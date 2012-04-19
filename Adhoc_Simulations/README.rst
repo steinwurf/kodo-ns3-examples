@@ -45,7 +45,9 @@ Checking for ’g++’ (c++ compiler)
 ’configure’ finished successfully (0.072s)
 Next step, build the program with this sentence:
 ./waf
+
 The result of this action would be something like that:
+
 Waf: Entering directory ‘/home/edwin/waf_examples/test-ns3.2/build’
 [1/2] cxx: second.cc -> build/second.cc.1.o
 [2/2] cxxprogram: build/second.cc.1.o -> build/second
