@@ -1,9 +1,15 @@
 As a starting point, it is going to be created a folder called test-ns3 where it is going to be download the waf code :
+
 wget http://waf.googlecode.com/files/waf-1.6.11.tar.bz2
+
 tar xjvf waf-1.6.11.tar.bz2
+
 cd waf-1.6.11
+
 python waf-light
+
 The result of this actions will be something like:
+
 Configuring the project
 ’build’ finished successfully (0.001s)
 Checking for program python
