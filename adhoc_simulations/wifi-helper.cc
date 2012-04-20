@@ -19,21 +19,21 @@
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  * Author: Mirko Banchi <mk.banchi@gmail.com>
  */
-#include "wifi-helper_1.h"
-#include "wifi-net-device_1.h"
-#include "pep-wifi-net-device_1.h"
-#include "ns3/wifi-mac.h"
-#include "ns3/wifi-phy.h"
-#include "ns3/wifi-remote-station-manager.h"
-#include "ns3/wifi-channel.h"
-#include "ns3/yans-wifi-channel.h"
-#include "ns3/propagation-delay-model.h"
-#include "ns3/propagation-loss-model.h"
-#include "ns3/mobility-model.h"
-#include "ns3/log.h"
-#include "ns3/config.h"
-#include "ns3/simulator.h"
-#include "ns3/names.h"
+#include "wifi-helper.h"
+#include <wifi-net-device.h>
+#include "pep-wifi-net-device.h"
+#include <wifi-mac.h>
+#include <wifi-phy.h>
+#include <wifi-remote-station-manager.h>
+#include <wifi-channel.h>
+#include <yans-wifi-channel.h>
+#include <propagation-delay-model.h>
+#include <propagation-loss-model.h>
+#include <mobility-model.h>
+#include <log.h>
+#include <config.h>
+#include <simulator.h>
+#include <names.h>
 
 NS_LOG_COMPONENT_DEFINE ("WifiHelper");
 
