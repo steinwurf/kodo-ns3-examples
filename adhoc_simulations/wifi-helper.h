@@ -158,8 +158,8 @@ public:
    */
   NetDeviceContainer Install (const WifiPhyHelper &phy,
                               const WifiMacHelper &mac, std::string nodeName) const;
-                              
-   NetDeviceContainer Install (const WifiPhyHelper &phy,
+
+  NetDeviceContainer Install (const WifiPhyHelper &phy,
                               const WifiMacHelper &mac, NodeContainer c, int code, int symbols,int recode,int RelayActivity) const;
 
   /**
