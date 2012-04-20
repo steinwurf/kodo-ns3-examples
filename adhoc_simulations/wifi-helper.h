@@ -23,12 +23,12 @@
 #define WIFI_HELPER_H
 
 #include <string>
-#include "ns3/attribute.h"
-#include "ns3/object-factory.h"
-#include "ns3/node-container.h"
-#include "ns3/net-device-container.h"
-#include "ns3/wifi-phy-standard.h"
-#include "ns3/trace-helper.h"
+#include <ns3/attribute.h>
+#include <ns3/object-factory.h>
+#include <ns3/node-container.h>
+#include <ns3/net-device-container.h>
+#include <ns3/wifi-phy-standard.h>
+#include <ns3/trace-helper.h>
 
 namespace ns3 {
 
@@ -158,8 +158,8 @@ public:
    */
   NetDeviceContainer Install (const WifiPhyHelper &phy,
                               const WifiMacHelper &mac, std::string nodeName) const;
-                              
-   NetDeviceContainer Install (const WifiPhyHelper &phy,
+
+  NetDeviceContainer Install (const WifiPhyHelper &phy,
                               const WifiMacHelper &mac, NodeContainer c, int code, int symbols,int recode,int RelayActivity) const;
 
   /**

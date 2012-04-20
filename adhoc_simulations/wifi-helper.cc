@@ -19,21 +19,21 @@
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  * Author: Mirko Banchi <mk.banchi@gmail.com>
  */
-#include "wifi-helper_1.h"
-#include "wifi-net-device_1.h"
-#include "pep-wifi-net-device_1.h"
-#include "ns3/wifi-mac.h"
-#include "ns3/wifi-phy.h"
-#include "ns3/wifi-remote-station-manager.h"
-#include "ns3/wifi-channel.h"
-#include "ns3/yans-wifi-channel.h"
-#include "ns3/propagation-delay-model.h"
-#include "ns3/propagation-loss-model.h"
-#include "ns3/mobility-model.h"
-#include "ns3/log.h"
-#include "ns3/config.h"
-#include "ns3/simulator.h"
-#include "ns3/names.h"
+#include "wifi-helper.h"
+#include <ns3/wifi-net-device.h>
+#include "pep-wifi-net-device.h"
+#include <ns3/wifi-mac.h>
+#include <ns3/wifi-phy.h>
+#include <ns3/wifi-remote-station-manager.h>
+#include <ns3/wifi-channel.h>
+#include <ns3/yans-wifi-channel.h>
+#include <ns3/propagation-delay-model.h>
+#include <ns3/propagation-loss-model.h>
+#include <ns3/mobility-model.h>
+#include <ns3/log.h>
+#include <ns3/config.h>
+#include <ns3/simulator.h>
+#include <ns3/names.h>
 
 NS_LOG_COMPONENT_DEFINE ("WifiHelper");
 
@@ -113,7 +113,7 @@ WifiHelper::Install (const WifiPhyHelper &phyHelper,
       NS_LOG_DEBUG ("node=" << node << ", mob=" << node->GetObject<MobilityModel> ());
     }
   return devices;
-}	
+}
 
 NetDeviceContainer
 WifiHelper::Install (const WifiPhyHelper &phyHelper,
@@ -125,12 +125,12 @@ WifiHelper::Install (const WifiPhyHelper &phyHelper,
     {
       Ptr<Node> node = *i;
       Ptr<PepWifiNetDevice> device = CreateObject<PepWifiNetDevice> ();
-		
-	device->SetAttribute ("SymbolsNum",   UintegerValue (symbols));
-	device->SetAttribute ("EnableCode", UintegerValue (code));
-	device->SetAttribute ("EnableRecode", UintegerValue (recode));
-	device->SetAttribute ("RelayActivity", UintegerValue (RelayActivity));		
-			
+
+      device->SetAttribute ("SymbolsNum",   UintegerValue (symbols));
+      device->SetAttribute ("EnableCode", UintegerValue (code));
+      device->SetAttribute ("EnableRecode", UintegerValue (recode));
+      device->SetAttribute ("RelayActivity", UintegerValue (RelayActivity));
+
       Ptr<WifiRemoteStationManager> manager = m_stationManager.Create<WifiRemoteStationManager> ();
       Ptr<WifiMac> mac = macHelper.Create ();
       Ptr<WifiPhy> phy = phyHelper.Create (node, device);
@@ -145,7 +145,7 @@ WifiHelper::Install (const WifiPhyHelper &phyHelper,
       NS_LOG_DEBUG ("node=" << node << ", mob=" << node->GetObject<MobilityModel> ());
     }
   return devices;
-}	
+}
 
 
 NetDeviceContainer
