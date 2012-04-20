@@ -51,19 +51,19 @@
 // tcpdump -r wifi-simple-adhoc-0-0.pcap -nn -tt
 //
 
-#include <core-module.h>
-#include <network-module.h>
-#include <mobility-module.h>
-#include <config-store-module.h>
-#include <wifi-module.h>
-#include <propagation-loss-model.h>
-#include <internet-module.h>
+#include <ns3/core-module.h>
+#include <ns3/network-module.h>
+#include <ns3/mobility-module.h>
+#include <ns3/config-store-module.h>
+#include <ns3/wifi-module.h>
+#include <ns3/propagation-loss-model.h>
+#include <ns3/internet-module.h>
 #include "pep-wifi-net-device.h"
 #include <iostream>
 #include <fstream>
 #include <vector>
 #include <string>
-#include <propagation-loss-model.h>
+#include <ns3/propagation-loss-model.h>
 NS_LOG_COMPONENT_DEFINE ("WifiSimpleAdhoc");
 
 

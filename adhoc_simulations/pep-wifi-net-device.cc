@@ -1,11 +1,11 @@
-#include <core-module.h>
-#include <net-device.h>
+#include <ns3/core-module.h>
+#include <ns3/net-device.h>
 #include "pep-wifi-net-device.h"
 #include <kodo/rlnc/full_vector_codes.h>
-#include <llc-snap-header.h>
-#include <adhoc-wifi-mac.h>
-#include <packet.h>
-#include <llc-snap-header.h>	
+#include <ns3/llc-snap-header.h>
+#include <ns3/adhoc-wifi-mac.h>
+#include <ns3/packet.h>
+#include <ns3/llc-snap-header.h>	
 
 NS_LOG_COMPONENT_DEFINE ("PepWifiNetDevice");
 namespace ns3 {

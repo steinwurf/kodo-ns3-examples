@@ -2,8 +2,8 @@
 #define PEP_WIFI_NET_DEVICE_H
 
 
-#include <wifi-net-device.h>
-#include <packet.h>
+#include <ns3/wifi-net-device.h>
+#include <ns3/packet.h>
 
 #include <kodo/rlnc/full_vector_codes.h>
 #include "code-header.h"

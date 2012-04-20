@@ -64,7 +64,7 @@ def build(bld):
     ns3_libs = [lib[:-3] for lib in ns3_libs]
     
     
-    bld.env['INCLUDES'] += ['/home/edwin/kodo/', '/home/edwin/kodo/build/linux/test', '/home/edwin/kodo/bundle_dependencies/fifi-1.0.1', '/home/edwin/kodo/kodo/rlnc/','/home/edwin/kodo/bundle_dependencies/boost-1.1.0-boost_1_48_0/boost', '/home/edwin/kodo/bundle_dependencies/sak-1.0.0', '/home/edwin/waf_examples/test-ns3.5/test-ns3.4/test/', '/home/edwin/repo/ns-3-allinone/ns-3-dev/build/', '/home/edwin/repo/ns-3-allinone/ns-3-dev/build/ns3/']
+    bld.env['INCLUDES'] += ['/home/edwin/kodo/', '/home/edwin/kodo/build/linux/test', '/home/edwin/kodo/bundle_dependencies/fifi-1.0.1', '/home/edwin/kodo/kodo/rlnc/','/home/edwin/kodo/bundle_dependencies/boost-1.1.0-boost_1_48_0/boost', '/home/edwin/kodo/bundle_dependencies/sak-1.0.0', '/home/edwin/waf_examples/test-ns3.5/test-ns3.4/test/', '/home/edwin/repo/ns-3-allinone/ns-3-dev/build/']
   
     bld.program(source = ['adhoc.cc', 'pep-wifi-net-device.cc', 'code-header.cc'],
                 target = 'adhoc',

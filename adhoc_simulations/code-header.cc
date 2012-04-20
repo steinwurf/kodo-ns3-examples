@@ -1,5 +1,5 @@
 #include "code-header.h"
-#include <address-utils.h>
+#include <ns3/address-utils.h>
 
 namespace ns3 {
 
