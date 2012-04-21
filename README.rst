@@ -1,8 +1,8 @@
 Introduction
 ------------
-Bla bla :)
+Here, it is going to be explained how to simulate network coding using ns3 as a library.
 
 Getting Started
 ---------------
 
-Hi please write here how to use the project
+
