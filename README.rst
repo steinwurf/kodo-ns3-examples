@@ -5,7 +5,9 @@ ns-3 is a discrete-event network simulator for Internet systems, targeted primar
 
 Getting Started
 ---------------
-The first step is to install ns3 in a local machine. Dependind on the operating system that is used, a set of steps must be follow which can be found in the following link: http://www.nsnam.org/wiki/index.php/Installation. 
+The first step is to install ns3 in a local machine. Dependind on the operating system that is used, a set of steps must be follow which can be found in the following link: 
+
+http://www.nsnam.org/wiki/index.php/Installation. 
 
 
 Once ns3 is installed, some guides can be follow in order to become familiar with. 
