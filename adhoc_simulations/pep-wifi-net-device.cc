@@ -166,7 +166,7 @@ PepWifiNetDevice::DecodingReceive (Ptr< NetDevice > device, Ptr< const
           srand ( seed );
           seed++;
           cout << "recode2:" << (rand () % 110 + 1) << endl;
-          if ((rand () % 100 + 1) >  relay_activity)
+          if ((rand () % 100 + 1) > relay_activity)
             {
               cout << "recode3:" << m_mac->GetAddress () << endl;
               // Send recoded packet
@@ -182,7 +182,7 @@ PepWifiNetDevice::DecodingReceive (Ptr< NetDevice > device, Ptr< const
           packet->AddHeader (h1);
           srand ( (int)h1.GetGeneration () );
 
-          if ((rand () % 100 + 1) >  relay_activity)
+          if ((rand () % 100 + 1) > relay_activity)
             {
               sent_code++;
               cout << "sent_code:" << sent_code << endl;
@@ -246,7 +246,7 @@ PepWifiNetDevice::DecodingReceive (Ptr< NetDevice > device, Ptr< const
 
 
 
-          //	decoded_flag[(int)h1.GetGeneration()] = 0;
+          // decoded_flag[(int)h1.GetGeneration()] = 0;
 
         }
       else
@@ -281,11 +281,11 @@ PepWifiNetDevice::DecodingReceive (Ptr< NetDevice > device, Ptr< const
         }
 
 
-      if (decoding[h1.GetGeneration ()]->is_complete () &&  decoded_flag[(int)h1.GetGeneration ()] == 0)
+      if (decoding[h1.GetGeneration ()]->is_complete () && decoded_flag[(int)h1.GetGeneration ()] == 0)
         {
           decoded_flag[(int)h1.GetGeneration ()] = 1;
 
-          cout << "time:" <<      Simulator::Now ().GetSeconds () << endl;
+          cout << "time:" << Simulator::Now ().GetSeconds () << endl;
 
           countcode++;
           cout << "decoded packets:" << (countcode * (max_symbols)) << endl;
@@ -310,7 +310,7 @@ PepWifiNetDevice::DecodingReceive (Ptr< NetDevice > device, Ptr< const
             }
 
         }
-      else if (decoding[h1.GetGeneration ()]->is_complete () &&  decoded_flag[(int)h1.GetGeneration ()] == 1)
+      else if (decoding[h1.GetGeneration ()]->is_complete () && decoded_flag[(int)h1.GetGeneration ()] == 1)
         {
 
           Ptr<Packet> ACK = Create<Packet> (10);
@@ -330,12 +330,12 @@ bool PepWifiNetDevice::Send (Ptr<Packet> packet, const Address& dest, uint16_t p
 
   if (code == 1)
     {
-      cout << "code is enabled"  << flush;
+      cout << "code is enabled" << flush;
       coding (packet,dest, protocolNumber);
     }
   else
     {
-      cout << "code is disabled"  << endl;
+      cout << "code is disabled" << endl;
       WifiNetDevice::Send (packet,dest,protocolNumber);
     }
 
@@ -364,7 +364,7 @@ PepWifiNetDevice::SendCode (Ptr <coded> m_coded)
       pkt->AddHeader (m_coded->h1);
 
       //PointerValue ptr;
-      cout << "generation number: " <<        m_coded->h1.GetGeneration () << endl;
+      cout << "generation number: " << m_coded->h1.GetGeneration () << endl;
 
       WifiNetDevice::Send (pkt,m_coded->realTo,m_coded->protocolNumber );
 

@@ -96,12 +96,17 @@ WifiHelper::Install (const WifiPhyHelper &phyHelper,
   NetDeviceContainer devices;
   for (NodeContainer::Iterator i = c.Begin (); i != c.End (); ++i)
     {
-      Ptr<Node> node = *i;
-      Ptr<PepWifiNetDevice> device = CreateObject<PepWifiNetDevice> ();
+      Ptr<Node> node;
+      node = *i;
+      Ptr<PepWifiNetDevice> device;
+      device = CreateObject<PepWifiNetDevice> ();
       device->SetAttribute ("SymbolsNum",   UintegerValue (2));
-      Ptr<WifiRemoteStationManager> manager = m_stationManager.Create<WifiRemoteStationManager> ();
-      Ptr<WifiMac> mac = macHelper.Create ();
-      Ptr<WifiPhy> phy = phyHelper.Create (node, device);
+      Ptr<WifiRemoteStationManager> manager;
+      manager = m_stationManager.Create<WifiRemoteStationManager> ();
+      Ptr<WifiMac> mac;
+      mac = macHelper.Create ();
+      Ptr<WifiPhy> phy;
+      phy = phyHelper.Create (node, device);
       mac->SetAddress (Mac48Address::Allocate ());
       mac->ConfigureStandard (m_standard);
       phy->ConfigureStandard (m_standard);
@@ -123,17 +128,22 @@ WifiHelper::Install (const WifiPhyHelper &phyHelper,
   std::cout << "salam  " << symbols << std::endl;
   for (NodeContainer::Iterator i = c.Begin (); i != c.End (); ++i)
     {
-      Ptr<Node> node = *i;
-      Ptr<PepWifiNetDevice> device = CreateObject<PepWifiNetDevice> ();
+      Ptr<Node> node;
+      node = *i;
+      Ptr<PepWifiNetDevice> device;
+      device = CreateObject<PepWifiNetDevice> ();
 
       device->SetAttribute ("SymbolsNum",   UintegerValue (symbols));
       device->SetAttribute ("EnableCode", UintegerValue (code));
       device->SetAttribute ("EnableRecode", UintegerValue (recode));
       device->SetAttribute ("RelayActivity", UintegerValue (RelayActivity));
 
-      Ptr<WifiRemoteStationManager> manager = m_stationManager.Create<WifiRemoteStationManager> ();
-      Ptr<WifiMac> mac = macHelper.Create ();
-      Ptr<WifiPhy> phy = phyHelper.Create (node, device);
+      Ptr<WifiRemoteStationManager> manager;
+      manager = m_stationManager.Create<WifiRemoteStationManager> ();
+      Ptr<WifiMac> mac;
+      mac = macHelper.Create ();
+      Ptr<WifiPhy> phy;
+      phy = phyHelper.Create (node, device);
       mac->SetAddress (Mac48Address::Allocate ());
       mac->ConfigureStandard (m_standard);
       phy->ConfigureStandard (m_standard);
@@ -159,7 +169,8 @@ NetDeviceContainer
 WifiHelper::Install (const WifiPhyHelper &phy,
                      const WifiMacHelper &mac, std::string nodeName) const
 {
-  Ptr<Node> node = Names::Find<Node> (nodeName);
+  Ptr<Node> node;
+  node = Names::Find<Node> (nodeName);
   return Install (phy, mac, NodeContainer (node));
 }
 
