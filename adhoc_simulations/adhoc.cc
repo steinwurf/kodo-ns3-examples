@@ -95,7 +95,8 @@ int main (int argc, char *argv[])
 {
 
 
-  int N = atol (argv[1]); //read in run number from command line
+  int N;
+  N = atol (argv[1]); //read in run number from command line
   SeedManager::SetSeed (N);
   SeedManager::SetRun (1);
   UniformVariable x (0,10);
@@ -167,7 +168,7 @@ int main (int argc, char *argv[])
 
   YansWifiChannelHelper wifiChannel;
   FriisPropagationLossModel loss;
-  cout << loss.GetSystemLoss  ();
+  cout << loss.GetSystemLoss ();
   wifiChannel.SetPropagationDelay ("ns3::ConstantSpeedPropagationDelayModel");
 
   wifiChannel.AddPropagationLoss ("ns3::NakagamiPropagationLossModel","m2",DoubleValue (0.024));
@@ -194,7 +195,7 @@ int main (int argc, char *argv[])
   Ptr<Node> node;
   node = c.Get (0); // Get pointer to ith node in container
   Ptr<PepWifiNetDevice> wifi1;
-  wifi1 = node->GetObject<PepWifiNetDevice> (); // Get Ipv4 instance of the node
+  wifi1 = node->GetObject<PepWifiNetDevice>(); // Get Ipv4 instance of the node
 //wifi1.GetPhy ();
 //int a=1;
 //wifi1->setcode(&a);
