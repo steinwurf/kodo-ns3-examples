@@ -1,6 +1,6 @@
 Introduction
 ------------
-As it concerns to the ns3-networkcoding repository, codes have been included which made random linear network coding possible in wireless systems. Before performing the implementation process, it is necessary to make some simulations and in order to do so, the ns3 simulator has been chosen.
+As it concerns to the ns3-networkcoding repository, codes have been included which made the use of random linear network coding possible in a wireless systems. Before performing the implementation process, it is necessary to make some simulations and in order to do so, the ns3 simulator has been chosen.
 
 ns-3 is a discrete-event network simulator for Internet systems, targeted primarily for research and educational use. ns-3 is free software, licensed under the GNU GPLv2 license.
 
