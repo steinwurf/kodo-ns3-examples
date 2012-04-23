@@ -1,31 +1,31 @@
-/* -*-  Mode: C++; c-file-style: "gnu"; indent-tabs-mode:nil; -*- */
+/* -*- Mode: C++; c-file-style: "gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2009 The Boeing Company
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation;
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
- *
- */
+* Copyright (c) 2009 The Boeing Company
+*
+* This program is free software; you can redistribute it and/or modify
+* it under the terms of the GNU General Public License version 2 as
+* published by the Free Software Foundation;
+*
+* This program is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+* GNU General Public License for more details.
+*
+* You should have received a copy of the GNU General Public License
+* along with this program; if not, write to the Free Software
+* Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+*
+*/
 
 //
 // This script configures two nodes on an 802.11b physical layer, with
 // 802.11b NICs in adhoc mode, and by default, sends one packet of 1000
-// (application) bytes to the other node.  The physical layer is configured
+// (application) bytes to the other node. The physical layer is configured
 // to receive at a fixed RSS (regardless of the distance and transmit
 // power); therefore, changing position of the nodes has no effect.
 //
 // There are a number of command-line options available to control
-// the default behavior.  The list of available command-line options
+// the default behavior. The list of available command-line options
 // can be listed with the following command:
 // ./waf --run "wifi-simple-adhoc --help"
 //
@@ -94,23 +94,24 @@ static void GenerateTraffic (Ptr<Socket> socket, uint32_t pktSize,
 int main (int argc, char *argv[])
 {
 
-
+  CommandLine cmd;  
   int N;
-  N = atol (argv[1]); //read in run number from command line
+  cmd.AddValue("N", "set run number of simulation", N);
+  int N2;  
+  cmd.AddValue("N2", "read in run number", N2);
   SeedManager::SetSeed (N);
   SeedManager::SetRun (1);
   UniformVariable x (0,10);
   ExponentialVariable y (2902);
 
   std::string phyMode ("DsssRate1Mbps");
-  double rss = -50;  // -dBm
+  double rss = -50; // -dBm
   uint32_t packetSize = 100; // bytes
 
   uint32_t numPackets = 2002;
   double interval = 5.00; // seconds
   bool verbose = false;
 
-  CommandLine cmd;
 
   cmd.AddValue ("phyMode", "Wifi Phy mode", phyMode);
   cmd.AddValue ("rss", "received signal strength", rss);
@@ -118,11 +119,10 @@ int main (int argc, char *argv[])
   cmd.AddValue ("numPackets", "number of packets generated", numPackets);
   cmd.AddValue ("interval", "interval (seconds) between packets", interval);
   cmd.AddValue ("verbose", "turn on all WifiNetDevice log components", verbose);
-
   cmd.Parse (argc, argv);
+  
   // Convert to time object
-  Time interPacketInterval;
-  interPacketInterval = Seconds (interval);
+  Time interPacketInterval = Seconds (interval);
 
   // disable fragmentation for frames below 2200 bytes
   Config::SetDefault ("ns3::WifiRemoteStationManager::FragmentationThreshold", StringValue ("2200"));
@@ -132,35 +132,32 @@ int main (int argc, char *argv[])
   Config::SetDefault ("ns3::WifiRemoteStationManager::NonUnicastMode",
                       StringValue (phyMode));
 
-  NodeContainer c;
-  int N2;
-  N2 = atol (argv[2]);
+  NodeContainer c;  
   c.Create (N2);
 
   // The below set of helpers will help us to put together the wifi NICs we want
   WifiHelper wifi;
   if (verbose)
     {
-      wifi.EnableLogComponents ();  // Turn on all Wifi logging
+      wifi.EnableLogComponents (); // Turn on all Wifi logging
     }
   wifi.SetStandard (WIFI_PHY_STANDARD_80211b);
 
-  /* YansWifiPhyHelper wifiPhy =  YansWifiPhyHelper::Default ();
-   // This is one parameter that matters when using FixedRssLossModel
-   // set it to zero; otherwise, gain will be added
-   //wifiPhy.Set ("RxGain", DoubleValue (0) );
-   // ns-3 supports RadioTap and Prism tracing extensions for 802.11b
-   wifiPhy.SetPcapDataLinkType (YansWifiPhyHelper::DLT_IEEE802_11_RADIO);
+  /* YansWifiPhyHelper wifiPhy = YansWifiPhyHelper::Default ();
+// This is one parameter that matters when using FixedRssLossModel
+// set it to zero; otherwise, gain will be added
+//wifiPhy.Set ("RxGain", DoubleValue (0) );
+// ns-3 supports RadioTap and Prism tracing extensions for 802.11b
+wifiPhy.SetPcapDataLinkType (YansWifiPhyHelper::DLT_IEEE802_11_RADIO);
 
-   YansWifiChannelHelper wifiChannel;
-   wifiChannel.SetPropagationDelay ("ns3::ConstantSpeedPropagationDelayModel");
-   // The below FixedRssLossModel will cause the rss to be fixed regardless
-   // of the distance between the two stations, and the transmit power
-   wifiChannel.AddPropagationLoss ("ns3::FixedRssLossModel","Rss",DoubleValue (rss));
-   wifiPhy.SetChannel (wifiChannel.Create ());*/
+YansWifiChannelHelper wifiChannel;
+wifiChannel.SetPropagationDelay ("ns3::ConstantSpeedPropagationDelayModel");
+// The below FixedRssLossModel will cause the rss to be fixed regardless
+// of the distance between the two stations, and the transmit power
+wifiChannel.AddPropagationLoss ("ns3::FixedRssLossModel","Rss",DoubleValue (rss));
+wifiPhy.SetChannel (wifiChannel.Create ());*/
 
-  YansWifiPhyHelper wifiPhy; 
-  wifiPhy =  YansWifiPhyHelper::Default ();
+  YansWifiPhyHelper wifiPhy = YansWifiPhyHelper::Default ();
   // set it to zero; otherwise, gain will be added
 //wifiPhy.Set ("RxGain", DoubleValue (-9.998) );
 // ns-3 supports RadioTap and Prism tracing extensions for 802.11b
@@ -177,25 +174,21 @@ int main (int argc, char *argv[])
   wifiPhy.SetChannel (wifiChannel.Create ());
 
   // Add a non-QoS upper mac, and disable rate control
-  NqosWifiMacHelper wifiMac;
-  wifiMac = NqosWifiMacHelper::Default ();
+  NqosWifiMacHelper wifiMac = NqosWifiMacHelper::Default ();
   wifi.SetRemoteStationManager ("ns3::ConstantRateWifiManager",
                                 "DataMode",StringValue (phyMode),
                                 "ControlMode",StringValue (phyMode));
   // Set it to adhoc mode
   wifiMac.SetType ("ns3::AdhocWifiMac");
 
-  NetDeviceContainer devices;
-  devices = wifi.Install (wifiPhy, wifiMac, c);
+  NetDeviceContainer devices = wifi.Install (wifiPhy, wifiMac, c);
   //wifiChannel.AddPropagationLoss ("ns3::NakagamiPropagationLossModel","m2",DoubleValue(0.02));
 // Ptr<NqosWifiMacHelper> wifiChannel2=c.Get (0)->GetObject<NqosWifiMacHelper> ();
 //Ptr<WifiNetDevice> wifi2= c.Get (2)->GetObject<WifiNetDevice> (); // Get Ipv4 instance of the node
-//wifi2->SetPhy  (&wifiPhy);
+//wifi2->SetPhy (&wifiPhy);
 
-  Ptr<Node> node;
-  node = c.Get (0); // Get pointer to ith node in container
-  Ptr<PepWifiNetDevice> wifi1;
-  wifi1 = node->GetObject<PepWifiNetDevice>(); // Get Ipv4 instance of the node
+  Ptr<Node> node = c.Get (0); // Get pointer to ith node in container
+  Ptr<PepWifiNetDevice> wifi1 = node->GetObject<PepWifiNetDevice> (); // Get Ipv4 instance of the node
 //wifi1.GetPhy ();
 //int a=1;
 //wifi1->setcode(&a);
@@ -210,8 +203,7 @@ int main (int argc, char *argv[])
 // Note that with FixedRssLossModel, the positions below are not
 // used for received signal strength.
   MobilityHelper mobility;
-  Ptr<ListPositionAllocator> positionAlloc;
-  positionAlloc = CreateObject<ListPositionAllocator> ();
+  Ptr<ListPositionAllocator> positionAlloc = CreateObject<ListPositionAllocator> ();
   positionAlloc->Add (Vector (0.0, 0.0, 0.0));
   positionAlloc->Add (Vector (500.0, 0.0, 0.0));
   positionAlloc->Add (Vector (250, 2, 0.0));
@@ -238,19 +230,15 @@ int main (int argc, char *argv[])
   Ipv4AddressHelper ipv4;
   NS_LOG_INFO ("Assign IP Addresses.");
   ipv4.SetBase ("10.1.1.0", "255.255.255.0");
-  Ipv4InterfaceContainer i;
-  i = ipv4.Assign (devices);
+  Ipv4InterfaceContainer i = ipv4.Assign (devices);
 
-  TypeId tid;
-  tid = TypeId::LookupByName ("ns3::UdpSocketFactory");
-  Ptr<Socket> recvSink;
-  recvSink = Socket::CreateSocket (c.Get (0), tid);
+  TypeId tid = TypeId::LookupByName ("ns3::UdpSocketFactory");
+  Ptr<Socket> recvSink = Socket::CreateSocket (c.Get (0), tid);
   InetSocketAddress local = InetSocketAddress (Ipv4Address::GetAny (), 80);
   recvSink->Bind (local);
   recvSink->SetRecvCallback (MakeCallback (&ReceivePacket));
 
-  Ptr<Socket> source;
-  source = Socket::CreateSocket (c.Get (1), tid);
+  Ptr<Socket> source = Socket::CreateSocket (c.Get (1), tid);
   InetSocketAddress remote = InetSocketAddress (Ipv4Address ("255.255.255.255"), 80);
 //InetSocketAddress remote = InetSocketAddress (i.GetAddress (0, 0), 80);
   source->SetAllowBroadcast (true);
@@ -261,7 +249,7 @@ int main (int argc, char *argv[])
   wifiPhy.EnablePcap ("wifi-simple-adhoc", devices);
 
   // Output what we are doing
-  NS_LOG_UNCOND ("Testing " << numPackets  << " packets sent with receiver rss " << rss );
+  NS_LOG_UNCOND ("Testing " << numPackets << " packets sent with receiver rss " << rss );
 
   Simulator::ScheduleWithContext (source->GetNode ()->GetId (),
                                   Seconds (10000.0), &GenerateTraffic,
@@ -273,4 +261,5 @@ int main (int argc, char *argv[])
 
   return 0;
 }
+
 

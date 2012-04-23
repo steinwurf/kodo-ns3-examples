@@ -20,8 +20,7 @@ CodeHeader::~CodeHeader ()
 TypeId
 CodeHeader::GetTypeId (void)
 {
-  static TypeId tid = 
-  tid = TypeId ("CodeHeader")
+  static TypeId tid = TypeId ("CodeHeader")
     .SetParent<Header> ()
     .AddConstructor<CodeHeader> ()
   ;
@@ -50,7 +49,7 @@ uint32_t
 CodeHeader::Deserialize (Buffer::Iterator start)
 {
   m_destinationPort = start.ReadNtohU16 ();
-  return 2;    // the number of bytes consumed.
+  return 2; // the number of bytes consumed.
 }
 void
 CodeHeader::Print (std::ostream &os) const

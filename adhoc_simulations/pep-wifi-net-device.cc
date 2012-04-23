@@ -46,8 +46,7 @@ PepWifiNetDevice::PepWifiNetDevice ()
 TypeId
 PepWifiNetDevice::GetTypeId (void)
 {
-  static TypeId tid;
-  tid = TypeId ("ns3::PepWifiNetDevice")
+  static TypeId tid = TypeId ("ns3::PepWifiNetDevice")
     .SetParent<WifiNetDevice> ()
     .AddConstructor<PepWifiNetDevice> ()
     .AddAttribute ("SymbolsNum",
@@ -99,11 +98,11 @@ void PepWifiNetDevice::SetReceiveCallback (NetDevice::ReceiveCallback receiveCal
 }
 
 
-Ptr<Packet> PepWifiNetDevice::rencoding (Ptr<Packet> packet,int seq)
+Ptr<Packet>
+PepWifiNetDevice::rencoding (Ptr<Packet> packet,int seq)
 {
 
-  uint8_t *buffer1;
-  buffer1 = new uint8_t[packet->GetSize ()];
+  uint8_t *buffer1 = new uint8_t[packet->GetSize ()];
 
   if (forward.find (seq) != forward.end ())
     {
@@ -115,8 +114,7 @@ Ptr<Packet> PepWifiNetDevice::rencoding (Ptr<Packet> packet,int seq)
       cout << "payload recode " << encoder->payload_size () << endl;
       cout << "rbuffer size " << packet->GetSize () << endl;
 
-      Ptr<Packet> pkt;
-      pkt = Create<Packet> (&payload[0],encoder->payload_size ());
+      Ptr<Packet> pkt = Create<Packet> (&payload[0],encoder->payload_size ());
       return pkt;
     }
   else
@@ -128,8 +126,7 @@ Ptr<Packet> PepWifiNetDevice::rencoding (Ptr<Packet> packet,int seq)
       forward[seq]->decode ( buffer1 );
       forward[seq]->recode ( &payload[0]);
 
-      Ptr<Packet> pkt;
-      pkt = Create<Packet> (&payload[0],encoder->payload_size ());
+      Ptr<Packet> pkt = Create<Packet> (&payload[0],encoder->payload_size ());
       return pkt;
     }
 
@@ -142,17 +139,13 @@ PepWifiNetDevice::DecodingReceive (Ptr< NetDevice > device, Ptr< const
 {
   cout << "Max symbols" << max_symbols << endl;
 
-  Ptr<Packet> packet;
-  packet = packet1->Copy ();
-  Mac48Address des;
-  des = Mac48Address ("00:00:00:00:00:01");
-  Mac48Address source;
-  source = Mac48Address ("00:00:00:00:00:02");
+  Ptr<Packet> packet = packet1->Copy ();
+  Mac48Address des = Mac48Address ("00:00:00:00:00:01");
+  Mac48Address source = Mac48Address ("00:00:00:00:00:02");
 
   PointerValue ptr;
   GetAttribute ("Mac",ptr);
-  Ptr<AdhocWifiMac> m_mac;
-  m_mac = ptr.Get<AdhocWifiMac> ();
+  Ptr<AdhocWifiMac> m_mac = ptr.Get<AdhocWifiMac> ();
 
   if (from == source && m_mac->GetAddress () == des)
     {
@@ -168,13 +161,12 @@ PepWifiNetDevice::DecodingReceive (Ptr< NetDevice > device, Ptr< const
       if ( recode == 1)
         {
 
-          Ptr<Packet> pkt;
-          pkt = rencoding ( packet,(int)h1.GetGeneration ());
+          Ptr<Packet> pkt = rencoding ( packet,(int)h1.GetGeneration ());
           pkt->AddHeader (h1);
           srand ( seed );
           seed++;
           cout << "recode2:" << (rand () % 110 + 1) << endl;
-          if ((rand () % 100 + 1) >  relay_activity)
+          if ((rand () % 100 + 1) > relay_activity)
             {
               cout << "recode3:" << m_mac->GetAddress () << endl;
               // Send recoded packet
@@ -190,7 +182,7 @@ PepWifiNetDevice::DecodingReceive (Ptr< NetDevice > device, Ptr< const
           packet->AddHeader (h1);
           srand ( (int)h1.GetGeneration () );
 
-          if ((rand () % 100 + 1) >  relay_activity)
+          if ((rand () % 100 + 1) > relay_activity)
             {
               sent_code++;
               cout << "sent_code:" << sent_code << endl;
@@ -211,8 +203,7 @@ PepWifiNetDevice::DecodingReceive (Ptr< NetDevice > device, Ptr< const
     {
       received++;
       cout << "received:" << received << endl;
-      uint8_t *buffer1;
-      buffer1 = new uint8_t[packet->GetSize ()];
+      uint8_t *buffer1 = new uint8_t[packet->GetSize ()];
 
       CodeHeader h1;
       packet->RemoveHeader (h1);
@@ -255,7 +246,7 @@ PepWifiNetDevice::DecodingReceive (Ptr< NetDevice > device, Ptr< const
 
 
 
-          //	decoded_flag[(int)h1.GetGeneration()] = 0;
+          // decoded_flag[(int)h1.GetGeneration()] = 0;
 
         }
       else
@@ -290,18 +281,17 @@ PepWifiNetDevice::DecodingReceive (Ptr< NetDevice > device, Ptr< const
         }
 
 
-      if (decoding[h1.GetGeneration ()]->is_complete () &&  decoded_flag[(int)h1.GetGeneration ()] == 0)
+      if (decoding[h1.GetGeneration ()]->is_complete () && decoded_flag[(int)h1.GetGeneration ()] == 0)
         {
           decoded_flag[(int)h1.GetGeneration ()] = 1;
 
-          cout << "time:" <<      Simulator::Now ().GetSeconds () << endl;
+          cout << "time:" << Simulator::Now ().GetSeconds () << endl;
 
           countcode++;
           cout << "decoded packets:" << (countcode * (max_symbols)) << endl;
           cout << "decoded packets:" << from << endl;
 
-          Ptr<Packet> ACK;
-          ACK = Create<Packet> (10);
+          Ptr<Packet> ACK = Create<Packet> (10);
           ACK->AddHeader (h1);
           WifiNetDevice::Send (ACK,Mac48Address ("00:00:00:00:00:02"),100 );
 
@@ -310,23 +300,20 @@ PepWifiNetDevice::DecodingReceive (Ptr< NetDevice > device, Ptr< const
 
           for (int i = 0; i < (max_symbols); i++)
             {
-              uint8_t *buffer1;
-              buffer1 = new uint8_t[max_size];
+              uint8_t *buffer1 = new uint8_t[max_size];
               memcpy (buffer1,&data_out[i * max_size],max_size);
 
-              Ptr<Packet> pkt;
-              pkt = Create<Packet> (buffer1,max_size);
+              Ptr<Packet> pkt = Create<Packet> (buffer1,max_size);
               m_mac->NotifyRx (pkt);
               m_receiveCallback (this, pkt, type, Mac48Address ("00:00:00:00:00:01"));
 
             }
 
         }
-      else if (decoding[h1.GetGeneration ()]->is_complete () &&  decoded_flag[(int)h1.GetGeneration ()] == 1)
+      else if (decoding[h1.GetGeneration ()]->is_complete () && decoded_flag[(int)h1.GetGeneration ()] == 1)
         {
 
-          Ptr<Packet> ACK;
-          ACK = Create<Packet> (10);
+          Ptr<Packet> ACK = Create<Packet> (10);
           ACK->AddHeader (h1);
           WifiNetDevice::Send (ACK,Mac48Address ("00:00:00:00:00:02"),100 );
 
@@ -343,12 +330,12 @@ bool PepWifiNetDevice::Send (Ptr<Packet> packet, const Address& dest, uint16_t p
 
   if (code == 1)
     {
-      cout << "code is enabled"  << flush;
+      cout << "code is enabled" << flush;
       coding (packet,dest, protocolNumber);
     }
   else
     {
-      cout << "code is disabled"  << endl;
+      cout << "code is disabled" << endl;
       WifiNetDevice::Send (packet,dest,protocolNumber);
     }
 
@@ -372,13 +359,12 @@ PepWifiNetDevice::SendCode (Ptr <coded> m_coded)
       std::vector<uint8_t> payload (m_coded->m_encoder->payload_size ());
       m_coded->m_encoder->encode ( &payload[0] );
 
-      Ptr<Packet> pkt;
-      pkt = Create<Packet> (&payload[0], m_coded->m_encoder->payload_size ());
+      Ptr<Packet> pkt = Create<Packet> (&payload[0], m_coded->m_encoder->payload_size ());
 
       pkt->AddHeader (m_coded->h1);
 
       //PointerValue ptr;
-      cout << "generation number: " <<        m_coded->h1.GetGeneration () << endl;
+      cout << "generation number: " << m_coded->h1.GetGeneration () << endl;
 
       WifiNetDevice::Send (pkt,m_coded->realTo,m_coded->protocolNumber );
 
@@ -405,8 +391,7 @@ PepWifiNetDevice::coding (Ptr<Packet> packet, const Address& dest, uint16_t prot
 {
 
   NS_ASSERT (Mac48Address::IsMatchingType (dest));
-  Mac48Address realTo;
-  realTo = Mac48Address::ConvertFrom (dest);
+  Mac48Address realTo = Mac48Address::ConvertFrom (dest);
 
   int k = 0;
 
@@ -422,8 +407,7 @@ PepWifiNetDevice::coding (Ptr<Packet> packet, const Address& dest, uint16_t prot
       h1.SetGeneration (generation);
       generation++;
 
-      Ptr<coded> m_coded;
-      m_coded = Create<coded> ();
+      Ptr<coded> m_coded = Create<coded> ();
       m_coded->t2 = interval;
       m_coded->k = k;
       m_coded->m_encoder = encoder;
@@ -432,8 +416,7 @@ PepWifiNetDevice::coding (Ptr<Packet> packet, const Address& dest, uint16_t prot
       m_coded->realTo = realTo;
       m_coded->m_encoder_data.resize (encoder->block_size ());
 
-      uint8_t *buffer1;
-      buffer1 = new uint8_t[packet->GetSize ()];
+      uint8_t *buffer1 = new uint8_t[packet->GetSize ()];
 
       for (int i = 0; i < (max_symbols); i++)
         {
