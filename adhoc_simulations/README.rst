@@ -36,7 +36,8 @@ Before execute the program, it would be required to create symbolic links of the
 
 And finally, executing the program:
 ::
-  ./build/adhoc 10 10
+  ./build/adhoc --N=3 --N2=6
+
 
 After that, the result of the progrma have to be displayed in the screen.
 
