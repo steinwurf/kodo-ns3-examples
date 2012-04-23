@@ -98,7 +98,7 @@ int main (int argc, char *argv[])
   int N;
   cmd.AddValue("N", "set run number of simulation", N);
   int N2;  
-  cmd.AddValue("N2", "read in run number", N2);
+  cmd.AddValue("N2", "number of nodes", N2);
   SeedManager::SetSeed (N);
   SeedManager::SetRun (1);
   UniformVariable x (0,10);
