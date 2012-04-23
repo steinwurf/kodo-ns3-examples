@@ -1,11 +1,5 @@
 Introduction
 ------------
-<<<<<<< HEAD
-Here, it is going to be explained how to simulate network coding using ns3 as a library.
-
-Getting Started
----------------
-=======
 As it concerns to the ns3-networkcoding repository, codes have been included which made the use of random linear network coding possible in a wireless systems. Before performing the implementation process, it is necessary to make some simulations and in order to do so, the ns3 simulator has been chosen.
 
 ns-3 is a discrete-event network simulator for Internet systems, targeted primarily for research and educational use. ns-3 is free software, licensed under the GNU GPLv2 license.
@@ -22,4 +16,3 @@ In this case, it is going to be simulated network coding using ns3 as a library,
 
 
 
->>>>>>> c3d158cd606c0c3f573c26e8c68ce3a075b0efb7
