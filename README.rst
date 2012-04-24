@@ -15,7 +15,4 @@ Once ns3 is installed, some guides can be follow in order to become familiar wit
 In this case, it is going to be simulated network coding using ns3 as a library, then these steps can be skipped.
 
 
-Moreover, the library kodo is used by code. In order to download and place the library kodo in the system, just follow this link:
-
-http://readthedocs.org/docs/kodo/en/latest/intro.html#getting-started
 
