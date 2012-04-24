@@ -23,7 +23,7 @@ PepWifiNetDevice::PepWifiNetDevice ()
   NS_LOG_FUNCTION_NOARGS ();
   code = 1;
   sent_packet = 0;
-  interval = 0.1;
+  interval = 0.5;
   generation = 0;
   received = 0;
   countcode = 0;
@@ -40,6 +40,7 @@ PepWifiNetDevice::PepWifiNetDevice ()
   payload.resize (encoder->payload_size ());
   relay_activity = 1;
   seed = 100;
+ received_relay=0;
 }
 
 
