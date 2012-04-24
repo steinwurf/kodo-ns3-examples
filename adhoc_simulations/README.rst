@@ -42,20 +42,35 @@ And finally, executing the program:
 Moreover other parameters can be fixed as:
 
   --PrintHelp: Print this help message.
+
   --PrintGroups: Print the list of groups.
+
   --PrintTypeIds: Print all TypeIds.
+
   --PrintGroup=[group]: Print all TypeIds of group.
+
   --PrintAttributes=[typeid]: Print all attributes of typeid.
+
   --PrintGlobals: Print the list of globals.
+
   User Arguments:
+
     --N: set run number of simulation
+
     --N2: number of nodes
+
     --phyMode: Wifi Phy mode
+
     --rss: received signal strength
+
     --packetSize: size of application packet sent
+
     --numPackets: number of packets generated
+
     --interval: interval (seconds) between packets
+
     --verbose: turn on all WifiNetDevice log components
+
 
 
 After that, the result of the progrma have to be displayed in the screen.
