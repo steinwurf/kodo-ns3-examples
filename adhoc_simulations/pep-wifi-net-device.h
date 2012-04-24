@@ -57,6 +57,7 @@ public:
   std::vector<uint8_t> payload;
   int relay_activity;
   int seed;
+  int received_relay;
   // @todo when you move out of ns3 namespace use
   // struct coded : public ns3::Object
   struct coded : public Object
