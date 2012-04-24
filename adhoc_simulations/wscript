@@ -137,7 +137,7 @@ def build(bld):
                 rpath = ns3_build,
                 includes = ns3_build,
                 lib = ns3_libs,
-                cxxflags = '-g',
+                cxxflags = bld.toolchain_cxx_flags(),
                 features = 'cxx cxxprogram',
                 use = ['kodo_includes', 'boost_includes',
                        'fifi_includes', 'sak_includes'])
