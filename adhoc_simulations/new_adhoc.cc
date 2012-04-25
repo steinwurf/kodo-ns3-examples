@@ -96,7 +96,6 @@ StringValue("1"));
     {
       wifi.EnableLogComponents (); // Turn on all Wifi logging
     }
-  wifi.EnableLogComponents (); // Turn on all Wifi logging
   wifi.SetStandard (WIFI_PHY_STANDARD_80211b);
 
   YansWifiPhyHelper wifiPhy = YansWifiPhyHelper::Default ();
