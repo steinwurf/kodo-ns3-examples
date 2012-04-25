@@ -11,13 +11,13 @@
 #include <string>
 
 
-NS_LOG_COMPONENT_DEFINE ("WifiSimpleAdhoc");
+NS_LOG_COMPONENT_DEFINE ("NewAdhoc");
 
 using namespace ns3;
 
 void ReceivePacket (Ptr<Socket> socket)
 {
-  NS_LOG_UNCOND ("Received one packet!");
+  NS_LOG_DEBUG ("Received one packet!");
 }
 
 static void GenerateTraffic (Ptr<Socket> socket, uint32_t pktSize,
@@ -96,6 +96,7 @@ StringValue("1"));
     {
       wifi.EnableLogComponents (); // Turn on all Wifi logging
     }
+  wifi.EnableLogComponents (); // Turn on all Wifi logging
   wifi.SetStandard (WIFI_PHY_STANDARD_80211b);
 
   YansWifiPhyHelper wifiPhy = YansWifiPhyHelper::Default ();
@@ -124,7 +125,8 @@ StringValue("1"));
                                 "ControlMode",StringValue (phyMode));
   // Set it to adhoc mode
   wifiMac.SetType ("ns3::AdhocWifiMac");
-  std::cout << "RelayActivity " << RelayActivity << endl;
+   NS_LOG_DEBUG ("RelayActivity " <<  RelayActivity);
+  //std::cout << "RelayActivity " << RelayActivity << endl;
  // int a=symbols;
   NetDeviceContainer devices = wifi.Install (wifiPhy, wifiMac, c, EnableCode, symbols , EnableRencode, RelayActivity);
   
@@ -167,7 +169,7 @@ StringValue("1"));
   wifiPhy.EnablePcap ("wifi-simple-adhoc", devices);
 
   // Output what we are doing
-  NS_LOG_UNCOND ("Testing " << numPackets << " packets sent with receiver rss " << rss );
+  NS_LOG_DEBUG ("Testing " << numPackets << " packets sent with receiver rss " << rss );
 
   Simulator::ScheduleWithContext (source->GetNode ()->GetId (),
                                   Seconds (1.0), &GenerateTraffic,
