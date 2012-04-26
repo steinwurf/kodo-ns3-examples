@@ -131,7 +131,7 @@ def build(bld):
     ns3_libs = [lib[3:] for lib in ns3_libs]
     ns3_libs = [lib[:-3] for lib in ns3_libs]
 
-    bld.program(source = ['adhoc.cc', 'pep-wifi-net-device.cc', 'code-header.cc'],
+    bld.program(source = ['new_adhoc.cc', 'pep-wifi-net-device-add-methods.cc', 'code-header.cc', 'pep-wifi-helper.cc'],
                 target = 'adhoc',
                 libpath = ns3_build,
                 rpath = ns3_build,
