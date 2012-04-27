@@ -1,6 +1,6 @@
 #include <ns3/core-module.h>
 #include <ns3/net-device.h>
-#include "pep-wifi-net-device-add-methods.h"
+#include "pep-wifi-net-device.h"
 #include <kodo/rlnc/full_vector_codes.h>
 #include <ns3/llc-snap-header.h>
 #include <ns3/adhoc-wifi-mac.h>
