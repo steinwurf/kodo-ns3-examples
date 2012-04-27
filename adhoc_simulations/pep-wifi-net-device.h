@@ -1,10 +1,10 @@
-#ifndef PEP_WIFI_NET_DEVICE_H
+##ifndef PEP_WIFI_NET_DEVICE_H
 #define PEP_WIFI_NET_DEVICE_H
 
 
 #include <ns3/wifi-net-device.h>
 #include <ns3/packet.h>
-
+#include <ns3/adhoc-wifi-mac.h>
 #include <kodo/rlnc/full_vector_codes.h>
 #include "code-header.h"
 
@@ -98,9 +98,12 @@ public:
 public:
   Ptr<Packet> rencoding (Ptr<Packet> packet,int seq);
   bool DecodingReceive (Ptr< NetDevice > device, Ptr< const Packet > packet, uint16_t type, const Address & from);
+  bool ReceivedSource (const Address & from, Mac48Address des, Ptr< const Packet > packet);
+  bool ReceivedSink (Mac48Address source, Ptr< const Packet > packet, const Address & from, uint16_t type, Ptr<AdhocWifiMac> m_mac);
+  bool ReceivedRelay (Mac48Address des, uint16_t type, Ptr< const Packet > packet);
   virtual bool coding (Ptr<Packet> packet, const Address& dest, uint16_t protocolNumber);
-  void SendCode (Ptr <coded> m_coded );
-
+  void SendCode (Ptr <coded> m_coded);
+  
   // The ns3 function which handle incomming packets
   NetDevice::ReceiveCallback m_receiveCallback;
 
