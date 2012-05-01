@@ -197,8 +197,8 @@ StringValue("1"));
   MobilityHelper mobility;
   Ptr<ListPositionAllocator> positionAlloc = CreateObject<ListPositionAllocator> ();
   positionAlloc->Add (Vector (500.0, 0.0, 0.0));
-  positionAlloc->Add (Vector (-500, 0.0, 0.0));
-  positionAlloc->Add (Vector (distance, 0,.0));
+  positionAlloc->Add (Vector (500, 0.0, 0.0));
+  positionAlloc->Add (Vector (500, 0,.0));
   mobility.SetPositionAllocator (positionAlloc);
   mobility.SetMobilityModel ("ns3::ConstantPositionMobilityModel");
   mobility.Install (c);
@@ -218,7 +218,7 @@ StringValue("1"));
   recvSink->SetRecvCallback (MakeCallback (&ReceivePacket));
 
   Ptr<Socket> source = Socket::CreateSocket (c.Get (1), tid);
-  InetSocketAddress remote = InetSocketAddress (Ipv4Address ("255.255.255.255"), 80);
+  InetSocketAddress remote = InetSocketAddress (Ipv4Address ("10.1.1.1"), 80);
   //source->SetAllowBroadcast (true);
   source->Connect (remote);
 
