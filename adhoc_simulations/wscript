@@ -4,7 +4,7 @@
 # Example of how to run Waf if you want it to download all dependencies
 #
 # ./waf configure --bundle=ALL --bundle-path=/home/edwin/bundle_dependencies
-#                 --ns3-path=/home/edwin/blabla --ns3-type=debug
+# --ns3-path=/home/edwin/blabla --ns3-type=debug
 #
 
 import os
@@ -104,6 +104,11 @@ def configure(conf):
     conf.load('toolchain_cxx')
     conf.load('dependency_bundle')
 
+    conf.check_cxx(header_name = 'ns3/core-module.h', includes = [ns3_build])
+    conf.check_cxx(lib = ns3_lib_name % ('core', ns3_type), libpath = [ns3_build])      
+    #env.append_value('DEFINES', 'NS3_LOG_ENABLE')
+   
+
     recurse_helper(conf, 'boost')
     recurse_helper(conf, 'gtest')
     recurse_helper(conf, 'sak')
@@ -112,8 +117,7 @@ def configure(conf):
 
 def build(bld):
 
-    bld.load('dependency_bundle')
-
+    bld.load('dependency_bundle')    
     recurse_helper(bld, 'boost')
     recurse_helper(bld, 'gtest')
     recurse_helper(bld, 'sak')
@@ -130,18 +134,20 @@ def build(bld):
     ns3_libs = [str(lib).split('/')[-1] for lib in ns3_libs]
     ns3_libs = [lib[3:] for lib in ns3_libs]
     ns3_libs = [lib[:-3] for lib in ns3_libs]
-
-    bld.program(source = ['adhoc.cc', 'pep-wifi-net-device.cc', 'code-header.cc', 'pep-wifi-helper.cc'],
+    
+    print bld.toolchain_cxx_flags()
+    
+    bld.program(source = ['adhoc.cc', 'pep-wifi-helper.cc', 'pep-wifi-net-device.cc', 'code-header.cc'],
                 target = 'adhoc',
                 libpath = ns3_build,
                 rpath = ns3_build,
                 includes = ns3_build,
+		defines = ["NS3_LOG_ENABLE"],
                 lib = ns3_libs,
                 cxxflags = bld.toolchain_cxx_flags(),
                 features = 'cxx cxxprogram',
                 use = ['kodo_includes', 'boost_includes',
                        'fifi_includes', 'sak_includes'])
-
 
 
 

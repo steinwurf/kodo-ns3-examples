@@ -37,7 +37,7 @@ PepWifiHelper::Install (const WifiPhyHelper &phyHelper,
       Ptr<PepWifiNetDevice> device;
       device = CreateObject<PepWifiNetDevice> ();
 
-      device->SetAttribute ("SymbolsNum",   UintegerValue (symbols));
+      device->SetAttribute ("SymbolsNum", UintegerValue (symbols));
       device->SetAttribute ("EnableCode", UintegerValue (code));
       device->SetAttribute ("EnableRecode", UintegerValue (recode));
       device->SetAttribute ("RelayActivity", UintegerValue (RelayActivity));
@@ -48,7 +48,11 @@ PepWifiHelper::Install (const WifiPhyHelper &phyHelper,
       mac = macHelper.Create ();
       Ptr<WifiPhy> phy;
       phy = phyHelper.Create (node, device);
+      // set the promiscous mode in the interface
+      //mac->SetPromisc();
+      //give a new mac address
       mac->SetAddress (Mac48Address::Allocate ());
+      //
       mac->ConfigureStandard (m_standard);
       phy->ConfigureStandard (m_standard);
       device->SetMac (mac);
@@ -91,40 +95,36 @@ PepWifiHelper::SetStandard (enum WifiPhyStandard standard)
 void
 PepWifiHelper::EnableLogComponents (void)
 {
-  LogComponentEnable ("NewAdhoc", LOG_LEVEL_ALL);
-  LogComponentEnable ("PepWifiNetDevice", LOG_LEVEL_ALL);
-  //LogComponentEnable ("Aarfcd", LOG_LEVEL_ALL);
-  //LogComponentEnable ("AdhocWifiMac", LOG_LEVEL_ALL);
-  //LogComponentEnable ("AmrrWifiRemoteStation", LOG_LEVEL_ALL);
-  //LogComponentEnable ("ApWifiMac", LOG_LEVEL_ALL);
-  //LogComponentEnable ("ns3::ArfWifiManager", LOG_LEVEL_ALL);
-  //LogComponentEnable ("Cara", LOG_LEVEL_ALL);
-  //LogComponentEnable ("DcaTxop", LOG_LEVEL_ALL);
-  //LogComponentEnable ("DcfManager", LOG_LEVEL_ALL);
-  //LogComponentEnable ("DsssErrorRateModel", LOG_LEVEL_ALL);
-  //LogComponentEnable ("EdcaTxopN", LOG_LEVEL_ALL);
-  //LogComponentEnable ("InterferenceHelper", LOG_LEVEL_ALL);
-  //LogComponentEnable ("Jakes", LOG_LEVEL_ALL);
-  //LogComponentEnable ("MacLow", LOG_LEVEL_ALL);
-  //LogComponentEnable ("MacRxMiddle", LOG_LEVEL_ALL);
-  //LogComponentEnable ("MsduAggregator", LOG_LEVEL_ALL);
-  //LogComponentEnable ("MsduStandardAggregator", LOG_LEVEL_ALL);
-  
-  //LogComponentEnable ("NistErrorRateModel", LOG_LEVEL_ALL);
-  //LogComponentEnable ("OnoeWifiRemoteStation", LOG_LEVEL_ALL);
- 
-  //LogComponentEnable ("PropagationLossModel", LOG_LEVEL_ALL);
-  //LogComponentEnable ("RegularWifiMac", LOG_LEVEL_ALL);
-  //LogComponentEnable ("RraaWifiManager", LOG_LEVEL_ALL);
-  //LogComponentEnable ("StaWifiMac", LOG_LEVEL_ALL);
-  //LogComponentEnable ("SupportedRates", LOG_LEVEL_ALL);
-  //LogComponentEnable ("WifiChannel", LOG_LEVEL_ALL);
-  //LogComponentEnable ("WifiPhyStateHelper", LOG_LEVEL_ALL);
-  //LogComponentEnable ("WifiPhy", LOG_LEVEL_ALL);
-  //LogComponentEnable ("WifiRemoteStationManager", LOG_LEVEL_ALL);
-  //LogComponentEnable ("YansErrorRateModel", LOG_LEVEL_ALL);
-  //LogComponentEnable ("YansWifiChannel", LOG_LEVEL_ALL);
-  //LogComponentEnable ("YansWifiPhy", LOG_LEVEL_ALL);
+  LogComponentEnable ("Aarfcd", LOG_LEVEL_ALL);
+  LogComponentEnable ("AdhocWifiMac", LOG_LEVEL_ALL);
+  LogComponentEnable ("AmrrWifiRemoteStation", LOG_LEVEL_ALL);
+  LogComponentEnable ("ApWifiMac", LOG_LEVEL_ALL);
+  LogComponentEnable ("ns3::ArfWifiManager", LOG_LEVEL_ALL);
+  LogComponentEnable ("Cara", LOG_LEVEL_ALL);
+  LogComponentEnable ("DcaTxop", LOG_LEVEL_ALL);
+  LogComponentEnable ("DcfManager", LOG_LEVEL_ALL);
+  LogComponentEnable ("DsssErrorRateModel", LOG_LEVEL_ALL);
+  LogComponentEnable ("EdcaTxopN", LOG_LEVEL_ALL);
+  LogComponentEnable ("InterferenceHelper", LOG_LEVEL_ALL);
+  LogComponentEnable ("Jakes", LOG_LEVEL_ALL);
+  LogComponentEnable ("MacLow", LOG_LEVEL_ALL);
+  LogComponentEnable ("MacRxMiddle", LOG_LEVEL_ALL);
+  LogComponentEnable ("MsduAggregator", LOG_LEVEL_ALL);
+  LogComponentEnable ("MsduStandardAggregator", LOG_LEVEL_ALL);  
+  LogComponentEnable ("NistErrorRateModel", LOG_LEVEL_ALL);
+  LogComponentEnable ("OnoeWifiRemoteStation", LOG_LEVEL_ALL); 
+  LogComponentEnable ("PropagationLossModel", LOG_LEVEL_ALL);
+  LogComponentEnable ("RegularWifiMac", LOG_LEVEL_ALL);
+  LogComponentEnable ("RraaWifiManager", LOG_LEVEL_ALL);
+  LogComponentEnable ("StaWifiMac", LOG_LEVEL_ALL);
+  LogComponentEnable ("SupportedRates", LOG_LEVEL_ALL);
+  LogComponentEnable ("WifiChannel", LOG_LEVEL_ALL);
+  LogComponentEnable ("WifiPhyStateHelper", LOG_LEVEL_ALL);
+  LogComponentEnable ("WifiPhy", LOG_LEVEL_ALL);
+  LogComponentEnable ("WifiRemoteStationManager", LOG_LEVEL_ALL);
+  LogComponentEnable ("YansErrorRateModel", LOG_LEVEL_ALL);
+  LogComponentEnable ("YansWifiChannel", LOG_LEVEL_ALL);
+  LogComponentEnable ("YansWifiPhy", LOG_LEVEL_ALL);
 }
 
 } // namespace ns3

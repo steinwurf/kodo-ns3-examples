@@ -90,8 +90,13 @@ static void GenerateTraffic (Ptr<Socket> socket, uint32_t pktSize,
 
 int main (int argc, char *argv[])
 {
+ // In order to see the comments of this two scripts
+  LogComponentEnable ("NewAdhoc", LOG_LEVEL_ALL);
+  LogComponentEnable ("PepWifiNetDevice", LOG_LEVEL_ALL);
+
+//DSSS Rates: 1, 2, 5.5, 11Mbps
   std::string phyMode ("DsssRate1Mbps");
-  
+
   double rss = -80; // -dBm
   uint32_t packetSize = 100; // bytes
   uint32_t numPackets = 1000;
@@ -103,9 +108,9 @@ int main (int argc, char *argv[])
   int RelayActivity=10;
   int seed;
   int distance=0;
-  
+ // Variables which can be changed from prompt.
   CommandLine cmd;
-  
+
   cmd.AddValue ("RelayActivity", "Number of symbols in each generation",RelayActivity);
   cmd.AddValue ("EnableCode", "enable ncoding 1, disable coding 0",EnableCode );
   cmd.AddValue ("Symbols", "Number of symbols in each generation",symbols);
@@ -121,7 +126,9 @@ int main (int argc, char *argv[])
 
   cmd.Parse (argc, argv);
 
+ //set the seed it will duplicate the seed value 6 times
  SeedManager::SetSeed(seed);
+
   // Convert to time object
   Time interPacketInterval = Seconds (interval);
 
@@ -132,14 +139,14 @@ int main (int argc, char *argv[])
   // Fix non-unicast data rate to be the same as that of unicast
   Config::SetDefault ("ns3::WifiRemoteStationManager::NonUnicastMode",
                       StringValue (phyMode));
- // Config::SetDefault ("ns3::PepWifiNetDevice::max_symbols", DoubleValue (2.0));
-
-
 
   NodeContainer c;
+  //Create 3 nodes
   c.Create (3);
+  //???????
   Config::SetDefault ("ns3::WifiRemoteStationManager::MaxSsrc",
 StringValue("1"));
+  //??????????
   Config::SetDefault ("ns3::WifiRemoteStationManager::MaxSlrc",
 StringValue("1"));
   // The below set of helpers will help us to put together the wifi NICs we want
@@ -163,10 +170,10 @@ StringValue("1"));
   // of the distance between the two stations, and the transmit power
   //wifiChannel.AddPropagationLoss ("ns3::FixedRssLossModel","Rss",DoubleValue (rss));
   // wifiChannel.AddPropagationLoss ("ns3::NakagamiPropagationLossModel","m2",DoubleValue(0.025));
- 
+
    wifiChannel.AddPropagationLoss ("ns3::NakagamiPropagationLossModel","m2",DoubleValue(0.025));
    //wifiChannel.AddPropagationLoss ("ns3::LogDistancePropagationLossModel");
-   
+
    wifiPhy.SetChannel (wifiChannel.Create ());
 
   // Add a non-QoS upper mac, and disable rate control
@@ -176,11 +183,11 @@ StringValue("1"));
                                 "ControlMode",StringValue (phyMode));
   // Set it to adhoc mode
   wifiMac.SetType ("ns3::AdhocWifiMac");
-   NS_LOG_DEBUG ("RelayActivity " <<  RelayActivity);
+   NS_LOG_DEBUG ("RelayActivity " << RelayActivity);
   //std::cout << "RelayActivity " << RelayActivity << endl;
  // int a=symbols;
   NetDeviceContainer devices = wifi.Install (wifiPhy, wifiMac, c, EnableCode, symbols , EnableRencode, RelayActivity);
-  
+
 
 
   //wifi1->SetCode(true);
@@ -212,7 +219,7 @@ StringValue("1"));
 
   Ptr<Socket> source = Socket::CreateSocket (c.Get (1), tid);
   InetSocketAddress remote = InetSocketAddress (Ipv4Address ("255.255.255.255"), 80);
-  source->SetAllowBroadcast (true);
+  //source->SetAllowBroadcast (true);
   source->Connect (remote);
 
 
