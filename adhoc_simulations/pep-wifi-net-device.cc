@@ -113,9 +113,10 @@ bool PepWifiNetDevice::test_promisc(Ptr<NetDevice> device, Ptr<const Packet> pac
   NS_LOG_DEBUG ("gen :" <<h1.GetGeneration ());
   if (m_mac->GetAddress () == des || h1.GetGeneration ()==0) // received in destination
     {
-     WifiNetDevice::SetPromiscReceiveCallback (ns3::MakeCallback (&PepWifiNetDevice::ReceivedSink, this));
+     result=ReceivedSink(this, packet, type, from, to, typ );
+    // WifiNetDevice::SetPromiscReceiveCallback (ns3::MakeCallback (&PepWifiNetDevice::ReceivedSink, this));
      //WifiNetDevice::SetReceiveCallback (ReceivedSink (source, des, packet, from, type, m_mac, typ));
-     result = true;
+     WifiNetDevice::SetPromiscReceiveCallback(m_receiveCallback);
     }
     else if (m_mac->GetAddress () == source) //received in source
     {
@@ -279,9 +280,13 @@ bool PepWifiNetDevice::ReceivedSink (Ptr<NetDevice> device, Ptr<const Packet> pa
     }
     else
 	{
-          
+          NS_LOG_DEBUG ("device"<<this);
+          NS_LOG_DEBUG ("tipo"<<type); 
+          NS_LOG_DEBUG ("from"<<from);
+          NS_LOG_DEBUG ("aki entra"<<to);
+          NS_LOG_DEBUG ("aki entra"<<typ);
           m_receiveCallback (this ,packet , type , from, to, typ);
-          NS_LOG_DEBUG ("aki entra");
+          
 	}	
 
 
