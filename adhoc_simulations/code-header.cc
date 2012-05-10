@@ -63,29 +63,8 @@ CodeHeader::SetGeneration (uint16_t gen)
   m_generation = gen;
 }
 
-void
-CodeHeader::SetMacSource ( Mac48Address source)
-{
-  m_Macsource = source;
-}
 
-void
-CodeHeader::SetMacSink ( Mac48Address sink)
-{
-  m_Macsink = sink;
-}
 
-Mac48Address
-CodeHeader::GetMacSource (void) const
-{
-  return m_Macsource;
-}
-
-Mac48Address
-CodeHeader::GetMacSink (void) const
-{
-  return m_Macsink;
-}
 
 uint16_t
 CodeHeader::GetGeneration (void) const

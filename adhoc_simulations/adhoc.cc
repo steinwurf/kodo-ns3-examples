@@ -56,6 +56,9 @@
 #include <ns3/config-store-module.h>
 #include <ns3/wifi-module.h>
 #include <ns3/internet-module.h>
+//#include <ns3/olsr-helper.h>
+//#include <ns3/ipv4-static-routing-helper.h>
+//#include <ns3/ipv4-list-routing-helper.h>
 #include "pep-wifi-helper.h"
 #include <iostream>
 #include <fstream>
@@ -77,9 +80,12 @@ static void GenerateTraffic (Ptr<Socket> socket, uint32_t pktSize,
 {
   if (pktCount > 0)
     {
+      
+     // NS_LOG_DEBUG("GENERATE TRAFFIC");
       socket->Send (Create<Packet> (pktSize));
+      
       Simulator::Schedule (pktInterval, &GenerateTraffic,
-                           socket, pktSize,pktCount-1, pktInterval);
+                           socket, pktSize, pktCount-1, pktInterval);
     }
   else
     {
@@ -142,7 +148,7 @@ int main (int argc, char *argv[])
 
   NodeContainer c;
   //Create 3 nodes
-  c.Create (3);
+  c.Create (2);
   //???????
   Config::SetDefault ("ns3::WifiRemoteStationManager::MaxSsrc",
 StringValue("1"));
@@ -203,6 +209,18 @@ StringValue("1"));
   mobility.SetMobilityModel ("ns3::ConstantPositionMobilityModel");
   mobility.Install (c);
 
+// Enable OLSR
+//  OlsrHelper olsr;
+//  Ipv4StaticRoutingHelper staticRouting;
+
+//  Ipv4ListRoutingHelper list;
+//  list.Add (staticRouting, 0);
+//  list.Add (olsr, 10);
+
+  //InternetStackHelper internet;
+ // internet.SetRoutingHelper (list); // has effect on the next Install ()
+ // internet.Install (c);
+
   InternetStackHelper internet;
   internet.Install (c);
 
@@ -218,8 +236,11 @@ StringValue("1"));
   recvSink->SetRecvCallback (MakeCallback (&ReceivePacket));
 
   Ptr<Socket> source = Socket::CreateSocket (c.Get (1), tid);
-  InetSocketAddress remote = InetSocketAddress (Ipv4Address ("10.1.1.1"), 80);
-  //source->SetAllowBroadcast (true);
+
+  NS_LOG_DEBUG("remote addr " << c.Get(0)->GetDevice(0)->GetAddress());
+
+  InetSocketAddress remote = InetSocketAddress (Ipv4Address ("10.1.1.100"), 80);
+  source->SetAllowBroadcast (false);
   source->Connect (remote);
 
 

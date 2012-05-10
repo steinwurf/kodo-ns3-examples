@@ -16,11 +16,6 @@ public:
   ~CodeHeader ();
   void SetGeneration (uint16_t gen);
   uint16_t GetGeneration (void) const;
-  void SetMacSource (Mac48Address source);
-  Mac48Address GetMacSource (void) const;
-  void SetMacSink (Mac48Address sink);
-  Mac48Address GetMacSink (void) const;
-
 
   // must be implemented to become a valid new header.
   static TypeId GetTypeId (void);
@@ -33,8 +28,7 @@ public:
 
 private:
   uint16_t m_generation;
-  Mac48Address m_Macsource;
-  Mac48Address m_Macsink;
+  
 
 };
 }

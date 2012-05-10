@@ -49,7 +49,7 @@ PepWifiHelper::Install (const WifiPhyHelper &phyHelper,
       Ptr<WifiPhy> phy;
       phy = phyHelper.Create (node, device);
       // set the promiscous mode in the interface
-      //mac->SetPromisc();
+      mac->SetPromisc();
       //give a new mac address
       mac->SetAddress (Mac48Address::Allocate ());
       //
@@ -58,6 +58,7 @@ PepWifiHelper::Install (const WifiPhyHelper &phyHelper,
       device->SetMac (mac);
       device->SetPhy (phy);
       device->SetRemoteStationManager (manager);
+      device->SetPromiscReceiveCallback(ns3::MakeCallback(&PepWifiNetDevice::test_promisc, device));
       node->AddDevice (device);
       devices.Add (device);
       NS_LOG_DEBUG ("node=" << node << ", mob=" << node->GetObject<MobilityModel> ());
