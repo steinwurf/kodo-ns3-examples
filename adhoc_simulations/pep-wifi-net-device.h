@@ -42,6 +42,7 @@ public:
   int countcode;
   int max_symbols;
   int max_size;
+  Mac48Address Origin;
   int from_source;
   int from_relay;
   int rank;
@@ -71,6 +72,7 @@ public:
     uint16_t protocolNumber;
     CodeHeader h1;
     Mac48Address realTo;
+    
   };
 
   std::list<Ptr<Packet> > m_queue;
@@ -102,7 +104,7 @@ public:
 public:
   Ptr<Packet> rencoding (Ptr<Packet> packet,int seq);
  bool ReceivedSource (const Address & from, Mac48Address des, Ptr< const Packet > packet);
-  bool ReceivedSink (Mac48Address source, Mac48Address dest, Ptr< const Packet > packet, const Address & from, uint16_t type, Ptr<AdhocWifiMac> m_mac, enum NetDevice::PacketType typ);
+  bool ReceivedSink (Ptr<NetDevice> device, Ptr<const Packet> packet1, uint16_t type,const Address & from, const Address & to, enum NetDevice::PacketType typ);
   bool ReceivedRelay (Mac48Address des, uint16_t type, Ptr< const Packet > packet);
   virtual bool coding (Ptr<Packet> packet, const Address& dest, uint16_t protocolNumber);
   void SendCode (Ptr <coded> m_coded);

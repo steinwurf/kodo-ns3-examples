@@ -137,7 +137,7 @@ def build(bld):
     
     print bld.toolchain_cxx_flags()
     
-    bld.program(source = ['adh.cc', 'pep-wifi-helper.cc', 'code-header.cc', 'pep-wifi-net-device.cc'],
+    bld.program(source = ['adhoc.cc', 'pep-wifi-helper.cc', 'code-header.cc', 'pep-wifi-net-device.cc'],
                 target = 'adhoc',
                 libpath = ns3_build,
                 rpath = ns3_build,

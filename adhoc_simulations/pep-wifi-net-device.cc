@@ -113,7 +113,9 @@ bool PepWifiNetDevice::test_promisc(Ptr<NetDevice> device, Ptr<const Packet> pac
   NS_LOG_DEBUG ("gen :" <<h1.GetGeneration ());
   if (m_mac->GetAddress () == des || h1.GetGeneration ()==0) // received in destination
     {
-     result = ReceivedSink (source, des, packet, from, type, m_mac, typ);
+     WifiNetDevice::SetPromiscReceiveCallback (ns3::MakeCallback (&PepWifiNetDevice::ReceivedSink, this));
+     //WifiNetDevice::SetReceiveCallback (ReceivedSink (source, des, packet, from, type, m_mac, typ));
+     result = true;
     }
     else if (m_mac->GetAddress () == source) //received in source
     {
@@ -121,7 +123,7 @@ bool PepWifiNetDevice::test_promisc(Ptr<NetDevice> device, Ptr<const Packet> pac
     }
     else
     {
-       //result = ReceivedRelay (des, type, packet); //received in relay
+      result = ReceivedRelay (des, type, packet); //received in relay
     }
   return result;
 }
@@ -153,9 +155,16 @@ return pkt ;
 
 
 
-bool PepWifiNetDevice::ReceivedSink (Mac48Address source, Mac48Address dest, Ptr< const Packet > packet1, const Address & from, uint16_t type, Ptr<AdhocWifiMac> m_mac, enum NetDevice::PacketType typ)
+bool PepWifiNetDevice::ReceivedSink (Ptr<NetDevice> device, Ptr<const Packet> packet1, uint16_t type, 
+                                    const Address & from, const Address & to, enum NetDevice::PacketType typ)
 {
-     
+      NS_ASSERT (Mac48Address::IsMatchingType (to));
+      Mac48Address dest = Mac48Address::ConvertFrom (to);
+      NS_ASSERT (Mac48Address::IsMatchingType (from));
+      Mac48Address source = Mac48Address::ConvertFrom (from);
+      PointerValue ptr;
+      GetAttribute ("Mac",ptr);
+      Ptr<AdhocWifiMac> m_mac = ptr.Get<AdhocWifiMac> (); 
       Ptr<Packet> packet = packet1->Copy ();
       CodeHeader h1;
       packet->RemoveHeader (h1);
@@ -170,7 +179,7 @@ bool PepWifiNetDevice::ReceivedSink (Mac48Address source, Mac48Address dest, Ptr
       
 
 
-      if (from != source)
+      if (Origin != source)
         {
           NS_LOG_DEBUG ("from_relay!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!:" <<from_relay);
           from_relay++;
@@ -253,7 +262,7 @@ bool PepWifiNetDevice::ReceivedSink (Mac48Address source, Mac48Address dest, Ptr
 
               Ptr<Packet> pkt = Create<Packet> (buffer1,max_size);
               m_mac->NotifyPromiscRx (pkt);               
-              m_receiveCallback (this ,pkt , type , source, dest, typ);
+              m_receiveCallback (this ,pkt , type , from, to, typ);
 
             }
 
@@ -268,6 +277,13 @@ bool PepWifiNetDevice::ReceivedSink (Mac48Address source, Mac48Address dest, Ptr
         }
        
     }
+    else
+	{
+          
+          m_receiveCallback (this ,packet , type , from, to, typ);
+          NS_LOG_DEBUG ("aki entra");
+	}	
+
 
   return true;
 }
@@ -332,7 +348,10 @@ seed++;
 
 bool PepWifiNetDevice::Send (Ptr<Packet> packet, const Address& dest, uint16_t protocolNumber)
 { 
-
+  PointerValue ptr;
+  GetAttribute ("Mac",ptr);
+  Ptr<AdhocWifiMac> m_mac = ptr.Get<AdhocWifiMac> ();
+  Mac48Address Origin= m_mac->GetAddress ();
   if (code == 1 && protocolNumber != ns3::ArpL3Protocol::PROT_NUMBER)
    {
     NS_LOG_DEBUG ("coding is enabled:" << flush);
