@@ -99,18 +99,17 @@ public:
 public:
   // From WifiNetDevice
   virtual bool Send (Ptr<Packet> packet, const Address& dest, uint16_t protocolNumber);
-  //virtual void SetReceiveCallback (NetDevice::ReceiveCallback cb);
+  virtual void SetReceiveCallback (NetDevice::ReceiveCallback cb);
   //virtual void SetPromiscReceiveCallback (PromiscReceiveCallback  cb);
 public:
   Ptr<Packet> rencoding (Ptr<Packet> packet,int seq);
- bool ReceivedSource (const Address & from, Mac48Address des, Ptr< const Packet > packet);
-  bool ReceivedSink (Ptr<NetDevice> device, Ptr<const Packet> packet1, uint16_t type,const Address & from, const Address & to, enum NetDevice::PacketType typ);
-  bool ReceivedRelay (Mac48Address des, uint16_t type, Ptr< const Packet > packet);
+   bool ReceivedSink (Ptr<NetDevice> device, Ptr<const Packet> packet1, uint16_t type,const Address & from);
   virtual bool coding (Ptr<Packet> packet, const Address& dest, uint16_t protocolNumber);
   void SendCode (Ptr <coded> m_coded);
   
   // The ns3 function which handle incomming packets
-  PromiscReceiveCallback  m_receiveCallback;
+  //PromiscReceiveCallback  m_promiscreceiveCallback;
+  NetDevice::ReceiveCallback m_receiveCallback;
 
 
 
