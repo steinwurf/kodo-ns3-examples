@@ -59,6 +59,7 @@ PepWifiHelper::Install (const WifiPhyHelper &phyHelper,
       device->SetPhy (phy);
       device->SetRemoteStationManager (manager);
       device->SetPromiscReceiveCallback(ns3::MakeCallback(&PepWifiNetDevice::test_promisc, device));
+      //device->SetPromiscReceiveCallback(ns3::MakeCallback(&Node::PromiscReceiveFromDevice, node));
       node->AddDevice (device);
       devices.Add (device);
       NS_LOG_DEBUG ("node=" << node << ", mob=" << node->GetObject<MobilityModel> ());

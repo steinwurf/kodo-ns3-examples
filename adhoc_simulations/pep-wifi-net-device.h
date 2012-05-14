@@ -43,6 +43,7 @@ public:
   int max_symbols;
   int max_size;
   Mac48Address Origin;
+  int m_data;
   int from_source;
   int from_relay;
   int rank;
@@ -108,7 +109,7 @@ public:
   void SendCode (Ptr <coded> m_coded);
   
   // The ns3 function which handle incomming packets
-  //PromiscReceiveCallback  m_promiscreceiveCallback;
+  PromiscReceiveCallback  m_promiscReceiveCallback;
   NetDevice::ReceiveCallback m_receiveCallback;
 
 
