@@ -1,7 +1,7 @@
-In order to make a simmulation of our code out of ns3, some steps must be follow. As it can be observed in the files, waf is used to configure and build the program.
+In order to make a simulation of our code out of ns3, some steps must be follow. As it can be observed in the files, waf is used to configure and build the program.
 In this case, it is going to be simulated the code Adhoc. However, firstly it is needed to make the configuration of waf and specified the path where the libraries and h files are placed. 
 ::
-  ./waf configure --ns3-path=../../repo/ns-3-allinone/ns-3-dev/ --ns3-type=debug
+  ./waf configure--bundle=ALL --bundle-path=~/bundle_dependencies/ --ns3-path=~/repo/ns-3-allinone/ns-3-dev/ --ns3-type=debug
 
 These values will be changed for each user in his own system, adding his own NS3 path and type.
 The result of this action would be something like that:
@@ -30,16 +30,11 @@ The result of this action would be something like that:
 
 
 
-Before execute the program, it would be required to create symbolic links of the ns3 libraries in our /usr/lib. For that, it is written the next sentence in the terminal :
-::
-  sudo ln -s /path/to/ns3/build/*-debug.so /usr/lib/
-
 And finally, executing the program:
 ::
-  ./build/adhoc --N=3 --N2=6
+  ./build/linux/adhoc --rss=-80 --RelayActivity=50 --numPackets=2000 --EnableCode=1 --ChecksumEnabled=true --Symbols=5
 
- Where it is specified the number of simulations and the number of nodes used durin this simulations, respectively.
-Moreover other parameters can be fixed as:
+ Where it is specified some parameters. This list content all the parameters that can be fixed in this way:
 
   --PrintHelp: Print this help message.
 
@@ -55,9 +50,13 @@ Moreover other parameters can be fixed as:
 
   User Arguments:
 
-    --N: set run number of simulation
+     --RelayActivity: Number of symbols in each generation
 
-    --N2: number of nodes
+    --EnableCode: enable ncoding 1, disable coding 0
+
+    --Symbols: Number of symbols in each generation
+
+    --EnableRencode: enable rencoding 1, disable rencoding 0
 
     --phyMode: Wifi Phy mode
 
@@ -71,8 +70,12 @@ Moreover other parameters can be fixed as:
 
     --verbose: turn on all WifiNetDevice log components
 
+    --distance: distance 
+
+    --seed: seed 
 
 
-After that, the result of the progrma have to be displayed in the screen.
+
+After that, the result of the program have to be displayed in the screen.
 
 
