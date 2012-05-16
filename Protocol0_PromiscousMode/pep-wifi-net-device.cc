@@ -81,21 +81,6 @@ PepWifiNetDevice::~PepWifiNetDevice ()
 }
 
 
-void PepWifiNetDevice::SetPromiscReceiveCallback (PromiscReceiveCallback cb){
-	
-  m_PromiscReceiveCallback=cb;
-
-  if (code == 1)
-    {
-      WifiNetDevice::SetPromiscReceiveCallback (ns3::MakeCallback (&PepWifiNetDevice::promisc, this));
-    }
-  else
-    {
-      WifiNetDevice::SetPromiscReceiveCallback (m_PromiscReceiveCallback);
-    }
-
-}	
-
 bool
 PepWifiNetDevice::promisc (Ptr<NetDevice> device, Ptr<const Packet> packet1, uint16_t type,
                                     const Address & from, const Address & to, enum NetDevice::PacketType typ)
@@ -114,21 +99,17 @@ PepWifiNetDevice::promisc (Ptr<NetDevice> device, Ptr<const Packet> packet1, uin
 	
       if (typ != NetDevice::PACKET_OTHERHOST || type==2054 || h1.GetCode() == 0 || h1.GetSourceMAC() == m_mac->GetAddress ())
 	      return true;	   
+	   	
 	
- 
-       	
-	
-       	//Ipv4Header ip;
-      // 	packet2->RemoveHeader(ip);
-      // 	packet2->AddHeader(ip);
-      std::cout << "received_relay:" << received_relay++<< endl;	
+     
+      NS_LOG_DEBUG ( "received_relay:" << received_relay++);	
 
       if ( recode == 1)
         {
-      std::cout << "hi1:" <<h1.GetGeneration () << endl;	
+      NS_LOG_DEBUG ( "hi1:" <<h1.GetGeneration () );	
 
-          Ptr<Packet> pkt = rencoding ( packet,(int)h1.GetGeneration ());
-            std::cout << "hi2:" << endl;	
+          Ptr<Packet> pkt = rencoding ( packet,(int)h1.GetGeneration (),(Mac48Address)h1.GetSourceMAC());
+            NS_LOG_DEBUG ( "hi2:" );	
           pkt->AddHeader (h1);
           srand ( seed );
           seed++;
@@ -139,7 +120,7 @@ PepWifiNetDevice::promisc (Ptr<NetDevice> device, Ptr<const Packet> packet1, uin
               // Send recoded packet
               WifiNetDevice::Send (pkt,to,type );
               sent_code++;
-              cout << "sent_code:" << sent_code << endl;
+              NS_LOG_DEBUG ( "sent_code:" << sent_code );
 
             }
         }
@@ -153,7 +134,7 @@ PepWifiNetDevice::promisc (Ptr<NetDevice> device, Ptr<const Packet> packet1, uin
           if ((rand () % 100 + 1) > relay_activity)
             {
               sent_code++;
-              cout << "sent_code:" << sent_code << endl;
+              NS_LOG_DEBUG ( "sent_code:" << sent_code );
               WifiNetDevice::Send (packet,to,type );
             }
         
@@ -180,18 +161,18 @@ void PepWifiNetDevice::SetReceiveCallback (NetDevice::ReceiveCallback receiveCal
 }
 
 
-
-
-
 Ptr<Packet>
-PepWifiNetDevice::rencoding (Ptr<Packet> packet,int seq)
+PepWifiNetDevice::rencoding (Ptr<Packet> packet,int seq,Mac48Address source)
 {
-
+  
+  
   uint8_t *buffer1 = new uint8_t[packet->GetSize ()];
  
- if (forward.find(seq) == forward.end()) 
+ if (forward.find(seq) == forward.end() && forwardmac.find(source) == forwardmac.end()) 
+   {
     forward[seq]= m_decoder_factory.build((max_symbols), max_size);
-	
+
+   }	
   packet->CopyData(buffer1,packet->GetSize());
   
   forward[seq]->decode( buffer1 );
@@ -201,8 +182,6 @@ PepWifiNetDevice::rencoding (Ptr<Packet> packet,int seq)
 
 return 	pkt ;
 		
-
-
 }
 
 
@@ -214,25 +193,22 @@ PepWifiNetDevice::DecodingReceive (Ptr< NetDevice > device, Ptr< const
   PointerValue ptr;
   GetAttribute ("Mac",ptr);
   Ptr<AdhocWifiMac> m_mac = ptr.Get<AdhocWifiMac> ();
-  cout << "received from"  << from << endl;
+  NS_LOG_DEBUG ( "received from"  << from );
  
   if ( type == 2054){
 
      m_mac->NotifyRx (packet1);
      m_receiveCallback (this, packet1, type, from);
-     cout << "received an ARP packet!!!"  << from << endl;
-     cout << "how am i"<< m_mac->GetAddress ()<<endl;
+     NS_LOG_DEBUG ( "received an ARP packet!!!"  << from );
+     NS_LOG_DEBUG ( "how am i"<< m_mac->GetAddress ());
      return true;
 	}
 
 
-  cout << "Max symbols" << max_symbols << endl;
+  NS_LOG_DEBUG ( "Max symbols" << max_symbols );
 
   Ptr<Packet> packet = packet1->Copy ();
 
-
-
- 
 
 		CodeHeader h1;
 		packet->RemoveHeader (h1);
@@ -240,13 +216,13 @@ PepWifiNetDevice::DecodingReceive (Ptr< NetDevice > device, Ptr< const
 		Mac48Address source=h1.GetSourceMAC();
 		
 		
-		  cout << "from: " << from<< endl;
-  		  cout << "dource: " << source<< endl;
+		  NS_LOG_DEBUG ( "from: " << from);
+  		  NS_LOG_DEBUG ( "dource: " << source);
 
   if (from == source )
     {
 			
-      cout << "from_source:" << from_source << endl;
+      NS_LOG_DEBUG ( "from_source:" << from_source );
       from_source++;
     }
 
@@ -255,7 +231,7 @@ PepWifiNetDevice::DecodingReceive (Ptr< NetDevice > device, Ptr< const
   if ( m_mac->GetAddress () == source )
     {
 
-      cout << "Generation is decoded:" << (int)h1.GetGeneration () << endl;
+      NS_LOG_DEBUG ( "Generation is decoded:" << (int)h1.GetGeneration () );
       decoded_flag[(int)h1.GetGeneration ()] = 1;
 	
       return true; 
@@ -264,12 +240,12 @@ PepWifiNetDevice::DecodingReceive (Ptr< NetDevice > device, Ptr< const
   if ( code == 1)
     {
       received++;
-      cout << "received:" << received << endl;
+      NS_LOG_DEBUG ( "received:" << received );
       uint8_t *buffer1 = new uint8_t[packet->GetSize ()];
 
       if (from != source)
         {
-          cout << "from_relay:" << from_relay << endl;
+          NS_LOG_DEBUG ( "from_relay:" << from_relay );
           from_relay++;
         }
 
@@ -282,7 +258,7 @@ PepWifiNetDevice::DecodingReceive (Ptr< NetDevice > device, Ptr< const
     }
 
     rlnc_decoder::pointer decoder = decoding[h1.GetGeneration()];
-    cout << "payload size 3 "  << decoder->payload_size() << endl;
+    NS_LOG_DEBUG ( "payload size 3 "  << decoder->payload_size() );
     rank = (int)decoder->rank();
     packet->CopyData(buffer1,packet->GetSize());
 
@@ -293,25 +269,25 @@ PepWifiNetDevice::DecodingReceive (Ptr< NetDevice > device, Ptr< const
     decoder->decode( buffer1 );
 
 
-    cout << "Generation : " << h1.GetGeneration()<< endl;
+    NS_LOG_DEBUG ( "Generation : " << h1.GetGeneration());
 
     if ((rank+1)==(int)(decoder->rank()) && from!=source)
     {
-        cout << "increased:" <<inc << endl ;
+        NS_LOG_DEBUG ( "increased:" <<inc ) ;
         inc++;
     }
     if ((rank)==(int)(decoder->rank()) && from!=source)
     {
-        cout << "not increased:" <<ninc << endl;
+        NS_LOG_DEBUG ( "not increased:" <<ninc );
         ninc++;
     }
     if (from == source)
     {
-        cout << "recevied_source:" <<rsource++<< endl;
+        NS_LOG_DEBUG ( "recevied_source:" <<rsource++);
 
     }
         
-    cout << "rank after:" << decoder->rank()<< endl;
+    NS_LOG_DEBUG ( "rank after:" << decoder->rank());
 
 
 
@@ -319,10 +295,10 @@ PepWifiNetDevice::DecodingReceive (Ptr< NetDevice > device, Ptr< const
         {
           decoded_flag[(int)h1.GetGeneration ()] = 1;
 
-          cout << "time:" << Simulator::Now ().GetSeconds () << endl;
+          NS_LOG_DEBUG ( "time:" << Simulator::Now ().GetSeconds () );
 
           countcode++;
-          cout << "decoded packets:" << (countcode * (max_symbols)) << endl;
+          NS_LOG_DEBUG ( "decoded packets:" << (countcode * (max_symbols)) );
       
 
           Ptr<Packet> ACK = Create<Packet> (10);
@@ -333,7 +309,7 @@ PepWifiNetDevice::DecodingReceive (Ptr< NetDevice > device, Ptr< const
           ACK->AddHeader (h1);
           WifiNetDevice::Send (ACK,from,100 );
 
-          std::vector<uint8_t> data_out (decoding[h1.GetGeneration ()]->block_size ());
+          vector<uint8_t> data_out (decoding[h1.GetGeneration ()]->block_size ());
           kodo::copy_symbols (kodo::storage (data_out), decoding[h1.GetGeneration ()]);
 
           for (int i = 0; i < (max_symbols); i++)
@@ -367,17 +343,17 @@ PepWifiNetDevice::DecodingReceive (Ptr< NetDevice > device, Ptr< const
 bool PepWifiNetDevice::Send (Ptr<Packet> packet, const Address& dest, uint16_t protocolNumber)
 {
 
-cout << "protocol number" << protocolNumber << endl;
-cout << "destination" << dest << endl;
+NS_LOG_DEBUG ( "protocol number" << protocolNumber );
+NS_LOG_DEBUG ( "destination" << dest );
   if (code == 1 && protocolNumber !=2054)
     {
-      cout << "coding is enabled" << flush;
+      NS_LOG_DEBUG ( "coding is enabled" );
       coding (packet,dest, protocolNumber);
 	
     }
   else
     {
-      cout << "coding is disabled " << endl;
+      NS_LOG_DEBUG ( "coding is disabled " );
       WifiNetDevice::Send (packet,dest,protocolNumber);
     }
 
@@ -392,25 +368,24 @@ PepWifiNetDevice::SendCode (Ptr <coded> m_coded)
     {
 
       sent_packet++;
-      std::cout << "sent:" << sent_packet << std::endl;
-      std::cout << "Interval:" << interval << std::endl;
+      NS_LOG_DEBUG ( "sent:" << sent_packet );
+      NS_LOG_DEBUG ( "Interval:" << interval);
 
       m_coded->k++;
       kodo::set_symbols (kodo::storage (m_coded->m_encoder_data), m_coded->m_encoder);
 
-      std::vector<uint8_t> payload (m_coded->m_encoder->payload_size ());
+      vector<uint8_t> payload (m_coded->m_encoder->payload_size ());
       m_coded->m_encoder->encode ( &payload[0] );
 
       Ptr<Packet> pkt = Create<Packet> (&payload[0], m_coded->m_encoder->payload_size ());
 
       pkt->AddHeader (m_coded->h1);
 
-      //PointerValue ptr;
-      cout << "generation number: " << m_coded->h1.GetGeneration () << endl;
+      
+      NS_LOG_DEBUG ( "generation number: " << m_coded->h1.GetGeneration () );
 
       WifiNetDevice::Send (pkt,m_coded->realTo,m_coded->protocolNumber );
-
-      //m_coded.t2=m_coded.t2+interval;
+      
       Simulator::Schedule ( Seconds (interval), &PepWifiNetDevice::SendCode, this,m_coded);
 
     }
@@ -446,9 +421,7 @@ PepWifiNetDevice::coding (Ptr<Packet> packet, const Address& dest, uint16_t prot
   if ((int)m_queue.size () == max_symbols )
     {
       encoder = m_encoder_factory.build ((max_symbols), packet->GetSize ());
-      //encoder->systematic_off();
-
-
+      
       CodeHeader h1;
       h1.SetGeneration (generation);
       h1.SetSourceMAC(m_mac->GetAddress());
@@ -472,7 +445,7 @@ PepWifiNetDevice::coding (Ptr<Packet> packet, const Address& dest, uint16_t prot
 
           p.m_packet->CopyData (buffer1,p.m_packet->GetSize ());
           memcpy (&m_coded->m_encoder_data[(i * packet->GetSize ())],buffer1,p.m_packet->GetSize ());
-          cout << "data in " << (i * packet->GetSize ()) << endl;
+          NS_LOG_DEBUG ( "data in " << (i * packet->GetSize ()) );
         }
 
       decoded_flag[(int)h1.GetGeneration ()] = 0;
