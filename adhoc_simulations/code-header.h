@@ -5,8 +5,7 @@
 #include <stdint.h>
 #include <string>
 #include <ns3/header.h>
-#include <ns3/ipv4-address.h>
-#include <ns3/ipv6-address.h>
+#include <ns3/mac48-address.h>
 
 namespace ns3 {
 
@@ -15,9 +14,8 @@ class CodeHeader : public Header
 public:
   CodeHeader ();
   ~CodeHeader ();
-  void SetGeneration (uint16_t port);
+  void SetGeneration (uint16_t gen);
   uint16_t GetGeneration (void) const;
-
 
   // must be implemented to become a valid new header.
   static TypeId GetTypeId (void);
@@ -29,7 +27,8 @@ public:
   // allow protocol-specific access to the header data.
 
 private:
-  uint16_t m_destinationPort;
+  uint16_t m_generation;
+  
 
 };
 }
