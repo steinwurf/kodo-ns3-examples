@@ -1,18 +1,57 @@
 Introduction
 ------------
-As it concerns to the ns3-networkcoding repository, codes have been included which made the use of random linear network coding possible in a wireless systems. Before performing the implementation process, it is necessary to make some simulations and in order to do so, the ns3 simulator has been chosen.
+This repository contains examples that show how you can build an ns-3
+using the Kodo erasure coding library.
 
-ns-3 is a discrete-event network simulator for Internet systems, targeted primarily for research and educational use. ns-3 is free software, licensed under the GNU GPLv2 license.
+ns-3 is a discrete-event network simulator, targeted primarily for
+research and educational use. ns-3 is licensed under the GNU GPLv2 license.
 
 Getting Started
 ---------------
-The first step is to install ns3 in a local machine. Dependind on the operating system that is used, a set of steps must be follow which can be found in the following link:
+As a first step you need ns-3 installed on your development machine.
+You may find lots of information about this on the ns-3 webpage.
 
 http://www.nsnam.org/wiki/index.php/Installation.
 
+Below we have recorded the steps needed to get ns-3 up and running
+using different approaches.
 
-Once ns3 is installed, some guides can be follow in order to become familiar with.
-In this case, it is going to be simulated network coding using ns3 as a library, then these steps can be skipped.
+Clone ns-3 repository (Ubuntu)
+------------------------------
 
+First we need to make sure we have the tool required:
+::
+   sudo apt-get install gcc g++ python mercurial
 
+Now clone the ns-3 repository:
+::
+  hg clone http://code.nsnam.org/ns-3-dev/
 
+This will download the ns-3 simulator to your computer, into a
+``ns-3-dev`` folder. We will switch  to the latest release. One
+advantage or this approach is that is will be easy for us to
+upgrade to the next version of ns-3 when it is release.
+
+To see the current tagged version of ns-3 run:
+::
+  cd ns-3-dev
+  hg tags
+
+We will select the currently newest release:
+::
+  hg checkout ns-3.16
+
+Configure the project by running:
+::
+  ./waf configure
+
+This will output a whole bunch of information about the modules
+enabled based on the availability of tools and libraries installed
+on your development machine. We will only need the ``Real Time Simulator``,
+this should be marked ``enabled``. Now we may proceed and build the
+ns-3 simulator libraries:
+::
+  ./waf build
+
+The ns-3 libraries should now be built and we may use them in our
+simulations.
