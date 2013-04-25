@@ -21,7 +21,8 @@
 // The code below are based the the wifi-simple-adhoc example, which can
 // be found here ns-3-dev/examples/wireless/wifi-simple-adhoc.cc in the
 // ns-3 source code.
-//
+// In the script below the sender transmits encoded packets from a block of
+// data. The sender continues until the receiver has all packets.
 
 // This script configures two nodes on an 802.11b physical layer, with
 // 802.11b NICs in adhoc mode, and by default, sends one packet of 1000
@@ -74,24 +75,31 @@ NS_LOG_COMPONENT_DEFINE ("KodoWifiSimpleAdhoc");
 
 using namespace ns3;
 
-void ReceivePacket (Ptr<Socket> socket)
+class kodo_simulation
 {
-  NS_LOG_UNCOND ("Received one packet!");
-}
 
-static void GenerateTraffic (Ptr<Socket> socket, uint32_t pktSize,
-                             uint32_t pktCount, Time pktInterval )
-{
-  if (pktCount > 0)
-    {
-      socket->Send (Create<Packet> (pktSize));
-      Simulator::Schedule (pktInterval, &GenerateTraffic,
-                           socket, pktSize,pktCount-1, pktInterval);
-    }
-  else
-    {
-      socket->Close ();
-    }
+  void ReceivePacket (Ptr<Socket> socket)
+  {
+    NS_LOG_UNCOND ("Received one packet!");
+  }
+
+  static void GenerateTraffic (Ptr<Socket> socket, uint32_t pktSize,
+                               uint32_t pktCount, Time pktInterval )
+  {
+    if (pktCount > 0)
+      {
+        socket->Send (Create<Packet> (pktSize));
+        Simulator::Schedule (pktInterval, &GenerateTraffic,
+                             socket, pktSize, pktCount-1, pktInterval);
+      }
+    else
+      {
+        socket->Close ();
+      }
+  }
+
+
+
 }
 
 
@@ -103,6 +111,7 @@ int main (int argc, char *argv[])
   uint32_t numPackets = 1;
   double interval = 1.0; // seconds
   bool verbose = false;
+  uint32_t generationSize = 32;
 
   CommandLine cmd;
 
@@ -112,6 +121,7 @@ int main (int argc, char *argv[])
   cmd.AddValue ("numPackets", "number of packets generated", numPackets);
   cmd.AddValue ("interval", "interval (seconds) between packets", interval);
   cmd.AddValue ("verbose", "turn on all WifiNetDevice log components", verbose);
+  cmd.AddValue ("generationSize", "Set the generation size to use", generationSize);
 
   cmd.Parse (argc, argv);
 
