@@ -68,7 +68,7 @@ def options(opt):
         resolve.ResolveGitMajorVersion(
             name = 'kodo',
             git_repository = 'git://github.com/steinwurf/kodo.git',
-            major_version = 8))
+            major_version = 9))
 
     opt.load('wurf_dependency_bundle')
     opt.load('wurf_tools')

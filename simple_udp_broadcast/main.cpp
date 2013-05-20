@@ -75,21 +75,48 @@ NS_LOG_COMPONENT_DEFINE ("KodoWifiSimpleAdhoc");
 
 using namespace ns3;
 
-class kodo_simulation
+// The encoder / decoder type we will use
+typedef kodo::full_rlnc_encoder<fifi::binary> rlnc_encoder;
+typedef kodo::full_rlnc_decoder<fifi::binary> rlnc_decoder;
+
+// Just for illustration purposes, this simple objects implements both
+// the sender (encoder) and receiver (decoder).
+class KodoSimulation
 {
+public:
+
+
+public:
+
+  KodoSimulation(const rlnc_encoder::pointer& encoder,
+                 const rlnc_decoder::pointer& decoder)
+    : m_encoder(encoder),
+      m_decoder(decoder)
+  {
+    m_payload_buffer.resize(m_encoder->payload_size());
+  }
 
   void ReceivePacket (Ptr<Socket> socket)
   {
     NS_LOG_UNCOND ("Received one packet!");
+
+    auto packet = socket->Recv();
+    packet->CopyData(&m_payload_buffer[0], m_decoder->payload_size());
+
+    m_decoder->decode(&m_payload_buffer[0]);
+
   }
 
-  static void GenerateTraffic (Ptr<Socket> socket, uint32_t pktSize,
-                               uint32_t pktCount, Time pktInterval )
+  void GenerateTraffic (Ptr<Socket> socket, uint32_t pktSize,
+                        uint32_t pktCount, Time pktInterval )
   {
-    if (pktCount > 0)
+    if(!m_decoder->is_complete())
       {
-        socket->Send (Create<Packet> (pktSize));
-        Simulator::Schedule (pktInterval, &GenerateTraffic,
+        uint32_t bytes_used = m_encoder->encode(&m_payload_buffer[0]);
+        auto packet = Create<Packet> (&m_payload_buffer[0],
+                                      bytes_used);
+        socket->Send (packet);
+        Simulator::Schedule (pktInterval, &KodoSimulation::GenerateTraffic, this,
                              socket, pktSize, pktCount-1, pktInterval);
       }
     else
@@ -98,9 +125,14 @@ class kodo_simulation
       }
   }
 
+private:
 
+  rlnc_encoder::pointer m_encoder;
+  rlnc_decoder::pointer m_decoder;
 
-}
+  std::vector<uint8_t> m_payload_buffer;
+
+};
 
 
 int main (int argc, char *argv[])
@@ -108,7 +140,7 @@ int main (int argc, char *argv[])
   std::string phyMode ("DsssRate1Mbps");
   double rss = -80;  // -dBm
   uint32_t packetSize = 1000; // bytes
-  uint32_t numPackets = 1;
+  uint32_t numPackets = 1000;
   double interval = 1.0; // seconds
   bool verbose = false;
   uint32_t generationSize = 32;
@@ -192,11 +224,18 @@ int main (int argc, char *argv[])
   ipv4.SetBase ("10.1.1.0", "255.255.255.0");
   Ipv4InterfaceContainer i = ipv4.Assign (devices);
 
+  rlnc_encoder::factory encoder_factory(generationSize, packetSize);
+  rlnc_decoder::factory decoder_factory(generationSize, packetSize);
+
+  KodoSimulation kodoSimulator(encoder_factory.build(),
+                               decoder_factory.build());
+
   TypeId tid = TypeId::LookupByName ("ns3::UdpSocketFactory");
   Ptr<Socket> recvSink = Socket::CreateSocket (c.Get (0), tid);
   InetSocketAddress local = InetSocketAddress (Ipv4Address::GetAny (), 80);
   recvSink->Bind (local);
-  recvSink->SetRecvCallback (MakeCallback (&ReceivePacket));
+  recvSink->SetRecvCallback (MakeCallback (&KodoSimulation::ReceivePacket,
+                                           &kodoSimulator));
 
   Ptr<Socket> source = Socket::CreateSocket (c.Get (1), tid);
   InetSocketAddress remote = InetSocketAddress (Ipv4Address ("255.255.255.255"), 80);
@@ -210,7 +249,8 @@ int main (int argc, char *argv[])
   NS_LOG_UNCOND ("Testing " << numPackets  << " packets sent with receiver rss " << rss );
 
   Simulator::ScheduleWithContext (source->GetNode ()->GetId (),
-                                  Seconds (1.0), &GenerateTraffic,
+                                  Seconds (1.0), &KodoSimulation::GenerateTraffic,
+                                  &kodoSimulator,
                                   source, packetSize, numPackets, interPacketInterval);
 
   Simulator::Run ();
