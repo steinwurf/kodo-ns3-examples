@@ -1,10 +1,27 @@
 Introduction
 ------------
 This repository contains examples that show how you can build an ns-3
-using the Kodo erasure coding library.
+using the Kodo erasure coding library (github.com/steinwurf/kodo).
+Which is freely available for educational and research purposes, you
+may find the specific license in the library.
 
 ns-3 is a discrete-event network simulator, targeted primarily for
 research and educational use. ns-3 is licensed under the GNU GPLv2 license.
+
+Using ns-3 as a library
+-----------------------
+In the example provided in this repository we use ns-3 as a library, i.e.
+we build ns-3 separately and then simply link against it to build our
+simulation. In contrast to developing the simulation by directly modifying
+the ns-3 source code or putting it in the scratch folder. This has several
+advantages (this is of course purely subjective and you are free to disagree).
+
+* It becomes easier to upgrade to the next version of ns-3 as it becomes
+  available.
+* If you want to distribute your changes it can be done easily without
+  distribution the entire ns-3 simulator.
+* You can freely choose the whatever build system you prefer. Note, we
+  also use the same build system as ns-3, namely Waf, because it rocks!
 
 Getting Started
 ---------------
@@ -55,3 +72,17 @@ ns-3 simulator libraries:
 
 The ns-3 libraries should now be built and we may use them in our
 simulations.
+
+Comments, feedback & bugs
+-------------------------
+All comments, questions, and feedback regarding the examples can be
+posted to our dev mailing list (hosted at google groups):
+
+* xxx
+
+Any bugs and patches should be posted to the github issue tracker:
+
+* yyy
+
+
+
