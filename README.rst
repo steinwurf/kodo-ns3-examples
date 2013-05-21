@@ -73,6 +73,47 @@ ns-3 simulator libraries:
 The ns-3 libraries should now be built and we may use them in our
 simulations.
 
+Building an example simulation.
+-------------------------------
+After building ns-3 you can build one of the example simulations
+provided by this repository. Here we will build the ``simple_udp_broadcast``
+example.
+
+Navigate to the ``simple_udp_broadcast`` folder:
+
+::
+  cd simple_udp_broadcast
+
+Configure the project by running:
+
+::
+  ./waf configure --bundle=ALL --bundle-path=~/dev/bundle_dependencies --ns3-path=~/dev/ns-3-dev
+
+The ``waf configure`` ensures that all tools needed by Kodo are
+available and prepares to build Kodo.
+Kodo relies on a number of auxiliary libraries (see kodo.readthedocs.org)
+by specifying the ``--bundle=ALL`` command we instruct ``waf`` to
+automatically download these. The ``--bundle-path`` informs ``waf``
+about where the downloaded libraries should be placed. You may
+omit the ``--bundle-path`` option in that case ``waf`` will create a
+local directory in the Kodo folder called  ``bundle_dependencies`` and
+store the libraries there. The ``--ns3-path`` specifies the folder where
+you have made the ns-3 checkout and built the ns-3 libraries.
+
+Now you should be able to build the simulation by running:
+
+::
+  ./waf build
+
+Which will produce a binary in the ``build/linux/`` folder called
+``simple_udp_broadcast``. Try running it by typing:
+
+::
+  ./build/linux/simple_udp_broadcast --verbose=1
+
+In your terminal (the ``--verbose`` option will make it print a lot
+of info, just to see it works).
+
 Comments, feedback & bugs
 -------------------------
 All comments, questions, and feedback regarding the examples can be
