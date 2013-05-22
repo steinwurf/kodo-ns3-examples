@@ -80,12 +80,10 @@ provided by this repository. Here we will build the ``simple_udp_broadcast``
 example.
 
 Navigate to the ``simple_udp_broadcast`` folder:
-
 ::
   cd simple_udp_broadcast
 
 Configure the project by running:
-
 ::
   ./waf configure --bundle=ALL --bundle-path=~/dev/bundle_dependencies --ns3-path=~/dev/ns-3-dev
 
@@ -101,13 +99,11 @@ store the libraries there. The ``--ns3-path`` specifies the folder where
 you have made the ns-3 checkout and built the ns-3 libraries.
 
 Now you should be able to build the simulation by running:
-
 ::
   ./waf build
 
 Which will produce a binary in the ``build/linux/`` folder called
 ``simple_udp_broadcast``. Try running it by typing:
-
 ::
   ./build/linux/simple_udp_broadcast --verbose=1
 
