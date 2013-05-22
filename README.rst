@@ -123,7 +123,7 @@ Any bugs and patches should be posted to the github issue tracker:
 
 If you make new examples or use the examples provided here for your
 research please let us know - we would be happy to add links to your
-work or potentially include as new examples.
+work or potentially include it as new examples.
 
 
 
