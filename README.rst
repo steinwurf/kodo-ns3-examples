@@ -119,11 +119,15 @@ Comments, feedback & bugs
 All comments, questions, and feedback regarding the examples can be
 posted to our dev mailing list (hosted at google groups):
 
-* xxx
+* http://groups.google.com/group/steinwurf-dev
 
 Any bugs and patches should be posted to the github issue tracker:
 
-* yyy
+* https://github.com/steinwurf/kodo/issues
+
+If you make new examples or use the examples provided here for your
+research please let us know - we would be happy to add links to your
+work or potentially include as new examples.
 
 
 
