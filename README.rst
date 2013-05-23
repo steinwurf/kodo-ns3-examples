@@ -73,6 +73,24 @@ ns-3 simulator libraries:
 The ns-3 libraries should now be built and we may use them in our
 simulations.
 
+Update to a new version
+-----------------------
+When a new version of ns-3 gets released you can get the new version easily by
+running (in the ``ns-3-dev`` folder):
+::
+  hg pull
+
+Then to see the tagged versions:
+::
+  hg tags
+
+And as previously described to switch to one of those versions do a:
+::
+  hg checkout ns-3.17
+
+Now you have to go through the ``configure`` and ``build`` steps again,
+described in the previous section.
+
 Building an example simulation.
 -------------------------------
 After building ns-3 you can build one of the example simulations
