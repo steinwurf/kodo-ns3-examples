@@ -68,7 +68,7 @@ def options(opt):
         resolve.ResolveGitMajorVersion(
             name = 'kodo',
             git_repository = 'github.com/steinwurf/kodo.git',
-            major_version = 9))
+            major_version = 10))
 
     opt.load('wurf_dependency_bundle')
     opt.load('wurf_tools')
@@ -116,7 +116,13 @@ def configure(conf):
         conf.fatal('You must specify the build type')
 
     ns3_lib_dir = conf.root.find_dir(ns3_build)
-    ns3_libs = ns3_lib_dir.ant_glob('*.so')
+
+    if conf.is_mkspec_platform('mac'):
+        ns3_libs = ns3_lib_dir.ant_glob('*.dylib')
+    elif conf.is_mkspec_platform('linux'):
+        ns3_libs = ns3_lib_dir.ant_glob('*.so')
+    else:
+        conf.fatal('We could not detect your platform, please send us a bug report')
 
     if not ns3_libs:
         conf.fatal('Could not find any of the ns-3 shared libraries (.so files) '
