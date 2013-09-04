@@ -56,7 +56,7 @@ To see the current tagged version of ns-3 run:
 
 We will select the currently newest release:
 ::
-  hg checkout ns-3.16
+  hg checkout ns-3.18
 
 Configure the project by running:
 ::
@@ -84,9 +84,10 @@ Then to see the tagged versions:
 ::
   hg tags
 
-And as previously described to switch to one of those versions do a:
+And as previously described to switch to one of those versions do a 
+(for example):
 ::
-  hg checkout ns-3.17
+  hg checkout ns-3.19
 
 Now you have to go through the ``configure`` and ``build`` steps again,
 described in the previous section.
@@ -121,12 +122,16 @@ Now you should be able to build the simulation by running:
   ./waf build
 
 Which will produce a binary in the ``build/linux/`` folder called
-``simple_udp_broadcast``. Try running it by typing:
+``simple_udp_broadcast``. Probably the build will throw some warnings, but if
+it is successful, you will be able to continue the test.
+
+
+Try running it by typing:
 ::
   ./build/linux/simple_udp_broadcast --verbose=1
 
-In your terminal (the ``--verbose`` option will make it print a lot
-of info, just to see it works).
+In your terminal the ``--verbose`` option will make it print a lot
+of info, just to see it works.
 
 Comments, feedback & bugs
 -------------------------
@@ -142,6 +147,3 @@ Any bugs and patches should be posted to the github issue tracker:
 If you make new examples or use the examples provided here for your
 research please let us know - we would be happy to add links to your
 work or potentially include it as new examples.
-
-
-
