@@ -149,11 +149,8 @@ def configure(conf):
 
     for l in ns3_lib_names:
 
-        if conf.is_mkspec_platform('linux'):
-            conf.check_cxx(lib = l, libpath=[ns3_lib_dir.abspath()],
-                           rpath = [ns3_lib_dir.abspath()])
-        else:
-            conf.check_cxx(lib = l, libpath=[ns3_lib_dir.abspath()])
+        conf.check_cxx(lib = l, libpath=[ns3_lib_dir.abspath()],
+                       rpath = [ns3_lib_dir.abspath()])
 
     conf.env['NS3_LIBS'] = ns3_lib_names
     conf.env['NS3_BUILD'] = [ns3_build]
