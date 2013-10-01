@@ -122,11 +122,12 @@ def configure(conf):
     elif conf.is_mkspec_platform('linux'):
         ns3_libs = ns3_lib_dir.ant_glob('*.so')
     else:
-        conf.fatal('We could not detect your platform, please send us a bug report')
+        conf.fatal('We could not detect your platform, please send us a '
+                   'bug report')
 
     if not ns3_libs:
-        conf.fatal('Could not find any of the ns-3 shared libraries (.so files) '
-                   'are you sure you have succesfully built ns-3')
+        conf.fatal('Could not find any of the ns-3 shared libraries '
+                   '(.so files) are you sure you have succesfully built ns-3')
 
     def get_libname(l):
         # Get the file name only
@@ -147,7 +148,12 @@ def configure(conf):
     ns3_lib_names = [get_libname(l) for l in ns3_libs]
 
     for l in ns3_lib_names:
-        conf.check_cxx(lib = l, libpath=[ns3_lib_dir.abspath()])
+
+        if conf.is_mkspec_platform('linux'):
+            conf.check_cxx(lib = l, libpath=[ns3_lib_dir.abspath()],
+                           rpath = [ns3_lib_dir.abspath()])
+        else:
+            conf.check_cxx(lib = l, libpath=[ns3_lib_dir.abspath()])
 
     conf.env['NS3_LIBS'] = ns3_lib_names
     conf.env['NS3_BUILD'] = [ns3_build]
