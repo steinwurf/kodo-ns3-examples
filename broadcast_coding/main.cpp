@@ -60,6 +60,7 @@
 //
 
 #include <ns3/core-module.h>
+#include <point-to-point-star.h>
 #include <ns3/network-module.h>
 #include <ns3/mobility-module.h>
 #include <ns3/config-store-module.h>
@@ -73,7 +74,7 @@
 #include <vector>
 #include <string>
 
-NS_LOG_COMPONENT_DEFINE ("KodoWifiSimpleAdhoc");
+NS_LOG_COMPONENT_DEFINE ("KodoWifiCentralizedCodedBroadcast");
 
 using namespace ns3;
 
@@ -146,6 +147,7 @@ int main (int argc, char *argv[])
   double interval = 1.0; // seconds
   bool verbose = false;
   uint32_t generationSize = 32;
+  float erasure = 0
 
   CommandLine cmd;
 
@@ -174,7 +176,7 @@ int main (int argc, char *argv[])
                       StringValue (phyMode));
 
   NodeContainer c;
-  c.Create (2);
+  c.Create (5);
 
   // The below set of helpers will help us to put together the wifi NICs we want
   WifiHelper wifi;
@@ -182,13 +184,15 @@ int main (int argc, char *argv[])
     {
       wifi.EnableLogComponents ();  // Turn on all Wifi logging
     }
-  wifi.SetStandard (WIFI_PHY_STANDARD_80211b);
+
+  // PHY-layer model
+  wifi.SetStandard (WIFI_PHY_STANDARD_80211g);
 
   YansWifiPhyHelper wifiPhy =  YansWifiPhyHelper::Default ();
   // This is one parameter that matters when using FixedRssLossModel
   // set it to zero; otherwise, gain will be added
   wifiPhy.Set ("RxGain", DoubleValue (0) );
-  // ns-3 supports RadioTap and Prism tracing extensions for 802.11b
+  // ns-3 supports RadioTap and Prism tracing extensions for 802.11g
   wifiPhy.SetPcapDataLinkType (YansWifiPhyHelper::DLT_IEEE802_11_RADIO);
 
   YansWifiChannelHelper wifiChannel;
@@ -197,6 +201,8 @@ int main (int argc, char *argv[])
   // of the distance between the two stations, and the transmit power
   wifiChannel.AddPropagationLoss ("ns3::FixedRssLossModel","Rss",DoubleValue (rss));
   wifiPhy.SetChannel (wifiChannel.Create ());
+
+  //MAC-layer model
 
   // Add a non-QoS upper mac, and disable rate control
   NqosWifiMacHelper wifiMac = NqosWifiMacHelper::Default ();
