@@ -203,7 +203,6 @@ int main (int argc, char *argv[])
   wifiPhy.SetChannel (wifiChannel.Create ());
 
   //MAC-layer model
-
   // Add a non-QoS upper mac, and disable rate control
   NqosWifiMacHelper wifiMac = NqosWifiMacHelper::Default ();
   wifi.SetRemoteStationManager ("ns3::ConstantRateWifiManager",
