@@ -141,7 +141,8 @@ private:
 
 int main (int argc, char *argv[])
 {
-  std::string phyMode ("DsssRate1Mbps");
+
+  /*std::string phyMode ("DsssRate1Mbps");
   double rss = -80;  // -dBm
   uint32_t packetSize = 1000; // bytes
   double interval = 1.0; // seconds
@@ -159,76 +160,30 @@ int main (int argc, char *argv[])
   cmd.AddValue ("generationSize", "Set the generation size to use", generationSize);
 
   cmd.Parse (argc, argv);
+  */
 
-  // Convert to time object
-  Time interPacketInterval = Seconds (interval);
+  Time::SetResolution (Time::NS);
+  LogComponentEnable ("UdpEchoClientApplication", LOG_LEVEL_INFO);
+  LogComponentEnable ("UdpEchoServerApplication", LOG_LEVEL_INFO);
 
-  // disable fragmentation for frames below 2200 bytes
-  Config::SetDefault ("ns3::WifiRemoteStationManager::FragmentationThreshold",
-                      StringValue ("2200"));
+  NodeContainer nodes;
+  nodes.Create (5);
 
-  // turn off RTS/CTS for frames below 2200 bytes
-  Config::SetDefault ("ns3::WifiRemoteStationManager::RtsCtsThreshold",
-                      StringValue ("2200"));
+  PointToPointHelper pointToPoint;
+  pointToPoint.SetDeviceAttribute ("DataRate", StringValue ("5Mbps"));
+  pointToPoint.SetChannelAttribute ("Delay", StringValue ("2ms"));
 
-  // Fix non-unicast data rate to be the same as that of unicast
-  Config::SetDefault ("ns3::WifiRemoteStationManager::NonUnicastMode",
-                      StringValue (phyMode));
+  NetDeviceContainer devices;
+  devices = pointToPoint.Install (nodes);
 
-  NodeContainer c;
-  c.Create (5);
+  InternetStackHelper stack;
+  stack.Install (nodes);
 
-  // The below set of helpers will help us to put together the wifi NICs we want
-  WifiHelper wifi;
-  if (verbose)
-    {
-      wifi.EnableLogComponents ();  // Turn on all Wifi logging
-    }
-
-  // PHY-layer model
-  wifi.SetStandard (WIFI_PHY_STANDARD_80211g);
-
-  YansWifiPhyHelper wifiPhy =  YansWifiPhyHelper::Default ();
-  // This is one parameter that matters when using FixedRssLossModel
-  // set it to zero; otherwise, gain will be added
-  wifiPhy.Set ("RxGain", DoubleValue (0) );
-  // ns-3 supports RadioTap and Prism tracing extensions for 802.11g
-  wifiPhy.SetPcapDataLinkType (YansWifiPhyHelper::DLT_IEEE802_11_RADIO);
-
-  YansWifiChannelHelper wifiChannel;
-  wifiChannel.SetPropagationDelay ("ns3::ConstantSpeedPropagationDelayModel");
-  // The below FixedRssLossModel will cause the rss to be fixed regardless
-  // of the distance between the two stations, and the transmit power
-  wifiChannel.AddPropagationLoss ("ns3::FixedRssLossModel","Rss",DoubleValue (rss));
-  wifiPhy.SetChannel (wifiChannel.Create ());
-
-  //MAC-layer model
-  // Add a non-QoS upper mac, and disable rate control
-  NqosWifiMacHelper wifiMac = NqosWifiMacHelper::Default ();
-  wifi.SetRemoteStationManager ("ns3::ConstantRateWifiManager",
-                                "DataMode",StringValue (phyMode),
-                                "ControlMode",StringValue (phyMode));
-  // Set it to adhoc mode
-  wifiMac.SetType ("ns3::AdhocWifiMac");
-  NetDeviceContainer devices = wifi.Install (wifiPhy, wifiMac, c);
-
-  // Note that with FixedRssLossModel, the positions below are not
-  // used for received signal strength.
-  MobilityHelper mobility;
-  Ptr<ListPositionAllocator> positionAlloc = CreateObject<ListPositionAllocator> ();
-  positionAlloc->Add (Vector (0.0, 0.0, 0.0));
-  positionAlloc->Add (Vector (5.0, 0.0, 0.0));
-  mobility.SetPositionAllocator (positionAlloc);
-  mobility.SetMobilityModel ("ns3::ConstantPositionMobilityModel");
-  mobility.Install (c);
-
-  InternetStackHelper internet;
-  internet.Install (c);
-
-  Ipv4AddressHelper ipv4;
+  Ipv4AddressHelper address;
   NS_LOG_INFO ("Assign IP Addresses.");
-  ipv4.SetBase ("10.1.1.0", "255.255.255.0");
-  Ipv4InterfaceContainer i = ipv4.Assign (devices);
+  address.SetBase ("10.1.1.0", "255.255.255.0");
+
+  Ipv4InterfaceContainer interfaces = address.Assign (devices);
 
   rlnc_encoder::factory encoder_factory(generationSize, packetSize);
   rlnc_decoder::factory decoder_factory(generationSize, packetSize);
@@ -249,7 +204,7 @@ int main (int argc, char *argv[])
   source->Connect (remote);
 
   // Tracing
-  wifiPhy.EnablePcap ("wifi-simple-adhoc", devices);
+  wifiPhy.EnablePcap ("wifi-simple-adhoc", devices); //Check with point multipoint
 
   // Output what we are doing
   NS_LOG_UNCOND ("Testing " << generationSize  << " packets sent "
@@ -260,9 +215,22 @@ int main (int argc, char *argv[])
                                   &kodoSimulator,
                                   source, interPacketInterval);
 
+  UdpEchoServerHelper echoServer (9);
+
+  ApplicationContainer serverApps = echoServer.Install (nodes.Get (1));
+  serverApps.Start (Seconds (1.0));
+  serverApps.Stop (Seconds (10.0));
+
+  UdpEchoClientHelper echoClient (interfaces.GetAddress (1), 9);
+  echoClient.SetAttribute ("MaxPackets", UintegerValue (1));
+  echoClient.SetAttribute ("Interval", TimeValue (Seconds (1.0)));
+  echoClient.SetAttribute ("PacketSize", UintegerValue (1024));
+
+  ApplicationContainer clientApps = echoClient.Install (nodes.Get (0));
+  clientApps.Start (Seconds (2.0));
+  clientApps.Stop (Seconds (10.0));
+
   Simulator::Run ();
   Simulator::Destroy ();
-
   return 0;
 }
-
