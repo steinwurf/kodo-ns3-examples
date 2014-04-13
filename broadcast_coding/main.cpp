@@ -58,6 +58,7 @@
 //
 // tcpdump -r wifi-simple-adhoc-0-0.pcap -nn -tt
 //
+// TO BE EDITED
 
 #include <ns3/core-module.h>
 #include <point-to-point-star.h>
