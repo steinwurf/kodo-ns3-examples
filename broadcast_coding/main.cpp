@@ -166,22 +166,19 @@ int main (int argc, char *argv[])
   LogComponentEnable ("UdpEchoClientApplication", LOG_LEVEL_INFO);
   LogComponentEnable ("UdpEchoServerApplication", LOG_LEVEL_INFO);
 
-  NodeContainer nodes;
-  nodes.Create (5);
-
+  // Attributes of each link against the hub (homogeneous links)
   PointToPointHelper pointToPoint;
-  pointToPoint.SetDeviceAttribute ("DataRate", StringValue ("5Mbps"));
-  pointToPoint.SetChannelAttribute ("Delay", StringValue ("2ms"));
+  pointToPoint.SetDeviceAttribute ("DataRate", StringValue ("1Mbps"));
+  pointToPoint.SetChannelAttribute ("Delay", StringValue ("1ms"));
 
-  NetDeviceContainer devices;
-  devices = pointToPoint.Install (nodes);
-
-  InternetStackHelper stack;
-  stack.Install (nodes);
+  // Four clients against a centralized hub
+  PointToPointStarHelper pointToPointStar (4,pointToPoint);
 
   Ipv4AddressHelper address;
   NS_LOG_INFO ("Assign IP Addresses.");
   address.SetBase ("10.1.1.0", "255.255.255.0");
+
+  pointToPointStar.AssignIpv4Addresses(address);
 
   Ipv4InterfaceContainer interfaces = address.Assign (devices);
 
