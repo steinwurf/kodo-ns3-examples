@@ -173,9 +173,9 @@ int main (int argc, char *argv[])
   pointToPoint.SetDeviceAttribute ("DataRate", StringValue ("1Mbps"));
   pointToPoint.SetChannelAttribute ("Delay", StringValue ("1ms"));
 
-  // Four clients against a centralized hub
+  // Two clients against a centralized hub
   NS_LOG_INFO ("Creating star topology...");
-  PointToPointStarHelper pointToPointStar (4,pointToPoint);
+  PointToPointStarHelper pointToPointStar (2,pointToPoint);
 
   // Set IP addresses
   NS_LOG_INFO ("Assigning IP Addresses...");
@@ -183,24 +183,28 @@ int main (int argc, char *argv[])
   address.SetBase ("10.1.1.0", "255.255.255.0");
   pointToPointStar.AssignIpv4Addresses(address);
 
+  // Setting IP protocol stack
+  NS_LOG_INFO ("Setting IP protocol...");
   InternetStackHelper internet;
   pointToPointStar.InstallStack(internet);
 
+  // Creation of RLNC encoder and decoder objects
   rlnc_encoder::factory encoder_factory(generationSize, packetSize);
   rlnc_decoder::factory decoder_factory(generationSize, packetSize);
 
   KodoSimulation kodoSimulator(encoder_factory.build(),
                                decoder_factory.build());
 
+  uint16_t port = 80;
   TypeId tid = TypeId::LookupByName ("ns3::UdpSocketFactory");
-  Ptr<Socket> recvSink = Socket::CreateSocket (c.Get (0), tid);
-  InetSocketAddress local = InetSocketAddress (Ipv4Address::GetAny (), 80);
+  Ptr<Socket> recvSink1 = Socket::CreateSocket (c.Get (0), tid);
+  InetSocketAddress local = InetSocketAddress (Ipv4Address::GetAny (), port);
   recvSink->Bind (local);
   recvSink->SetRecvCallback (MakeCallback (&KodoSimulation::ReceivePacket,
                                            &kodoSimulator));
 
   Ptr<Socket> source = Socket::CreateSocket (c.Get (1), tid);
-  InetSocketAddress remote = InetSocketAddress (Ipv4Address ("255.255.255.255"), 80);
+  InetSocketAddress remote = InetSocketAddress (Ipv4Address ("255.255.255.255"), port);
   source->SetAllowBroadcast (true);
   source->Connect (remote);
 
