@@ -181,8 +181,6 @@ int main (int argc, char *argv[])
 
   pointToPointStar.AssignIpv4Addresses(address);
 
-  Ipv4InterfaceContainer interfaces = address.Assign (devices);
-
   rlnc_encoder::factory encoder_factory(generationSize, packetSize);
   rlnc_decoder::factory decoder_factory(generationSize, packetSize);
 
