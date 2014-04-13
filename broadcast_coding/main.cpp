@@ -168,18 +168,23 @@ int main (int argc, char *argv[])
   LogComponentEnable ("UdpEchoServerApplication", LOG_LEVEL_INFO);
 
   // Attributes of each link against the hub (homogeneous links)
+  NS_LOG_INFO ("Defining link topology...");
   PointToPointHelper pointToPoint;
   pointToPoint.SetDeviceAttribute ("DataRate", StringValue ("1Mbps"));
   pointToPoint.SetChannelAttribute ("Delay", StringValue ("1ms"));
 
   // Four clients against a centralized hub
+  NS_LOG_INFO ("Creating star topology...");
   PointToPointStarHelper pointToPointStar (4,pointToPoint);
 
+  // Set IP addresses
+  NS_LOG_INFO ("Assigning IP Addresses...");
   Ipv4AddressHelper address;
-  NS_LOG_INFO ("Assign IP Addresses.");
   address.SetBase ("10.1.1.0", "255.255.255.0");
-
   pointToPointStar.AssignIpv4Addresses(address);
+
+  InternetStackHelper internet;
+  pointToPointStar.InstallStack(internet);
 
   rlnc_encoder::factory encoder_factory(generationSize, packetSize);
   rlnc_decoder::factory decoder_factory(generationSize, packetSize);
