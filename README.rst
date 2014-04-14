@@ -36,12 +36,10 @@ by cloning the repository.
 Clone ns-3 repository (Ubuntu)
 ------------------------------
 First we need to make sure we have the tool required:
-
 ::
-   sudo apt-get install gcc g++ python mercurial
+  sudo apt-get install gcc g++ python mercurial
 
 Now clone the ns-3 repository:
-
 ::
   hg clone http://code.nsnam.org/ns-3-dev/
 
@@ -51,18 +49,15 @@ advantage or this approach is that is will be easy for us to
 upgrade to the next version of ns-3 when it is release.
 
 To see the current tagged version of ns-3 run:
-
 ::
   cd ns-3-dev
   hg tags
 
 We will select the currently newest release:
-
 ::
   hg checkout ns-3.18
 
 Configure the project by running:
-
 ::
   ./waf configure
 
@@ -71,7 +66,6 @@ enabled based on the availability of tools and libraries installed
 on your development machine. We will only need the ``Real Time Simulator``,
 this should be marked ``enabled``. Now we may proceed and build the
 ns-3 simulator libraries:
-
 ::
   ./waf build
 
@@ -82,18 +76,15 @@ Update to a new version
 -----------------------
 When a new version of ns-3 gets released you can get the new version easily by
 running (in the ``ns-3-dev`` folder):
-
 ::
   hg pull
 
 Then to see the tagged versions:
-
 ::
   hg tags
 
 And as previously described to switch to one of those versions do a
 (for example):
-
 ::
   hg checkout ns-3.19
 
@@ -107,12 +98,10 @@ provided by this repository. Here we will build the ``simple_udp_broadcast``
 example.
 
 Navigate to the ``simple_udp_broadcast`` folder:
-
 ::
   cd simple_udp_broadcast
 
 Configure the project by running:
-
 ::
   ./waf configure --bundle=ALL --bundle-path=~/dev/bundle_dependencies --ns3-path=~/dev/ns-3-dev
 
@@ -128,7 +117,6 @@ store the libraries there. The ``--ns3-path`` specifies the folder where
 you have made the ns-3 checkout and built the ns-3 libraries.
 
 Now you should be able to build the simulation by running:
-
 ::
   ./waf build
 
@@ -137,7 +125,6 @@ Which will produce a binary in the ``build/linux/`` folder called
 it is successful, you will be able to continue the test.
 
 Try running it by typing:
-
 ::
   ./build/linux/simple_udp_broadcast --verbose=1
 
