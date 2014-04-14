@@ -139,6 +139,15 @@ private:
 
 };
 
+void set_client(Ptr<Node> client, uint16_t port)
+{
+  TypeId tid = TypeId::LookupByName ("ns3::UdpSocketFactory");
+  Ptr<Socket> recvSink = Socket::CreateSocket (client, tid);
+  InetSocketAddress local = InetSocketAddress (Ipv4Address::GetAny (), port);
+  recvSink->Bind (local);
+  recvSink->SetRecvCallback (MakeCallback (&KodoSimulation::ReceivePacket,
+                                           &kodoSimulator));
+}
 
 int main (int argc, char *argv[])
 {
@@ -195,47 +204,31 @@ int main (int argc, char *argv[])
   KodoSimulation kodoSimulator(encoder_factory.build(),
                                decoder_factory.build());
 
+  // Setting up application sockets for clients and server
+  NS_LOG_INFO ("Setting UDP Sockets...");
   uint16_t port = 80;
-  TypeId tid = TypeId::LookupByName ("ns3::UdpSocketFactory");
-  Ptr<Socket> recvSink1 = Socket::CreateSocket (c.Get (0), tid);
-  InetSocketAddress local = InetSocketAddress (Ipv4Address::GetAny (), port);
-  recvSink->Bind (local);
-  recvSink->SetRecvCallback (MakeCallback (&KodoSimulation::ReceivePacket,
-                                           &kodoSimulator));
 
-  Ptr<Socket> source = Socket::CreateSocket (c.Get (1), tid);
+  set_client(pointToPointStar.GetSpokeNode(0),port);
+  set_client(pointToPointStar.GetSpokeNode(1),port);
+
+  Ptr<Socket> source = Socket::CreateSocket (pointToPointStar.GetHub(), tid);
   InetSocketAddress remote = InetSocketAddress (Ipv4Address ("255.255.255.255"), port);
   source->SetAllowBroadcast (true);
   source->Connect (remote);
 
   // Tracing
-  wifiPhy.EnablePcap ("wifi-simple-adhoc", devices); //Check with point multipoint
+  //wifiPhy.EnablePcap ("wifi-simple-adhoc", devices); //Check with point multipoint
 
   // Output what we are doing
-  NS_LOG_UNCOND ("Testing " << generationSize  << " packets sent "
-                 << "with receiver rss " << rss );
+  //NS_LOG_UNCOND ("Testing " << generationSize  << " packets sent "
+  //               << "with receiver rss " << rss );
 
   Simulator::ScheduleWithContext (source->GetNode ()->GetId (),
                                   Seconds (1.0), &KodoSimulation::GenerateTraffic,
                                   &kodoSimulator,
                                   source, interPacketInterval);
-
-  UdpEchoServerHelper echoServer (9);
-
-  ApplicationContainer serverApps = echoServer.Install (nodes.Get (1));
-  serverApps.Start (Seconds (1.0));
-  serverApps.Stop (Seconds (10.0));
-
-  UdpEchoClientHelper echoClient (interfaces.GetAddress (1), 9);
-  echoClient.SetAttribute ("MaxPackets", UintegerValue (1));
-  echoClient.SetAttribute ("Interval", TimeValue (Seconds (1.0)));
-  echoClient.SetAttribute ("PacketSize", UintegerValue (1024));
-
-  ApplicationContainer clientApps = echoClient.Install (nodes.Get (0));
-  clientApps.Start (Seconds (2.0));
-  clientApps.Stop (Seconds (10.0));
-
   Simulator::Run ();
   Simulator::Destroy ();
+
   return 0;
 }
