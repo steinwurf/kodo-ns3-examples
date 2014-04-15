@@ -35,10 +35,14 @@ by cloning the repository.
 
 Clone ns-3 repository (Ubuntu)
 ------------------------------
-First we need to make sure we have the tool required: ::
+First we need to make sure we have the tool required:
+
+::
+
   sudo apt-get install gcc g++ python mercurial
 
 Now clone the ns-3 repository: ::
+
   hg clone http://code.nsnam.org/ns-3-dev/
 
 This will download the ns-3 simulator to your computer, into a
@@ -47,6 +51,7 @@ advantage or this approach is that is will be easy for us to
 upgrade to the next version of ns-3 when it is release.
 
 To see the current tagged version of ns-3 run: ::
+
   cd ns-3-dev
   hg tags
 
