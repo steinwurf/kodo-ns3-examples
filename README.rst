@@ -35,9 +35,7 @@ by cloning the repository.
 
 Clone ns-3 repository (Ubuntu)
 ------------------------------
-First we need to make sure we have the tool required:
-
-::
+First we need to make sure we have the tool required: ::
 
   sudo apt-get install gcc g++ python mercurial
 
@@ -56,9 +54,11 @@ To see the current tagged version of ns-3 run: ::
   hg tags
 
 We will select the currently newest release: ::
+
   hg checkout ns-3.18
 
 Configure the project by running: ::
+
   ./waf configure
 
 This will output a whole bunch of information about the modules
@@ -66,6 +66,7 @@ enabled based on the availability of tools and libraries installed
 on your development machine. We will only need the ``Real Time Simulator``,
 this should be marked ``enabled``. Now we may proceed and build the
 ns-3 simulator libraries: ::
+
   ./waf build
 
 The ns-3 libraries should now be built and we may use them in our
@@ -75,13 +76,16 @@ Update to a new version
 -----------------------
 When a new version of ns-3 gets released you can get the new version easily by
 running (in the ``ns-3-dev`` folder): ::
+
   hg pull
 
 Then to see the tagged versions: ::
+
   hg tags
 
 And as previously described to switch to one of those versions do a
 (for example): ::
+
   hg checkout ns-3.19
 
 Now you have to go through the ``configure`` and ``build`` steps again,
@@ -94,16 +98,17 @@ provided by this repository. Here we will build the ``simple_udp_broadcast``
 example.
 
 Navigate to the ``simple_udp_broadcast`` folder: ::
+
   cd simple_udp_broadcast
 
 Configure the project by running: ::
-  ./waf configure --bundle=ALL --bundle-path=~/dev/bundle_dependencies --ns3-path=~/dev/ns-3-dev
+
+  ./waf configure --bundle-path=~/dev/bundle_dependencies --ns3-path=~/dev/ns-3-dev
 
 The ``waf configure`` ensures that all tools needed by Kodo are
 available and prepares to build Kodo.
 Kodo relies on a number of auxiliary libraries (see kodo.readthedocs.org)
-by specifying the ``--bundle=ALL`` command we instruct ``waf`` to
-automatically download these. The ``--bundle-path`` informs ``waf``
+by specifying the ``--bundle-path`` informs ``waf``
 about where the downloaded libraries should be placed. You may
 omit the ``--bundle-path`` option in that case ``waf`` will create a
 local directory in the Kodo folder called  ``bundle_dependencies`` and
@@ -111,6 +116,7 @@ store the libraries there. The ``--ns3-path`` specifies the folder where
 you have made the ns-3 checkout and built the ns-3 libraries.
 
 Now you should be able to build the simulation by running: ::
+
   ./waf build
 
 Which will produce a binary in the ``build/linux/`` folder called
@@ -118,6 +124,7 @@ Which will produce a binary in the ``build/linux/`` folder called
 it is successful, you will be able to continue the test.
 
 Try running it by typing: ::
+
   ./build/linux/simple_udp_broadcast --verbose=1
 
 In your terminal the ``--verbose`` option will make it print a lot
