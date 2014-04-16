@@ -107,10 +107,10 @@ Configure the project by running: ::
 
 The ``waf configure`` ensures that all tools needed by Kodo are
 available and prepares to build Kodo.
-Kodo relies on a number of auxiliary libraries (see kodo.readthedocs.org)
-by specifying the ``--bundle-path`` informs ``waf``
+Kodo relies on a number of auxiliary libraries (see kodo.readthedocs.org).
+By specifying the ``--bundle-path`` option, this informs ``waf``
 about where the downloaded libraries should be placed. You may
-omit the ``--bundle-path`` option in that case ``waf`` will create a
+omit the ``--bundle-path`` option which in that case ``waf`` will create a
 local directory in the Kodo folder called  ``bundle_dependencies`` and
 store the libraries there. The ``--ns3-path`` specifies the folder where
 you have made the ns-3 checkout and built the ns-3 libraries.

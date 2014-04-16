@@ -39,19 +39,13 @@
 //
 // For instance, for this configuration, the physical layer will
 // stop successfully receiving packets when rss drops below -97 dBm.
-// To see this effect, try running:
-//
-// ./waf --run "wifi-simple-adhoc --rss=-97 --generationSize=20"
-// ./waf --run "wifi-simple-adhoc --rss=-98 --generationSize=20"
-// ./waf --run "wifi-simple-adhoc --rss=-99 --generationSize=20"
+// To see this effect, try by changing the rss parameter on the simulation
 //
 // Note that all ns-3 attributes (not just the ones exposed in the below
 // script) can be changed at command line; see the documentation.
 //
 // This script can also be helpful to put the Wifi layer into verbose
-// logging mode; this command will turn on all wifi logging:
-//
-// ./waf --run "wifi-simple-adhoc --verbose=1"
+// logging mode by setting the verbose variable to true.
 //
 // When you are done, you will notice two pcap trace files in your directory.
 // If you have tcpdump installed, you can try this:
