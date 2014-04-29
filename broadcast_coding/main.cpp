@@ -151,6 +151,7 @@ int main (int argc, char *argv[])
   rlnc_encoder::factory encoder_factory(generationSize, packetSize);
   rlnc_decoder::factory decoder_factory(generationSize, packetSize);
 
+  // The member build function creates differents instances of each object
   KodoSimulation kodoSimulator(encoder_factory.build(),
                                decoder_factory.build());
 
