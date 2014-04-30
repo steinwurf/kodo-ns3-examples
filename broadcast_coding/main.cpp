@@ -75,6 +75,12 @@ public:
     NS_LOG_UNCOND ("Received one packet!");
 
     auto packet = socket->Recv();
+    Address address;
+    socket->GetSockName (address);
+    auto inet_address = InetSocketAddress::ConvertFrom (address);
+
+    if(inet_address.GetIpv4())
+
     packet->CopyData(&m_payload_buffer[0], m_decoder->payload_size());
 
     m_decoder->decode(&m_payload_buffer[0]);
@@ -160,16 +166,17 @@ int main (int argc, char *argv[])
 
   uint16_t port = 80;
   TypeId tid = TypeId::LookupByName ("ns3::UdpSocketFactory");
-  InetSocketAddress local = InetSocketAddress (Ipv4Address::GetAny (), port);
+  InetSocketAddress local1 = InetSocketAddress (Ipv4Address ("10.1.1.1"), port);
+  InetSocketAddress local2 = InetSocketAddress (Ipv4Address ("10.1.1.2"), port);
 
   // Receivers
   Ptr<Socket> recvSink1 = Socket::CreateSocket (pointToPointStar.GetSpokeNode(0), tid);
-  recvSink1->Bind (local);
+  recvSink1->Bind (local1);
   recvSink1->SetRecvCallback (MakeCallback (&KodoSimulation::ReceivePacket,
                                            &kodoSimulator));
 
   Ptr<Socket> recvSink2 = Socket::CreateSocket (pointToPointStar.GetSpokeNode(1), tid);
-  recvSink2->Bind (local);
+  recvSink2->Bind (local2);
   recvSink2->SetRecvCallback (MakeCallback (&KodoSimulation::ReceivePacket,
                                            &kodoSimulator));
   // Sender
