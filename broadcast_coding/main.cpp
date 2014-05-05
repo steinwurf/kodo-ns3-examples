@@ -42,6 +42,7 @@
 #include <fstream>
 #include <vector>
 #include <string>
+#include <map>
 
 NS_LOG_COMPONENT_DEFINE ("KodoCentralizedCodedBroadcast");
 
@@ -50,6 +51,9 @@ using namespace ns3;
 // The encoder / decoder type we will use
 typedef kodo::full_rlnc_encoder<fifi::binary> rlnc_encoder;
 typedef kodo::full_rlnc_decoder<fifi::binary> rlnc_decoder;
+
+// A map to associate IP addresses to each receiver
+typedef std::map<Ipv4Address,uint8_t> address_map;
 
 // Just for illustration purposes, this simple objects implements both
 // the sender (encoder) and receiver (decoder).
@@ -152,6 +156,13 @@ int main (int argc, char *argv[])
   Ipv4AddressHelper address;
   address.SetBase ("10.1.1.0", "255.255.255.0");
   pointToPointStar.AssignIpv4Addresses(address);
+
+  // Save receivers IP addresses on the map
+
+  address_map addr_map;
+
+  addr_map[pointToPointStar.GetSpokeNode(0).GetIPv4()] =  0;
+  addr_map[pointToPointStar.GetSpokeNode(1).GetIPv4()] =  1;
 
   // Creation of RLNC encoder and decoder objects
   rlnc_encoder::factory encoder_factory(generationSize, packetSize);
