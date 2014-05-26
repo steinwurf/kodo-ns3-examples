@@ -64,7 +64,8 @@ public:
   KodoSimulation(const rlnc_encoder::pointer& encoder,
                  const rlnc_decoder::pointer& decoder)
     : m_encoder(encoder),
-      m_decoder(decoder)
+      m_decoder_1(decoder),
+      m_decoder_2(decoder)
   {
 
     // Initialize the encoder with some random data
@@ -83,18 +84,29 @@ public:
     socket->GetSockName (address);
     auto inet_address = InetSocketAddress::ConvertFrom (address);
 
-    if(inet_address.GetIpv4())
+    std::cout << "receiving but doing nothing" << std::endl;
+/*
+    if(inet_address.GetIpv4() == Ipv4Address ("10.1.1.1"))
+    {
+        std::cout << "Combination received in dec 1" << std::endl;
+        packet->CopyData(&m_payload_buffer[0], m_decoder_1->payload_size());
+        m_decoder_1->decode(&m_payload_buffer[0]);
+    }
 
-    packet->CopyData(&m_payload_buffer[0], m_decoder->payload_size());
-
-    m_decoder->decode(&m_payload_buffer[0]);
-
+    if(inet_address.GetIpv4() == Ipv4Address ("10.1.1.2"))
+    {
+        std::cout << "Combination received in dec 2" << std::endl;
+        packet->CopyData(&m_payload_buffer[0], m_decoder_2->payload_size());
+        m_decoder_2->decode(&m_payload_buffer[0]);
+    }
+*/
   }
 
   void GenerateTraffic (Ptr<Socket> socket, Time pktInterval )
   {
-    if(!m_decoder->is_complete())
+    if(!m_decoder_1->is_complete() || !m_decoder_2->is_complete())
       {
+        std::cout << "Sending a combination" << std::endl;
         uint32_t bytes_used = m_encoder->encode(&m_payload_buffer[0]);
         auto packet = Create<Packet> (&m_payload_buffer[0],
                                       bytes_used);
@@ -111,7 +123,8 @@ public:
 private:
 
   rlnc_encoder::pointer m_encoder;
-  rlnc_decoder::pointer m_decoder;
+  rlnc_decoder::pointer m_decoder_1;
+  rlnc_decoder::pointer m_decoder_2;
 
   std::vector<uint8_t> m_payload_buffer;
 
@@ -123,6 +136,8 @@ int main (int argc, char *argv[])
   uint32_t packetSize = 1000; // bytes
   double interval = 1.0; // seconds
   uint32_t generationSize = 32; // Generation size
+
+  std::cout << "Parameters received" << std::endl;
 
   Time interPacketInterval = Seconds (interval);
 
@@ -141,29 +156,33 @@ int main (int argc, char *argv[])
   PointToPointHelper pointToPoint;
   pointToPoint.SetDeviceAttribute ("DataRate", StringValue ("1Mbps"));
   pointToPoint.SetChannelAttribute ("Delay", StringValue ("1ms"));
+  std::cout << "Basic topology created" << std::endl;
 
   // Two receivers against a centralized hub
   NS_LOG_INFO ("Creating star topology...");
   PointToPointStarHelper pointToPointStar (2,pointToPoint);
+  std::cout << "Star topology created" << std::endl;
 
   // Setting IP protocol stack
   NS_LOG_INFO ("Setting IP protocol...");
   InternetStackHelper internet;
   pointToPointStar.InstallStack(internet);
+  std::cout << "IP protocol defined" << std::endl;
 
   // Set IP addresses
   NS_LOG_INFO ("Assigning IP Addresses...");
   Ipv4AddressHelper address;
   address.SetBase ("10.1.1.0", "255.255.255.0");
   pointToPointStar.AssignIpv4Addresses(address);
+  std::cout << "IP addresses defined" << std::endl;
 
   // Save receivers IP addresses on the map
 
-  address_map addr_map;
+  /*address_map addr_map;
 
   addr_map[pointToPointStar.GetSpokeNode(0).GetIPv4()] =  0;
   addr_map[pointToPointStar.GetSpokeNode(1).GetIPv4()] =  1;
-
+  */
   // Creation of RLNC encoder and decoder objects
   rlnc_encoder::factory encoder_factory(generationSize, packetSize);
   rlnc_decoder::factory decoder_factory(generationSize, packetSize);
@@ -171,6 +190,7 @@ int main (int argc, char *argv[])
   // The member build function creates differents instances of each object
   KodoSimulation kodoSimulator(encoder_factory.build(),
                                decoder_factory.build());
+  std::cout << "Encoder and decoders created" << std::endl;
 
   // Setting up application sockets for receivers and senders
   NS_LOG_INFO ("Setting UDP Sockets...");
