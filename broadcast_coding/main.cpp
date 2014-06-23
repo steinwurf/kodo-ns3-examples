@@ -49,8 +49,8 @@ NS_LOG_COMPONENT_DEFINE ("KodoCentralizedCodedBroadcast");
 using namespace ns3;
 
 // The encoder / decoder type we will use
-typedef kodo::full_rlnc_encoder<fifi::binary8> rlnc_encoder;
-typedef kodo::full_rlnc_decoder<fifi::binary8> rlnc_decoder;
+typedef kodo::full_rlnc_encoder<fifi::binary> rlnc_encoder;
+typedef kodo::full_rlnc_decoder<fifi::binary> rlnc_decoder;
 
 // A map to associate IP addresses to each receiver
 typedef std::map<Ipv4Address,uint8_t> address_map;
@@ -109,8 +109,7 @@ public:
       {
         std::cout << "Sending a combination" << std::endl;
         uint32_t bytes_used = m_encoder->encode(&m_payload_buffer[0]);
-        auto packet = Create<Packet> (&m_payload_buffer[0],
-                                      bytes_used);
+        auto packet = Create<Packet> (&m_payload_buffer[0],bytes_used);
         socket->Send (packet);
         Simulator::Schedule (pktInterval, &KodoSimulation::GenerateTraffic, this,
                              socket, pktInterval);
@@ -136,7 +135,7 @@ int main (int argc, char *argv[])
 
   uint32_t packetSize = 1000; // bytes
   double interval = 1.0; // seconds
-  uint32_t generationSize = 16; // Generation size
+  uint32_t generationSize = 3; // Generation size
 
   std::cout << "Parameters received" << std::endl;
 
