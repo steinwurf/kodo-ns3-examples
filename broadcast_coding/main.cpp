@@ -49,8 +49,8 @@ NS_LOG_COMPONENT_DEFINE ("KodoCentralizedCodedBroadcast");
 using namespace ns3;
 
 // The encoder / decoder type we will use
-typedef kodo::full_rlnc_encoder<fifi::binary> rlnc_encoder;
-typedef kodo::full_rlnc_decoder<fifi::binary> rlnc_decoder;
+typedef kodo::full_rlnc_encoder<fifi::binary8> rlnc_encoder;
+typedef kodo::full_rlnc_decoder<fifi::binary8> rlnc_decoder;
 
 // A map to associate IP addresses to each receiver
 typedef std::map<Ipv4Address,uint8_t> address_map;
@@ -79,6 +79,7 @@ public:
   {
     NS_LOG_UNCOND ("Received one packet!");
 
+    std::cout << "Received something!" << std::endl;
     auto packet = socket->Recv();
     Address address;
     socket->GetSockName (address);
@@ -135,7 +136,7 @@ int main (int argc, char *argv[])
 
   uint32_t packetSize = 1000; // bytes
   double interval = 1.0; // seconds
-  uint32_t generationSize = 32; // Generation size
+  uint32_t generationSize = 16; // Generation size
 
   std::cout << "Parameters received" << std::endl;
 
@@ -205,16 +206,19 @@ int main (int argc, char *argv[])
   recvSink1->Bind (local1);
   recvSink1->SetRecvCallback (MakeCallback (&KodoSimulation::ReceivePacket,
                                            &kodoSimulator));
+  std::cout << "Function for receiver 1 created" << std::endl;
 
   Ptr<Socket> recvSink2 = Socket::CreateSocket (pointToPointStar.GetSpokeNode(1), tid);
   recvSink2->Bind (local2);
   recvSink2->SetRecvCallback (MakeCallback (&KodoSimulation::ReceivePacket,
                                            &kodoSimulator));
+  std::cout << "Function for receiver 2 created" << std::endl;
   // Sender
   Ptr<Socket> source = Socket::CreateSocket (pointToPointStar.GetHub(), tid);
   InetSocketAddress remote = InetSocketAddress (Ipv4Address ("255.255.255.255"), port);
   source->SetAllowBroadcast (true);
   source->Connect (remote);
+  std::cout << "Function for sender created" << std::endl;
 
   Simulator::ScheduleWithContext (source->GetNode ()->GetId (),
                                   Seconds (1.0), &KodoSimulation::GenerateTraffic,
