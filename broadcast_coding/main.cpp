@@ -219,6 +219,9 @@ int main (int argc, char *argv[])
   source->Connect (remote);
   std::cout << "Function for sender created" << std::endl;
 
+  // Tracing
+  wifiPhy.EnablePcap ("wifi-simple-adhoc", devices);
+
   Simulator::ScheduleWithContext (source->GetNode ()->GetId (),
                                   Seconds (1.0), &KodoSimulation::GenerateTraffic,
                                   &kodoSimulator,
