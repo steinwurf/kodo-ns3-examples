@@ -78,6 +78,7 @@ public:
   void ReceivePacket1 (Ptr<Socket> socket)
   {
     NS_LOG_UNCOND ("Received one packet at decoder 1!");
+    std::cout << "Received one packet at decoder 1!" << std::endl;
 
     auto packet = socket->Recv();
     packet->CopyData(&m_payload_buffer[0], m_decoder_1->payload_size());
@@ -87,6 +88,7 @@ public:
   void ReceivePacket2 (Ptr<Socket> socket)
   {
     NS_LOG_UNCOND ("Received one packet at decoder 2!");
+    std::cout << "Received one packet at decoder 2!" << std::endl;
 
     auto packet = socket->Recv();
     packet->CopyData(&m_payload_buffer[0], m_decoder_2->payload_size());
@@ -106,6 +108,7 @@ public:
       }
     else
       {
+        std::cout << "Decoding completed!" << std::endl;
         socket->Close ();
       }
   }
