@@ -75,32 +75,22 @@ public:
     m_payload_buffer.resize(m_encoder->payload_size());
   }
 
-  void ReceivePacket (Ptr<Socket> socket)
+  void ReceivePacket1 (Ptr<Socket> socket)
   {
-    NS_LOG_UNCOND ("Received one packet!");
+    NS_LOG_UNCOND ("Received one packet at decoder 1!");
 
-    std::cout << "Received something!" << std::endl;
     auto packet = socket->Recv();
-    Address address;
-    socket->GetSockName (address);
-    auto inet_address = InetSocketAddress::ConvertFrom (address);
+    packet->CopyData(&m_payload_buffer[0], m_decoder_1->payload_size());
+    m_decoder_1->decode(&m_payload_buffer[0]);
+  }
 
-    std::cout << "receiving but doing nothing" << std::endl;
-/*
-    if(inet_address.GetIpv4() == Ipv4Address ("10.1.1.1"))
-    {
-        std::cout << "Combination received in dec 1" << std::endl;
-        packet->CopyData(&m_payload_buffer[0], m_decoder_1->payload_size());
-        m_decoder_1->decode(&m_payload_buffer[0]);
-    }
+  void ReceivePacket2 (Ptr<Socket> socket)
+  {
+    NS_LOG_UNCOND ("Received one packet at decoder 2!");
 
-    if(inet_address.GetIpv4() == Ipv4Address ("10.1.1.2"))
-    {
-        std::cout << "Combination received in dec 2" << std::endl;
-        packet->CopyData(&m_payload_buffer[0], m_decoder_2->payload_size());
-        m_decoder_2->decode(&m_payload_buffer[0]);
-    }
-*/
+    auto packet = socket->Recv();
+    packet->CopyData(&m_payload_buffer[0], m_decoder_2->payload_size());
+    m_decoder_2->decode(&m_payload_buffer[0]);
   }
 
   void GenerateTraffic (Ptr<Socket> socket, Time pktInterval )
@@ -135,7 +125,7 @@ int main (int argc, char *argv[])
 
   uint32_t packetSize = 1000; // bytes
   double interval = 1.0; // seconds
-  uint32_t generationSize = 3; // Generation size
+  uint32_t generationSize = 10; // Generation size
 
   std::cout << "Parameters received" << std::endl;
 
@@ -160,28 +150,25 @@ int main (int argc, char *argv[])
 
   // Two receivers against a centralized hub
   NS_LOG_INFO ("Creating star topology...");
-  PointToPointStarHelper pointToPointStar (2,pointToPoint);
+  PointToPointStarHelper star (2,pointToPoint);
   std::cout << "Star topology created" << std::endl;
 
   // Setting IP protocol stack
   NS_LOG_INFO ("Setting IP protocol...");
   InternetStackHelper internet;
-  pointToPointStar.InstallStack(internet);
+  star.InstallStack(internet);
   std::cout << "IP protocol defined" << std::endl;
 
   // Set IP addresses
   NS_LOG_INFO ("Assigning IP Addresses...");
-  Ipv4AddressHelper address;
-  address.SetBase ("10.1.1.0", "255.255.255.0");
-  pointToPointStar.AssignIpv4Addresses(address);
-  std::cout << "IP addresses defined" << std::endl;
+  star.AssignIpv4Addresses (Ipv4AddressHelper ("10.1.1.0", "255.255.255.0"));
 
   // Save receivers IP addresses on the map
 
   /*address_map addr_map;
 
-  addr_map[pointToPointStar.GetSpokeNode(0).GetIPv4()] =  0;
-  addr_map[pointToPointStar.GetSpokeNode(1).GetIPv4()] =  1;
+  addr_map[star.GetSpokeNode(0).GetIPv4()] =  0;
+  addr_map[star.GetSpokeNode(1).GetIPv4()] =  1;
   */
   // Creation of RLNC encoder and decoder objects
   rlnc_encoder::factory encoder_factory(generationSize, packetSize);
@@ -197,30 +184,38 @@ int main (int argc, char *argv[])
 
   uint16_t port = 80;
   TypeId tid = TypeId::LookupByName ("ns3::UdpSocketFactory");
-  InetSocketAddress local1 = InetSocketAddress (Ipv4Address ("10.1.1.1"), port);
-  InetSocketAddress local2 = InetSocketAddress (Ipv4Address ("10.1.1.2"), port);
+  InetSocketAddress local = InetSocketAddress (Ipv4Address::GetAny (), port);
 
   // Receivers
-  Ptr<Socket> recvSink1 = Socket::CreateSocket (pointToPointStar.GetSpokeNode(0), tid);
-  recvSink1->Bind (local1);
-  recvSink1->SetRecvCallback (MakeCallback (&KodoSimulation::ReceivePacket,
+  Ptr<Socket> recvSink1 = Socket::CreateSocket (star.GetSpokeNode(0), tid);
+  recvSink1->Bind (local);
+  recvSink1->SetRecvCallback (MakeCallback (&KodoSimulation::ReceivePacket1,
                                            &kodoSimulator));
   std::cout << "Function for receiver 1 created" << std::endl;
 
-  Ptr<Socket> recvSink2 = Socket::CreateSocket (pointToPointStar.GetSpokeNode(1), tid);
-  recvSink2->Bind (local2);
-  recvSink2->SetRecvCallback (MakeCallback (&KodoSimulation::ReceivePacket,
+  Ptr<Socket> recvSink2 = Socket::CreateSocket (star.GetSpokeNode(1), tid);
+  recvSink2->Bind (local);
+  recvSink2->SetRecvCallback (MakeCallback (&KodoSimulation::ReceivePacket2,
                                            &kodoSimulator));
   std::cout << "Function for receiver 2 created" << std::endl;
+
   // Sender
-  Ptr<Socket> source = Socket::CreateSocket (pointToPointStar.GetHub(), tid);
+  Ptr<Socket> source = Socket::CreateSocket (star.GetHub(), tid);
   InetSocketAddress remote = InetSocketAddress (Ipv4Address ("255.255.255.255"), port);
   source->SetAllowBroadcast (true);
   source->Connect (remote);
   std::cout << "Function for sender created" << std::endl;
 
-  // Tracing
-  wifiPhy.EnablePcap ("wifi-simple-adhoc", devices);
+  NS_LOG_INFO ("Enable static global routing.");
+  //
+  // Turn on global static routing so we can actually be routed across the star.
+  //
+  Ipv4GlobalRoutingHelper::PopulateRoutingTables ();
+
+  //
+  // Do pcap tracing on all point-to-point devices on all nodes.
+  //
+  pointToPoint.EnablePcapAll ("star");
 
   Simulator::ScheduleWithContext (source->GetNode ()->GetId (),
                                   Seconds (1.0), &KodoSimulation::GenerateTraffic,
