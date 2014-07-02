@@ -52,9 +52,6 @@ using namespace ns3;
 typedef kodo::full_rlnc_encoder<fifi::binary> rlnc_encoder;
 typedef kodo::full_rlnc_decoder<fifi::binary> rlnc_decoder;
 
-// A map to associate IP addresses to each receiver
-typedef std::map<Ipv4Address,uint8_t> address_map;
-
 // Just for illustration purposes, this simple objects implements both
 // the sender (encoder) and receiver (decoder).
 class KodoSimulation
@@ -68,7 +65,9 @@ public:
       m_decoder_2(decoder)
   {
 
-    // Initialize the encoder with some random data
+    m_encoder->set_systematic_off();
+
+    // Initialize the input data
     std::vector<uint8_t> data(encoder->block_size(), 'x');
     m_encoder->set_symbols(sak::storage(data));
 
@@ -128,7 +127,7 @@ int main (int argc, char *argv[])
 
   uint32_t packetSize = 1000; // bytes
   double interval = 1.0; // seconds
-  uint32_t generationSize = 10; // Generation size
+  uint32_t generationSize = 32; // Generation size
 
   std::cout << "Parameters received" << std::endl;
 
@@ -166,13 +165,6 @@ int main (int argc, char *argv[])
   NS_LOG_INFO ("Assigning IP Addresses...");
   star.AssignIpv4Addresses (Ipv4AddressHelper ("10.1.1.0", "255.255.255.0"));
 
-  // Save receivers IP addresses on the map
-
-  /*address_map addr_map;
-
-  addr_map[star.GetSpokeNode(0).GetIPv4()] =  0;
-  addr_map[star.GetSpokeNode(1).GetIPv4()] =  1;
-  */
   // Creation of RLNC encoder and decoder objects
   rlnc_encoder::factory encoder_factory(generationSize, packetSize);
   rlnc_decoder::factory decoder_factory(generationSize, packetSize);
