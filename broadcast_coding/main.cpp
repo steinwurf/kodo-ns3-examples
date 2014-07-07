@@ -35,6 +35,7 @@
 #include <ns3/network-module.h>
 #include <ns3/config-store-module.h>
 #include <ns3/internet-module.h>
+#include <ns3/netanim-module.h>
 
 #include <kodo/rlnc/full_rlnc_codes.hpp>
 #include <kodo/trace.hpp>
@@ -51,7 +52,7 @@ using namespace ns3;
 
 // The encoder / decoder type we will use
 typedef kodo::full_rlnc_encoder<fifi::binary,kodo::disable_trace> rlnc_encoder;
-typedef kodo::full_rlnc_decoder<fifi::binary,kodo::enable_trace> rlnc_decoder;
+typedef kodo::full_rlnc_decoder<fifi::binary,kodo::disable_trace> rlnc_decoder;
 
 // Just for illustration purposes, this simple objects implements both
 // the sender (encoder) and receiver (decoder).
@@ -67,6 +68,7 @@ public:
   {
 
     m_encoder->set_systematic_off();
+    m_encoder->seed(time(0));
 
     // Initialize the input data
     std::vector<uint8_t> data(encoder->block_size(), 'x');
@@ -184,9 +186,6 @@ int main (int argc, char *argv[])
   double interval = 1.0; // seconds
   uint32_t generationSize = 3; // Generation size
 
-  // Set random seed
-  srand(static_cast<uint32_t>(time(0)));
-
   std::cout << "Parameters received" << std::endl;
 
   Time interPacketInterval = Seconds (interval);
@@ -270,6 +269,11 @@ int main (int argc, char *argv[])
   //
   pointToPoint.EnablePcapAll ("star");
 
+/*  AnimationInterface anim ("broadcast_rlnc.xml");
+  anim.SetConstantPosition (star.GetHub(), 2.5, 0.0);
+  anim.SetConstantPosition (star.GetSpokeNode(0), 0.0, 5.0);
+  anim.SetConstantPosition (star.GetSpokeNode(1), 5.0, 5.0);
+*/
   Simulator::ScheduleWithContext (source->GetNode ()->GetId (),
                                   Seconds (1.0), &KodoSimulation::GenerateTraffic,
                                   &kodoSimulator,
