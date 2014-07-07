@@ -50,7 +50,7 @@ NS_LOG_COMPONENT_DEFINE ("KodoCentralizedCodedBroadcast");
 using namespace ns3;
 
 // The encoder / decoder type we will use
-typedef kodo::full_rlnc_encoder<fifi::binary,kodo::enable_trace> rlnc_encoder;
+typedef kodo::full_rlnc_encoder<fifi::binary,kodo::disable_trace> rlnc_encoder;
 typedef kodo::full_rlnc_decoder<fifi::binary,kodo::enable_trace> rlnc_decoder;
 
 // Just for illustration purposes, this simple objects implements both
@@ -86,14 +86,14 @@ public:
 
     if (kodo::has_trace<rlnc_decoder>::value)
     {
-    /*    auto filter = [](const std::string& zone)
+        auto filter = [](const std::string& zone)
         {
             std::set<std::string> filters =
                 {"decoder_state", "input_symbol_coefficients"};
 
             return filters.count(zone);
         };
-    */
+
         std::cout << "Trace decoder 1:" << std::endl;
 
 
@@ -102,8 +102,8 @@ public:
         // modify the filter to only view the information you are
         // interested in.
 
-        //kodo::trace(decoder, std::cout, filter);
-        kodo::trace(m_decoder_1, std::cout);
+        kodo::trace(decoder, std::cout, filter);
+        //kodo::trace(m_decoder_1, std::cout);
     }
 
   }
@@ -119,14 +119,14 @@ public:
 
     if (kodo::has_trace<rlnc_decoder>::value)
     {
-    /*    auto filter = [](const std::string& zone)
+        auto filter = [](const std::string& zone)
         {
             std::set<std::string> filters =
                 {"decoder_state", "input_symbol_coefficients"};
 
             return filters.count(zone);
         };
-    */
+
         std::cout << "Trace decoder 2:" << std::endl;
 
 
@@ -135,8 +135,8 @@ public:
         // modify the filter to only view the information you are
         // interested in.
 
-        // kodo::trace(decoder, std::cout, filter);
-        kodo::trace(m_decoder_2, std::cout);
+        kodo::trace(decoder, std::cout, filter);
+        // kodo::trace(m_decoder_2, std::cout);
     }
 
   }
