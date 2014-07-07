@@ -43,7 +43,7 @@
 #include <fstream>
 #include <vector>
 #include <string>
-#include <map>
+#include <ctime>
 
 NS_LOG_COMPONENT_DEFINE ("KodoCentralizedCodedBroadcast");
 
@@ -89,7 +89,7 @@ public:
         auto filter = [](const std::string& zone)
         {
             std::set<std::string> filters =
-                {"decoder_state", "input_symbol_coefficients"};
+                {"input_symbol_coefficients"};
 
             return filters.count(zone);
         };
@@ -102,7 +102,7 @@ public:
         // modify the filter to only view the information you are
         // interested in.
 
-        kodo::trace(decoder, std::cout, filter);
+        kodo::trace(m_decoder_1, std::cout, filter);
         //kodo::trace(m_decoder_1, std::cout);
     }
 
@@ -122,7 +122,7 @@ public:
         auto filter = [](const std::string& zone)
         {
             std::set<std::string> filters =
-                {"decoder_state", "input_symbol_coefficients"};
+                {"input_symbol_coefficients"};
 
             return filters.count(zone);
         };
@@ -135,7 +135,7 @@ public:
         // modify the filter to only view the information you are
         // interested in.
 
-        kodo::trace(decoder, std::cout, filter);
+        kodo::trace(m_decoder_2, std::cout, filter);
         // kodo::trace(m_decoder_2, std::cout);
     }
 
@@ -183,6 +183,9 @@ int main (int argc, char *argv[])
   uint32_t packetSize = 1000; // bytes
   double interval = 1.0; // seconds
   uint32_t generationSize = 3; // Generation size
+
+  // Set random seed
+  srand(static_cast<uint32_t>(time(0)));
 
   std::cout << "Parameters received" << std::endl;
 
