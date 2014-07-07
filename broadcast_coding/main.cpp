@@ -36,7 +36,8 @@
 #include <ns3/config-store-module.h>
 #include <ns3/internet-module.h>
 
-#include <kodo/rlnc/full_vector_codes.hpp>
+#include <kodo/rlnc/full_rlnc_codes.hpp>
+#include <kodo/trace.hpp>
 
 #include <iostream>
 #include <fstream>
@@ -49,8 +50,8 @@ NS_LOG_COMPONENT_DEFINE ("KodoCentralizedCodedBroadcast");
 using namespace ns3;
 
 // The encoder / decoder type we will use
-typedef kodo::full_rlnc_encoder<fifi::binary> rlnc_encoder;
-typedef kodo::full_rlnc_decoder<fifi::binary> rlnc_decoder;
+typedef kodo::full_rlnc_encoder<fifi::binary,kodo::enable_trace> rlnc_encoder;
+typedef kodo::full_rlnc_decoder<fifi::binary,kodo::enable_trace> rlnc_decoder;
 
 // Just for illustration purposes, this simple objects implements both
 // the sender (encoder) and receiver (decoder).
@@ -82,6 +83,29 @@ public:
     auto packet = socket->Recv();
     packet->CopyData(&m_payload_buffer[0], m_decoder_1->payload_size());
     m_decoder_1->decode(&m_payload_buffer[0]);
+
+    if (kodo::has_trace<rlnc_decoder>::value)
+    {
+    /*    auto filter = [](const std::string& zone)
+        {
+            std::set<std::string> filters =
+                {"decoder_state", "input_symbol_coefficients"};
+
+            return filters.count(zone);
+        };
+    */
+        std::cout << "Trace decoder 1:" << std::endl;
+
+
+        // Try to run without a filter to see the full amount of
+        // output produced by the trace function. You can then
+        // modify the filter to only view the information you are
+        // interested in.
+
+        //kodo::trace(decoder, std::cout, filter);
+        kodo::trace(m_decoder_1, std::cout);
+    }
+
   }
 
   void ReceivePacket2 (Ptr<Socket> socket)
@@ -92,16 +116,47 @@ public:
     auto packet = socket->Recv();
     packet->CopyData(&m_payload_buffer[0], m_decoder_2->payload_size());
     m_decoder_2->decode(&m_payload_buffer[0]);
+
+    if (kodo::has_trace<rlnc_decoder>::value)
+    {
+    /*    auto filter = [](const std::string& zone)
+        {
+            std::set<std::string> filters =
+                {"decoder_state", "input_symbol_coefficients"};
+
+            return filters.count(zone);
+        };
+    */
+        std::cout << "Trace decoder 2:" << std::endl;
+
+
+        // Try to run without a filter to see the full amount of
+        // output produced by the trace function. You can then
+        // modify the filter to only view the information you are
+        // interested in.
+
+        // kodo::trace(decoder, std::cout, filter);
+        kodo::trace(m_decoder_2, std::cout);
+    }
+
   }
 
   void GenerateTraffic (Ptr<Socket> socket, Time pktInterval )
   {
     if(!m_decoder_1->is_complete() || !m_decoder_2->is_complete())
       {
+
         std::cout << "Sending a combination" << std::endl;
         uint32_t bytes_used = m_encoder->encode(&m_payload_buffer[0]);
         auto packet = Create<Packet> (&m_payload_buffer[0],bytes_used);
         socket->Send (packet);
+
+        if (kodo::has_trace<rlnc_encoder>::value)
+        {
+            std::cout << "Trace encoder:" << std::endl;
+            kodo::trace(m_encoder, std::cout);
+        }
+
         Simulator::Schedule (pktInterval, &KodoSimulation::GenerateTraffic, this,
                              socket, pktInterval);
       }
@@ -127,7 +182,7 @@ int main (int argc, char *argv[])
 
   uint32_t packetSize = 1000; // bytes
   double interval = 1.0; // seconds
-  uint32_t generationSize = 32; // Generation size
+  uint32_t generationSize = 3; // Generation size
 
   std::cout << "Parameters received" << std::endl;
 

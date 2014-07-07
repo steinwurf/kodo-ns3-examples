@@ -56,19 +56,31 @@ def options(opt):
         resolve.ResolveGitMajorVersion(
             name = 'sak',
             git_repository = 'github.com/steinwurf/sak.git',
-            major_version = 10))
+            major_version = 11))
+
+    bundle.add_dependency(opt,
+        resolve.ResolveGitMajorVersion(
+            name = 'platform',
+            git_repository = 'github.com/steinwurf/platform.git',
+            major_version = 1))
+
+    bundle.add_dependency(opt,
+        resolve.ResolveGitMajorVersion(
+            name = 'cpuid',
+            git_repository = 'github.com/steinwurf/cpuid.git',
+            major_version = 3))
 
     bundle.add_dependency(opt,
         resolve.ResolveGitMajorVersion(
             name = 'fifi',
             git_repository = 'github.com/steinwurf/fifi.git',
-            major_version = 9))
+            major_version = 12))
 
     bundle.add_dependency(opt,
         resolve.ResolveGitMajorVersion(
             name = 'kodo',
             git_repository = 'github.com/steinwurf/kodo.git',
-            major_version = 10))
+            major_version = 17))
 
     opt.load('wurf_dependency_bundle')
     opt.load('wurf_tools')
@@ -89,9 +101,10 @@ def configure(conf):
 
         recurse_helper(conf, 'boost')
         recurse_helper(conf, 'sak')
+        recurse_helper(conf, 'platform')
+        recurse_helper(conf, 'cpuid')
         recurse_helper(conf, 'fifi')
         recurse_helper(conf, 'kodo')
-
 
     # Find the ns-3 libraries
 
@@ -165,6 +178,8 @@ def build(bld):
         recurse_helper(bld, 'boost')
         recurse_helper(bld, 'sak')
         recurse_helper(bld, 'fifi')
+        recurse_helper(bld, 'platform')
+        recurse_helper(bld, 'cpuid')
         recurse_helper(bld, 'kodo')
 
 
@@ -179,7 +194,7 @@ def build(bld):
                 includes = ns3_build,
                 lib = ns3_libs,
                 use = ['kodo_includes', 'fifi_includes', 'sak_includes',
-                       'boost_includes'])
+                       'boost_includes','platform_includes','cpuid_includes'])
 
 
 
