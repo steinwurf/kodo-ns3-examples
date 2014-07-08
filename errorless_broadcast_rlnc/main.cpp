@@ -24,11 +24,9 @@
 // In the script below the sender transmits encoded packets from a block of
 // data to two receivers. The sender continues until all receivers have received
 // all packets. Here the packets are sent using the binary field, GF(2)  with
-// a generation 32 packets and 1000 (application) bytes to the other node.
+// a generation 16 packets and 1000 (application) bytes to the other node.
 
-// Before running the script, you can set up the display of the full logging
-// module by typing:
-// export 'NS_LOG=*=level_all|prefix_func|prefix_time'
+// You can change the generation size by running....
 
 #include <ns3/core-module.h>
 #include <ns3/point-to-point-star.h>
@@ -48,7 +46,8 @@
 
 using namespace ns3;
 
-// The encoder / decoder type we will use
+// The encoder / decoder type we will use. Here we consider GF(2). For GF(2^8)
+// just change "binary" for "binary8"
 typedef kodo::full_rlnc_encoder<fifi::binary,kodo::enable_trace> rlnc_encoder;
 typedef kodo::full_rlnc_decoder<fifi::binary,kodo::enable_trace> rlnc_decoder;
 
@@ -161,9 +160,9 @@ private:
 int main (int argc, char *argv[])
 {
 
-  uint32_t packetSize = 1000; // bytes
-  double interval = 1.0; // seconds
-  uint32_t generationSize = 3; // Generation size
+  uint32_t packetSize = 1000; // Application bytes per packet
+  double interval = 1.0; // Time between events
+  uint32_t generationSize = 3; // RLNC generation size
 
   Time interPacketInterval = Seconds (interval);
 
@@ -171,16 +170,17 @@ int main (int argc, char *argv[])
 
   cmd.AddValue ("packetSize", "size of application packet sent", packetSize);
   cmd.AddValue ("interval", "interval (seconds) between packets", interval);
-  cmd.AddValue ("generationSize", "Set the generation size to use", generationSize);
+  cmd.AddValue ("generationSize", "Set the generation size to use",
+                generationSize);
 
   cmd.Parse (argc, argv);
 
   Time::SetResolution (Time::NS);
 
-  // Attributes of each link against the hub (homogeneous links)
+  // Set the basic helper for a single link
   PointToPointHelper pointToPoint;
 
-  // Two receivers against a centralized hub
+  // Two receivers against a centralized hub. Note: DO NOT CHANGE THIS LINE
   PointToPointStarHelper star (2,pointToPoint);
 
   // Setting IP protocol stack
@@ -227,7 +227,7 @@ int main (int argc, char *argv[])
   // Do pcap tracing on all point-to-point devices on all nodes
   pointToPoint.EnablePcapAll ("star");
 
-  // Simulation output to be read with NetAnim
+  // Get simulation output to be read with NetAnim
   AnimationInterface anim ("broadcast_rlnc.xml");
   anim.SetConstantPosition (star.GetHub(), 2.5, 0.0);
   anim.SetConstantPosition (star.GetSpokeNode(0), 0.0, 5.0);
