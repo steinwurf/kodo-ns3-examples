@@ -46,13 +46,11 @@
 #include <string>
 #include <ctime>
 
-NS_LOG_COMPONENT_DEFINE ("KodoCentralizedCodedBroadcast");
-
 using namespace ns3;
 
 // The encoder / decoder type we will use
-typedef kodo::full_rlnc_encoder<fifi::binary,kodo::disable_trace> rlnc_encoder;
-typedef kodo::full_rlnc_decoder<fifi::binary,kodo::disable_trace> rlnc_decoder;
+typedef kodo::full_rlnc_encoder<fifi::binary,kodo::enable_trace> rlnc_encoder;
+typedef kodo::full_rlnc_decoder<fifi::binary,kodo::enable_trace> rlnc_decoder;
 
 // Just for illustration purposes, this simple objects implements both
 // the sender (encoder) and receiver (decoder).
@@ -66,7 +64,6 @@ public:
       m_decoder_1(decoder),
       m_decoder_2(decoder)
   {
-
     m_encoder->set_systematic_off();
     m_encoder->seed(time(0));
 
@@ -79,8 +76,7 @@ public:
 
   void ReceivePacket1 (Ptr<Socket> socket)
   {
-    NS_LOG_UNCOND ("Received one packet at decoder 1!");
-    std::cout << "Received one packet at decoder 1!" << std::endl;
+    std::cout << "Received one packet at decoder 1" << std::endl;
 
     auto packet = socket->Recv();
     packet->CopyData(&m_payload_buffer[0], m_decoder_1->payload_size());
@@ -91,29 +87,20 @@ public:
         auto filter = [](const std::string& zone)
         {
             std::set<std::string> filters =
-                {"input_symbol_coefficients"};
+                {"decoder_state","input_symbol_coefficients"};
 
             return filters.count(zone);
         };
 
         std::cout << "Trace decoder 1:" << std::endl;
-
-
-        // Try to run without a filter to see the full amount of
-        // output produced by the trace function. You can then
-        // modify the filter to only view the information you are
-        // interested in.
-
         kodo::trace(m_decoder_1, std::cout, filter);
-        //kodo::trace(m_decoder_1, std::cout);
     }
 
   }
 
   void ReceivePacket2 (Ptr<Socket> socket)
   {
-    NS_LOG_UNCOND ("Received one packet at decoder 2!");
-    std::cout << "Received one packet at decoder 2!" << std::endl;
+    std::cout << "Received one packet at decoder 2" << std::endl;
 
     auto packet = socket->Recv();
     packet->CopyData(&m_payload_buffer[0], m_decoder_2->payload_size());
@@ -124,21 +111,13 @@ public:
         auto filter = [](const std::string& zone)
         {
             std::set<std::string> filters =
-                {"input_symbol_coefficients"};
+                {"decoder_state","input_symbol_coefficients"};
 
             return filters.count(zone);
         };
 
         std::cout << "Trace decoder 2:" << std::endl;
-
-
-        // Try to run without a filter to see the full amount of
-        // output produced by the trace function. You can then
-        // modify the filter to only view the information you are
-        // interested in.
-
         kodo::trace(m_decoder_2, std::cout, filter);
-        // kodo::trace(m_decoder_2, std::cout);
     }
 
   }
@@ -186,8 +165,6 @@ int main (int argc, char *argv[])
   double interval = 1.0; // seconds
   uint32_t generationSize = 3; // Generation size
 
-  std::cout << "Parameters received" << std::endl;
-
   Time interPacketInterval = Seconds (interval);
 
   CommandLine cmd;
@@ -201,25 +178,16 @@ int main (int argc, char *argv[])
   Time::SetResolution (Time::NS);
 
   // Attributes of each link against the hub (homogeneous links)
-  NS_LOG_INFO ("Defining link topology...");
   PointToPointHelper pointToPoint;
-  pointToPoint.SetDeviceAttribute ("DataRate", StringValue ("1Mbps"));
-  pointToPoint.SetChannelAttribute ("Delay", StringValue ("1ms"));
-  std::cout << "Basic topology created" << std::endl;
 
   // Two receivers against a centralized hub
-  NS_LOG_INFO ("Creating star topology...");
   PointToPointStarHelper star (2,pointToPoint);
-  std::cout << "Star topology created" << std::endl;
 
   // Setting IP protocol stack
-  NS_LOG_INFO ("Setting IP protocol...");
   InternetStackHelper internet;
   star.InstallStack(internet);
-  std::cout << "IP protocol defined" << std::endl;
 
   // Set IP addresses
-  NS_LOG_INFO ("Assigning IP Addresses...");
   star.AssignIpv4Addresses (Ipv4AddressHelper ("10.1.1.0", "255.255.255.0"));
 
   // Creation of RLNC encoder and decoder objects
@@ -229,11 +197,8 @@ int main (int argc, char *argv[])
   // The member build function creates differents instances of each object
   KodoSimulation kodoSimulator(encoder_factory.build(),
                                decoder_factory.build());
-  std::cout << "Encoder and decoders created" << std::endl;
 
   // Setting up application sockets for receivers and senders
-  NS_LOG_INFO ("Setting UDP Sockets...");
-
   uint16_t port = 80;
   TypeId tid = TypeId::LookupByName ("ns3::UdpSocketFactory");
   InetSocketAddress local = InetSocketAddress (Ipv4Address::GetAny (), port);
@@ -242,42 +207,35 @@ int main (int argc, char *argv[])
   Ptr<Socket> recvSink1 = Socket::CreateSocket (star.GetSpokeNode(0), tid);
   recvSink1->Bind (local);
   recvSink1->SetRecvCallback (MakeCallback (&KodoSimulation::ReceivePacket1,
-                                           &kodoSimulator));
-  std::cout << "Function for receiver 1 created" << std::endl;
+                                            &kodoSimulator));
 
   Ptr<Socket> recvSink2 = Socket::CreateSocket (star.GetSpokeNode(1), tid);
   recvSink2->Bind (local);
   recvSink2->SetRecvCallback (MakeCallback (&KodoSimulation::ReceivePacket2,
-                                           &kodoSimulator));
-  std::cout << "Function for receiver 2 created" << std::endl;
+                                            &kodoSimulator));
 
   // Sender
   Ptr<Socket> source = Socket::CreateSocket (star.GetHub(), tid);
-  InetSocketAddress remote = InetSocketAddress (Ipv4Address ("255.255.255.255"), port);
+  InetSocketAddress remote = InetSocketAddress (Ipv4Address ("255.255.255.255"),
+                                                port);
   source->SetAllowBroadcast (true);
   source->Connect (remote);
-  std::cout << "Function for sender created" << std::endl;
 
-  NS_LOG_INFO ("Enable static global routing.");
-  //
-  // Turn on global static routing so we can actually be routed across the star.
-  //
+  // Turn on global static routing so we can actually be routed across the star
   Ipv4GlobalRoutingHelper::PopulateRoutingTables ();
 
-  //
-  // Do pcap tracing on all point-to-point devices on all nodes.
-  //
+  // Do pcap tracing on all point-to-point devices on all nodes
   pointToPoint.EnablePcapAll ("star");
 
-/*  AnimationInterface anim ("broadcast_rlnc.xml");
+  // Simulation output to be read with NetAnim
+  AnimationInterface anim ("broadcast_rlnc.xml");
   anim.SetConstantPosition (star.GetHub(), 2.5, 0.0);
   anim.SetConstantPosition (star.GetSpokeNode(0), 0.0, 5.0);
   anim.SetConstantPosition (star.GetSpokeNode(1), 5.0, 5.0);
-*/
-  Simulator::ScheduleWithContext (source->GetNode ()->GetId (),
-                                  Seconds (1.0), &KodoSimulation::GenerateTraffic,
-                                  &kodoSimulator,
-                                  source, interPacketInterval);
+
+  Simulator::ScheduleWithContext (source->GetNode ()->GetId (), Seconds (1.0),
+                                  &KodoSimulation::GenerateTraffic,
+                                  &kodoSimulator, source, interPacketInterval);
   Simulator::Run ();
   Simulator::Destroy ();
 
