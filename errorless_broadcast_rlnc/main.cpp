@@ -27,7 +27,7 @@
 // a generation 16 packets and 1000 (application) bytes to the other node.
 
 // You can change the generation size or another parameter, by running (for
-// example with generation size):
+// example with a different generation size):
 // ./errorless_broadcast_rlnc --generationSize=MY_GENERATION_SIZE
 
 #include <ns3/core-module.h>
