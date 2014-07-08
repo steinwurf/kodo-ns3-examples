@@ -26,7 +26,9 @@
 // all packets. Here the packets are sent using the binary field, GF(2)  with
 // a generation 16 packets and 1000 (application) bytes to the other node.
 
-// You can change the generation size by running....
+// You can change the generation size or another parameter, by running (for
+// example with generation size):
+// ./errorless_broadcast_rlnc --generationSize=MY_GENERATION_SIZE
 
 #include <ns3/core-module.h>
 #include <ns3/point-to-point-star.h>
@@ -162,7 +164,7 @@ int main (int argc, char *argv[])
 
   uint32_t packetSize = 1000; // Application bytes per packet
   double interval = 1.0; // Time between events
-  uint32_t generationSize = 3; // RLNC generation size
+  uint32_t generationSize = 16; // RLNC generation size
 
   Time interPacketInterval = Seconds (interval);
 
