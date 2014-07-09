@@ -4,7 +4,7 @@ This repository contains examples that show how you can build an ns-3
 using the Kodo erasure coding library (http://github.com/steinwurf/kodo).
 
 To obtain a valid Kodo license **you must fill out the license request** form_. 
-Kodo is available under a research and educational friendly licensee, 
+Kodo is available under a research and educational friendly license, 
 you can see the details here_.
 
 .. _form: http://steinwurf.com/license/
@@ -23,9 +23,9 @@ advantages (this is of course purely subjective and you are free to disagree).
 
 * It becomes easier to upgrade to the next version of ns-3 as it becomes
   available.
-* If you want to distribute your changes it can be done easily without
-  distribution the entire ns-3 simulator.
-* You can freely choose the whatever build system you prefer. Note, we
+* If you want to distribute your changes, it can be done easily without
+  distributing the entire ns-3 simulator.
+* You can freely choose whatever build system you prefer. Note that we
   also use the same build system as ns-3, namely Waf, because it rocks!
 
 Getting Started
