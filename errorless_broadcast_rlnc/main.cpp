@@ -24,7 +24,7 @@
 // In the script below the sender transmits encoded packets from a block of
 // data to two receivers. The sender continues until all receivers have received
 // all packets. Here the packets are sent using the binary field, GF(2)  with
-// a generation 16 packets and 1000 (application) bytes to the other node.
+// a generation 10 packets and 1000 (application) bytes to the other node.
 
 // You can change the generation size or another parameter, by running (for
 // example with a different generation size):
@@ -35,7 +35,6 @@
 #include <ns3/network-module.h>
 #include <ns3/config-store-module.h>
 #include <ns3/internet-module.h>
-#include <ns3/netanim-module.h>
 
 #include <kodo/rlnc/full_rlnc_codes.hpp>
 #include <kodo/trace.hpp>
@@ -164,7 +163,7 @@ int main (int argc, char *argv[])
 
   uint32_t packetSize = 1000; // Application bytes per packet
   double interval = 1.0; // Time between events
-  uint32_t generationSize = 16; // RLNC generation size
+  uint32_t generationSize = 10; // RLNC generation size
 
   Time interPacketInterval = Seconds (interval);
 
@@ -228,12 +227,6 @@ int main (int argc, char *argv[])
 
   // Do pcap tracing on all point-to-point devices on all nodes
   pointToPoint.EnablePcapAll ("star");
-
-  // Get simulation output to be read with NetAnim
-  AnimationInterface anim ("broadcast_rlnc.xml");
-  anim.SetConstantPosition (star.GetHub(), 2.5, 0.0);
-  anim.SetConstantPosition (star.GetSpokeNode(0), 0.0, 5.0);
-  anim.SetConstantPosition (star.GetSpokeNode(1), 5.0, 5.0);
 
   Simulator::ScheduleWithContext (source->GetNode ()->GetId (), Seconds (1.0),
                                   &KodoSimulation::GenerateTraffic,
