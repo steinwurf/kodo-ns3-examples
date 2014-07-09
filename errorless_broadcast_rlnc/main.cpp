@@ -24,7 +24,7 @@
 // In the script below the sender transmits encoded packets from a block of
 // data to two receivers. The sender continues until all receivers have received
 // all packets. Here the packets are sent using the binary field, GF(2)  with
-// a generation 10 packets and 1000 (application) bytes to the other node.
+// a generation of 5 packets and 1000 (application) bytes to the other node.
 
 // You can change the generation size or another parameter, by running (for
 // example with a different generation size):
@@ -49,7 +49,7 @@ using namespace ns3;
 
 // The encoder / decoder type we will use. Here we consider GF(2). For GF(2^8)
 // just change "binary" for "binary8"
-typedef kodo::full_rlnc_encoder<fifi::binary,kodo::enable_trace> rlnc_encoder;
+typedef kodo::full_rlnc_encoder<fifi::binary,kodo::disable_trace> rlnc_encoder;
 typedef kodo::full_rlnc_decoder<fifi::binary,kodo::enable_trace> rlnc_decoder;
 
 // Just for illustration purposes, this simple objects implements both
@@ -163,7 +163,7 @@ int main (int argc, char *argv[])
 
   uint32_t packetSize = 1000; // Application bytes per packet
   double interval = 1.0; // Time between events
-  uint32_t generationSize = 10; // RLNC generation size
+  uint32_t generationSize = 5; // RLNC generation size
 
   Time interPacketInterval = Seconds (interval);
 
