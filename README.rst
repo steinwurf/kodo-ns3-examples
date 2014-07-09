@@ -2,8 +2,13 @@ Introduction
 ------------
 This repository contains examples that show how you can build an ns-3
 using the Kodo erasure coding library (http://github.com/steinwurf/kodo).
-Which is freely available for educational and research purposes, you
-may find the specific license in the library.
+
+To obtain a valid Kodo license **you must fill out the license request** form_. 
+Kodo is available under a research and educational friendly license, 
+you can see the details here_.
+
+.. _form: http://steinwurf.com/license/
+.. _here: https://github.com/steinwurf/kodo/blob/master/LICENSE.rst
 
 ns-3 (http://nsnam.org) is a discrete-event network simulator, targeted primarily for
 research and educational use. ns-3 is licensed under the GNU GPLv2 license.
@@ -18,9 +23,9 @@ advantages (this is of course purely subjective and you are free to disagree).
 
 * It becomes easier to upgrade to the next version of ns-3 as it becomes
   available.
-* If you want to distribute your changes it can be done easily without
-  distribution the entire ns-3 simulator.
-* You can freely choose the whatever build system you prefer. Note, we
+* If you want to distribute your changes, it can be done easily without
+  distributing the entire ns-3 simulator.
+* You can freely choose whatever build system you prefer. Note that we
   also use the same build system as ns-3, namely Waf, because it rocks!
 
 Getting Started
@@ -35,13 +40,12 @@ by cloning the repository.
 
 Clone ns-3 repository (Ubuntu)
 ------------------------------
+First we need to make sure we have the tool required: ::
 
-First we need to make sure we have the tool required:
-::
-   sudo apt-get install gcc g++ python mercurial
+  sudo apt-get install gcc g++ python mercurial
 
-Now clone the ns-3 repository:
-::
+Now clone the ns-3 repository: ::
+
   hg clone http://code.nsnam.org/ns-3-dev/
 
 This will download the ns-3 simulator to your computer, into a
@@ -49,25 +53,25 @@ This will download the ns-3 simulator to your computer, into a
 advantage or this approach is that is will be easy for us to
 upgrade to the next version of ns-3 when it is release.
 
-To see the current tagged version of ns-3 run:
-::
+To see the current tagged version of ns-3 run: ::
+
   cd ns-3-dev
   hg tags
 
-We will select the currently newest release:
-::
-  hg checkout ns-3.18
+We will select the currently newest release: ::
 
-Configure the project by running:
-::
+  hg checkout ns-3.20
+
+Configure the project by running: ::
+
   ./waf configure
 
 This will output a whole bunch of information about the modules
 enabled based on the availability of tools and libraries installed
 on your development machine. We will only need the ``Real Time Simulator``,
 this should be marked ``enabled``. Now we may proceed and build the
-ns-3 simulator libraries:
-::
+ns-3 simulator libraries: ::
+
   ./waf build
 
 The ns-3 libraries should now be built and we may use them in our
@@ -76,18 +80,18 @@ simulations.
 Update to a new version
 -----------------------
 When a new version of ns-3 gets released you can get the new version easily by
-running (in the ``ns-3-dev`` folder):
-::
+running (in the ``ns-3-dev`` folder): ::
+
   hg pull
 
-Then to see the tagged versions:
-::
+Then to see the tagged versions: ::
+
   hg tags
 
-And as previously described to switch to one of those versions do a 
-(for example):
-::
-  hg checkout ns-3.19
+And as previously described to switch to version ``xx`` do a
+(for example): ::
+
+  hg checkout ns-3.xx
 
 Now you have to go through the ``configure`` and ``build`` steps again,
 described in the previous section.
@@ -98,36 +102,34 @@ After building ns-3 you can build one of the example simulations
 provided by this repository. Here we will build the ``simple_udp_broadcast``
 example.
 
-Navigate to the ``simple_udp_broadcast`` folder:
-::
+Navigate to the ``simple_udp_broadcast`` folder: ::
+
   cd simple_udp_broadcast
 
-Configure the project by running:
-::
-  ./waf configure --bundle=ALL --bundle-path=~/dev/bundle_dependencies --ns3-path=~/dev/ns-3-dev
+Configure the project by running: ::
+
+  ./waf configure --bundle-path=~/dev/bundle_dependencies --ns3-path=~/dev/ns-3-dev
 
 The ``waf configure`` ensures that all tools needed by Kodo are
 available and prepares to build Kodo.
-Kodo relies on a number of auxiliary libraries (see kodo.readthedocs.org)
-by specifying the ``--bundle=ALL`` command we instruct ``waf`` to
-automatically download these. The ``--bundle-path`` informs ``waf``
+Kodo relies on a number of auxiliary libraries (see kodo.readthedocs.org).
+By specifying the ``--bundle-path`` option, this informs ``waf``
 about where the downloaded libraries should be placed. You may
-omit the ``--bundle-path`` option in that case ``waf`` will create a
+omit the ``--bundle-path`` option which in that case ``waf`` will create a
 local directory in the Kodo folder called  ``bundle_dependencies`` and
 store the libraries there. The ``--ns3-path`` specifies the folder where
 you have made the ns-3 checkout and built the ns-3 libraries.
 
-Now you should be able to build the simulation by running:
-::
+Now you should be able to build the simulation by running: ::
+
   ./waf build
 
 Which will produce a binary in the ``build/linux/`` folder called
 ``simple_udp_broadcast``. Probably the build will throw some warnings, but if
 it is successful, you will be able to continue the test.
 
+Try running it by typing: ::
 
-Try running it by typing:
-::
   ./build/linux/simple_udp_broadcast --verbose=1
 
 In your terminal the ``--verbose`` option will make it print a lot
