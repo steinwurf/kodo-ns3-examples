@@ -2,8 +2,9 @@ Introduction
 ------------
 This repository contains examples that show how you can build an ns-3
 using the Kodo erasure coding library (http://github.com/steinwurf/kodo).
-Which is freely available for educational and research purposes, you
-may find the specific license in the library.
+To obtain a valid Kodo license you must fill out the license request form. For
+educational and research purposes, you may find the specific license in the
+library LICENSE.rst.
 
 ns-3 (http://nsnam.org) is a discrete-event network simulator, targeted primarily for
 research and educational use. ns-3 is licensed under the GNU GPLv2 license.
@@ -55,7 +56,7 @@ To see the current tagged version of ns-3 run: ::
 
 We will select the currently newest release: ::
 
-  hg checkout ns-3.18
+  hg checkout ns-3.20
 
 Configure the project by running: ::
 
@@ -83,10 +84,10 @@ Then to see the tagged versions: ::
 
   hg tags
 
-And as previously described to switch to one of those versions do a
+And as previously described to switch to version ``xx`` do a
 (for example): ::
 
-  hg checkout ns-3.19
+  hg checkout ns-3.xx
 
 Now you have to go through the ``configure`` and ``build`` steps again,
 described in the previous section.
