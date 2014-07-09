@@ -2,9 +2,10 @@ Introduction
 ------------
 This repository contains examples that show how you can build an ns-3
 using the Kodo erasure coding library (http://github.com/steinwurf/kodo).
-To obtain a valid Kodo license you must fill out the license request form. For
-educational and research purposes, you may find the specific license in the
-library LICENSE.rst.
+To obtain a valid Kodo license you must fill out the license request form_. For
+educational and research purposes, you may find the specific license.
+
+.. _form: https://github.com/steinwurf/kodo/blob/master/LICENSE.rst
 
 ns-3 (http://nsnam.org) is a discrete-event network simulator, targeted primarily for
 research and educational use. ns-3 is licensed under the GNU GPLv2 license.
