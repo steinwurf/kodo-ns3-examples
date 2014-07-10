@@ -168,7 +168,7 @@ int main (int argc, char *argv[])
   double rss = -93;  // -dBm
   uint32_t packetSize = 1000; // bytes
   double interval = 1.0; // seconds
-  uint32_t generationSize = 8;
+  uint32_t generationSize = 5;
 
   CommandLine cmd;
 
