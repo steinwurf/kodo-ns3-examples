@@ -23,13 +23,12 @@
 // ns-3 source code.
 // In the script below the sender transmits encoded packets in a non-systematic
 // way from a block of data. The sender continues until the receiver has all
-// the packets. The
-// description below is from the original example, we modified it at bit
-// fit our scenario.
+// the packets. The description below is from the original example, we modified
+// it at bit fit our scenario.
 
 // This script configures two nodes on an 802.11b physical layer, with
 // 802.11b NICs in adhoc mode, and by default, sends one generation of
-// 5 packets and 1000 (application) bytes to the other node.  The physical
+// 5 packets and 1000 (application) bytes to the other node. The physical
 // layer is configured to receive at a fixed RSS (regardless of the distance
 // and transmit power); therefore, changing position of the nodes has no effect.
 //
@@ -39,20 +38,17 @@
 // ./waf --run "wifi-simple-adhoc --help"
 //
 // For instance, for this configuration, the physical layer will
-// stop successfully receiving packets when rss drops below -97 dBm.
+// stop successfully receiving packets when rss drops below -96 dBm.
 // To see this effect, try by changing the rss parameter on the simulation
 //
 // Note that all ns-3 attributes (not just the ones exposed in the below
 // script) can be changed at command line; see the documentation.
 //
-// This script can also be helpful to put the Wifi layer into verbose
-// logging mode by setting the verbose variable to true.
-//
 // When you are done, you will notice two pcap trace files in your directory.
-// If you have tcpdump installed, you can try this:
+// You can review the files with Wireshark or tcpdump. If you have tcpdump
+// installed, you can try this:
 //
 // tcpdump -r wifi-simple-adhoc-0-0.pcap -nn -tt
-//
 
 #include <ns3/core-module.h>
 #include <ns3/network-module.h>
