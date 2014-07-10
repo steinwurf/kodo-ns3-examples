@@ -5,9 +5,9 @@ ns3_build = bld.env['NS3_BUILD']
 ns3_libs = bld.env['NS3_LIBS']
 
 bld.program(
-    features='cxx cxxprogram',
+    features='cxx test',
     source=['main.cpp'],
-    target='wireless_point_to_point',
+    target='wifi_broadcast',
     libpath=ns3_build,
     rpath=ns3_build,
     includes=ns3_build,

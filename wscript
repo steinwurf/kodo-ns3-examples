@@ -14,6 +14,7 @@ def recurse_helper(ctx, name):
         p = ctx.dependency_path(name)
         ctx.recurse(p)
 
+
 def options(opt):
 
     # Here we fetch Kodo and its dependencies using git
@@ -157,4 +158,4 @@ def build(bld):
         recurse_helper(bld, 'sak')
 
     bld.recurse('wired_broadcast')
-    #bld.recurse('wifi_broadcast')
+    bld.recurse('wifi_broadcast')
