@@ -13,7 +13,7 @@ you can see the details here_.
 ns-3 (http://nsnam.org) is a discrete-event network simulator, targeted primarily for
 research and educational use. ns-3 is licensed under the GNU GPLv2 license.
 
-Using ns-3 as a library
+Using ns-3 as a Library
 -----------------------
 In the example provided in this repository we use ns-3 as a library, i.e.
 we build ns-3 separately and then simply link against it to build our
@@ -77,7 +77,7 @@ ns-3 simulator libraries: ::
 The ns-3 libraries should now be built and we may use them in our
 simulations.
 
-Update to a new version
+Update to a New Version
 -----------------------
 When a new version of ns-3 gets released you can get the new version easily by
 running (in the ``ns-3-dev`` folder): ::
@@ -96,7 +96,7 @@ And as previously described to switch to version ``xx`` do a
 Now you have to go through the ``configure`` and ``build`` steps again,
 described in the previous section.
 
-Building an example simulation.
+Building an Example Simulation.
 -------------------------------
 After building ns-3 you can build the example simulations
 provided by this repository.
@@ -130,7 +130,7 @@ Try running it by typing: ::
 In your terminal the ``--verbose`` option will make it print a lot
 of info, just to see it works.
 
-Comments, feedback & bugs
+Comments, Feedback & Bugs
 -------------------------
 All comments, questions, and feedback regarding the examples can be
 posted to our dev mailing list (hosted at google groups):
