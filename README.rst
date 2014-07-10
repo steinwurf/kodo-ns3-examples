@@ -3,8 +3,8 @@ Introduction
 This repository contains examples that show how you can build an ns-3
 using the Kodo erasure coding library (http://github.com/steinwurf/kodo).
 
-To obtain a valid Kodo license **you must fill out the license request** form_. 
-Kodo is available under a research and educational friendly license, 
+To obtain a valid Kodo license **you must fill out the license request** form_.
+Kodo is available under a research and educational friendly license,
 you can see the details here_.
 
 .. _form: http://steinwurf.com/license/
@@ -98,13 +98,8 @@ described in the previous section.
 
 Building an example simulation.
 -------------------------------
-After building ns-3 you can build one of the example simulations
-provided by this repository. Here we will build the ``simple_udp_broadcast``
-example.
-
-Navigate to the ``simple_udp_broadcast`` folder: ::
-
-  cd simple_udp_broadcast
+After building ns-3 you can build the example simulations
+provided by this repository.
 
 Configure the project by running: ::
 
@@ -130,7 +125,7 @@ it is successful, you will be able to continue the test.
 
 Try running it by typing: ::
 
-  ./build/linux/simple_udp_broadcast --verbose=1
+  ./build/linux/simple_udp_broadcast/simple_udp_broadcast --verbose=1
 
 In your terminal the ``--verbose`` option will make it print a lot
 of info, just to see it works.
