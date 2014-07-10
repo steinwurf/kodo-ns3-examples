@@ -60,7 +60,7 @@
 #include <ns3/wifi-module.h>
 #include <ns3/internet-module.h>
 
-#include <kodo/rlnc/full_vector_codes.hpp>
+#include <kodo/rlnc/full_rlnc_codes.hpp>
 
 #include <iostream>
 #include <fstream>

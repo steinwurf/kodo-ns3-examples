@@ -10,8 +10,9 @@
 import os
 import ntpath
 
-APPNAME = 'errorless_broadcast_rlnc'
+APPNAME = 'kodo-ns3-examples'
 VERSION = '1.0.0'
+
 
 def recurse_helper(ctx, name):
     if not ctx.has_dependency_path(name):
@@ -20,68 +21,64 @@ def recurse_helper(ctx, name):
         p = ctx.dependency_path(name)
         ctx.recurse(p)
 
+
 def options(opt):
 
     opt.load('compiler_cxx')
 
     # The options needed to find the ns-3 libraries
-    opt.add_option('--ns3-path',
-                   help='Install path to ns3',
-                   action="store", type="string", default=None,
-                   dest='ns3_path')
+    opt.add_option(
+        '--ns3-path',
+        help='Install path to ns3',
+        action="store", type="string", default=None,
+        dest='ns3_path')
 
-    opt.add_option('--ns3-type',
-                   help='The build type used when building ns3 [debug|release]',
-                   action="store", type="string", default='debug',
-                   dest='ns3_type')
+    opt.add_option(
+        '--ns3-type',
+        help='The build type used when building ns3 [debug|release]',
+        action="store", type="string", default='debug',
+        dest='ns3_type')
 
     # Here we fetch Kodo and its dependencies using git
     import waflib.extras.wurf_dependency_bundle as bundle
     import waflib.extras.wurf_dependency_resolve as resolve
-    import waflib.extras.wurf_configure_output
 
-    bundle.add_dependency(opt,
-        resolve.ResolveGitMajorVersion(
-            name='waf-tools',
-            git_repository = 'github.com/steinwurf/external-waf-tools.git',
-            major_version = 2))
+    bundle.add_dependency(opt, resolve.ResolveGitMajorVersion(
+        name='boost',
+        git_repository='github.com/steinwurf/external-boost-light.git',
+        major_version=1))
 
-    bundle.add_dependency(opt,
-        resolve.ResolveGitMajorVersion(
-            name = 'boost',
-            git_repository = 'github.com/steinwurf/external-boost-light.git',
-            major_version = 1))
+    bundle.add_dependency(opt, resolve.ResolveGitMajorVersion(
+        name='cpuid',
+        git_repository='github.com/steinwurf/cpuid.git',
+        major_version=3))
 
-    bundle.add_dependency(opt,
-        resolve.ResolveGitMajorVersion(
-            name = 'sak',
-            git_repository = 'github.com/steinwurf/sak.git',
-            major_version = 11))
+    bundle.add_dependency(opt, resolve.ResolveGitMajorVersion(
+        name='fifi',
+        git_repository='github.com/steinwurf/fifi.git',
+        major_version=12))
 
-    bundle.add_dependency(opt,
-        resolve.ResolveGitMajorVersion(
-            name = 'platform',
-            git_repository = 'github.com/steinwurf/platform.git',
-            major_version = 1))
+    bundle.add_dependency(opt, resolve.ResolveGitMajorVersion(
+        name='kodo',
+        git_repository='github.com/steinwurf/kodo.git',
+        major_version=17))
 
-    bundle.add_dependency(opt,
-        resolve.ResolveGitMajorVersion(
-            name = 'cpuid',
-            git_repository = 'github.com/steinwurf/cpuid.git',
-            major_version = 3))
+    bundle.add_dependency(opt, resolve.ResolveGitMajorVersion(
+        name='platform',
+        git_repository='github.com/steinwurf/platform.git',
+        major_version=1))
 
-    bundle.add_dependency(opt,
-        resolve.ResolveGitMajorVersion(
-            name = 'fifi',
-            git_repository = 'github.com/steinwurf/fifi.git',
-            major_version = 12))
+    bundle.add_dependency(opt, resolve.ResolveGitMajorVersion(
+        name='sak',
+        git_repository='github.com/steinwurf/sak.git',
+        major_version=11))
 
-    bundle.add_dependency(opt,
-        resolve.ResolveGitMajorVersion(
-            name = 'kodo',
-            git_repository = 'github.com/steinwurf/kodo.git',
-            major_version = 17))
+    bundle.add_dependency(opt, resolve.ResolveGitMajorVersion(
+        name='waf-tools',
+        git_repository='github.com/steinwurf/external-waf-tools.git',
+        major_version=2))
 
+    opt.load('wurf_configure_output')
     opt.load('wurf_dependency_bundle')
     opt.load('wurf_tools')
 
@@ -94,20 +91,19 @@ def configure(conf):
         conf.load('wurf_dependency_bundle')
         conf.load('wurf_tools')
 
-        conf.load_external_tool('mkspec', 'wurf_cxx_mkspec_tool')
-        conf.load_external_tool('runners', 'wurf_runner')
         conf.load_external_tool('install_path', 'wurf_install_path')
+        conf.load_external_tool('mkspec', 'wurf_cxx_mkspec_tool')
         conf.load_external_tool('project_gen', 'wurf_project_generator')
+        conf.load_external_tool('runners', 'wurf_runner')
 
         recurse_helper(conf, 'boost')
-        recurse_helper(conf, 'sak')
-        recurse_helper(conf, 'platform')
         recurse_helper(conf, 'cpuid')
         recurse_helper(conf, 'fifi')
         recurse_helper(conf, 'kodo')
+        recurse_helper(conf, 'platform')
+        recurse_helper(conf, 'sak')
 
     # Find the ns-3 libraries
-
     if not conf.options.ns3_path:
         conf.fatal('Please specify a path to ns3 using the '
                    '--ns3-path option example --ns3-path=~/dev/ns3')
@@ -157,17 +153,17 @@ def configure(conf):
 
         return l
 
-
     ns3_lib_names = [get_libname(l) for l in ns3_libs]
 
     for l in ns3_lib_names:
 
-        conf.check_cxx(lib = l, libpath=[ns3_lib_dir.abspath()],
-                       rpath = [ns3_lib_dir.abspath()])
+        conf.check_cxx(lib=l, libpath=[ns3_lib_dir.abspath()],
+                       rpath=[ns3_lib_dir.abspath()])
 
-    conf.env['NS3_LIBS'] = ns3_lib_names
     conf.env['NS3_BUILD'] = [ns3_build]
+    conf.env['NS3_LIBS'] = ns3_lib_names
     conf.env['NS3_TYPE'] = ns3_type
+
 
 def build(bld):
 
@@ -176,25 +172,11 @@ def build(bld):
         bld.load('wurf_dependency_bundle')
 
         recurse_helper(bld, 'boost')
-        recurse_helper(bld, 'sak')
-        recurse_helper(bld, 'fifi')
-        recurse_helper(bld, 'platform')
         recurse_helper(bld, 'cpuid')
+        recurse_helper(bld, 'fifi')
         recurse_helper(bld, 'kodo')
+        recurse_helper(bld, 'platform')
+        recurse_helper(bld, 'sak')
 
-
-    ns3_build = bld.env['NS3_BUILD']
-    ns3_libs = bld.env['NS3_LIBS']
-
-    bld.program(features = 'cxx cxxprogram',
-                source = ['main.cpp'],
-                target = 'errorless_broadcast_rlnc',
-                libpath = ns3_build,
-                rpath = ns3_build,
-                includes = ns3_build,
-                lib = ns3_libs,
-                use = ['kodo_includes', 'fifi_includes', 'sak_includes',
-                       'boost_includes','platform_includes','cpuid_includes'])
-
-
-
+    bld.recurse('errorless_broadcast_rlnc')
+    bld.recurse('simple_udp_broadcast')
