@@ -101,10 +101,10 @@ Examples Description and Repository Building
 After building ns-3 you can build the example simulations provided by this
 repository. Currently we have the following examples:
 
- * ``wifi_broadcast``: Broadcasting packets with RLNC on single
-   transmitter - receiver pair with an IEEE 802.11b WiFi channel.
- * ``wired_broadcast``: Broadcasting packets with RLNC on a single transmitter -
-    2 receivers without erasure channels.
+* ``wifi_broadcast``: Broadcasting packets with RLNC on single transmitter
+  receiver pair with an IEEE 802.11b WiFi channel.
+* ``wired_broadcast``: Broadcasting packets with RLNC on a single transmitter
+  with 2 receivers without erasure channels.
 
 You can see more documentation of each example in the ``main.cpp`` file comments
 regarding what the example does. There you can also check how to control and set
