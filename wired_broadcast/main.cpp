@@ -49,6 +49,9 @@ using namespace ns3;
 
 // The encoder / decoder type we will use. Here we consider GF(2). For GF(2^8)
 // just change "binary" for "binary8"
+
+// Also we implement the Kodo traces (available since V.17.0.0). Here, we have
+// enabled the decoder trace and disabled the encoder trace.
 typedef kodo::full_rlnc_encoder<fifi::binary,kodo::disable_trace> rlnc_encoder;
 typedef kodo::full_rlnc_decoder<fifi::binary,kodo::enable_trace> rlnc_decoder;
 
