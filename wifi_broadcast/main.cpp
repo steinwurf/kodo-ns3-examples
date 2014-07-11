@@ -41,6 +41,9 @@
 // For instance, for this configuration, the physical layer will
 // stop successfully receiving packets when rss drops below -96 dBm.
 // To see this effect, try by changing the rss parameter on the simulation
+// by typing ./build/linux/wifi_broadcast/wifi_broadcast --rss=-96
+// With this value (or higher), the erasure rate goes to 1 and the packets can
+// not be recovered.
 //
 // Note that all ns-3 attributes (not just the ones exposed in the below
 // script) can be changed at command line; see the documentation.

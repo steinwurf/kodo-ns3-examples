@@ -28,7 +28,14 @@
 
 // You can change the generation size or another parameter, by running (for
 // example with a different generation size):
-// ./errorless_broadcast_rlnc --generationSize=MY_GENERATION_SIZE
+// ./build/linux/wired_broadcast/wired_broadcast --generationSize=GENERATION_SIZE
+
+// When you are done, you will notice four pcap trace files in your directory.
+// You can review the files with Wireshark or tcpdump. If you have tcpdump
+// installed, you can try this:
+//
+// tcpdump -r star-0-0.pcap -nn -tt
+
 
 #include <ns3/core-module.h>
 #include <ns3/point-to-point-star.h>
