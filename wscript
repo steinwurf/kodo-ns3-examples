@@ -1,14 +1,7 @@
 #! /usr/bin/env python
 # encoding: utf-8
 
-# Example of how to run Waf if you want it to download all dependencies
-#
-# ./waf configure --bundle=ALL --bundle-path=/home/edwin/bundle_dependencies
-#                 --ns3-path=/home/edwin/blabla --ns3-type=debug
-#
-
 import os
-import ntpath
 
 APPNAME = 'kodo-ns3-examples'
 VERSION = '1.0.0'
@@ -24,7 +17,9 @@ def recurse_helper(ctx, name):
 
 def options(opt):
 
-    opt.load('compiler_cxx')
+    # Here we fetch Kodo and its dependencies using git
+    import waflib.extras.wurf_dependency_bundle as bundle
+    import waflib.extras.wurf_dependency_resolve as resolve
 
     # The options needed to find the ns-3 libraries
     opt.add_option(
@@ -32,16 +27,6 @@ def options(opt):
         help='Install path to ns3',
         action="store", type="string", default=None,
         dest='ns3_path')
-
-    opt.add_option(
-        '--ns3-type',
-        help='The build type used when building ns3 [debug|release]',
-        action="store", type="string", default='debug',
-        dest='ns3_type')
-
-    # Here we fetch Kodo and its dependencies using git
-    import waflib.extras.wurf_dependency_bundle as bundle
-    import waflib.extras.wurf_dependency_resolve as resolve
 
     bundle.add_dependency(opt, resolve.ResolveGitMajorVersion(
         name='boost',
@@ -119,11 +104,6 @@ def configure(conf):
         conf.fatal('Could not find the ns3 build directory '
                    'in "%s"' % ns3_build)
 
-    ns3_type = conf.options.ns3_type
-
-    if not ns3_type:
-        conf.fatal('You must specify the build type')
-
     ns3_lib_dir = conf.root.find_dir(ns3_build)
 
     if conf.is_mkspec_platform('mac'):
@@ -140,7 +120,7 @@ def configure(conf):
 
     def get_libname(l):
         # Get the file name only
-        l = ntpath.basename(str(l))
+        l = os.path.basename(str(l))
 
         # Remove the lib prefix
         prefix = 'lib'
@@ -162,7 +142,6 @@ def configure(conf):
 
     conf.env['NS3_BUILD'] = [ns3_build]
     conf.env['NS3_LIBS'] = ns3_lib_names
-    conf.env['NS3_TYPE'] = ns3_type
 
 
 def build(bld):
@@ -178,5 +157,5 @@ def build(bld):
         recurse_helper(bld, 'platform')
         recurse_helper(bld, 'sak')
 
-    bld.recurse('errorless_broadcast_rlnc')
-    bld.recurse('simple_udp_broadcast')
+    bld.recurse('wired_broadcast')
+    bld.recurse('wifi_broadcast')

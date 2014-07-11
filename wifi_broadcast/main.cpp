@@ -18,17 +18,18 @@
  */
 
 // This example shows how to use the Kodo library in a ns-3 simulation.
-// The code below are based the the wifi-simple-adhoc example, which can
+// The code below is based on the wifi-simple-adhoc example, which can
 // be found here ns-3-dev/examples/wireless/wifi-simple-adhoc.cc in the
 // ns-3 source code.
-// In the script below the sender transmits encoded packets from a block of
-// data. The sender continues until the receiver has all packets. The
-// description below is from the original example, we modified it at bit
-// fit our scenario.
+
+// In the script below the sender transmits encoded packets in a non-systematic
+// way from a block of data. The sender continues until the receiver has all
+// the packets. The description below is from the original example, we modified
+// it at bit fit our scenario.
 
 // This script configures two nodes on an 802.11b physical layer, with
 // 802.11b NICs in adhoc mode, and by default, sends one generation of
-// 32 packets and 1000 (application) bytes to the other node.  The physical
+// 5 packets and 1000 (application) bytes to the other node. The physical
 // layer is configured to receive at a fixed RSS (regardless of the distance
 // and transmit power); therefore, changing position of the nodes has no effect.
 //
@@ -38,20 +39,20 @@
 // ./waf --run "wifi-simple-adhoc --help"
 //
 // For instance, for this configuration, the physical layer will
-// stop successfully receiving packets when rss drops below -97 dBm.
+// stop successfully receiving packets when rss drops below -96 dBm.
 // To see this effect, try by changing the rss parameter on the simulation
+// by typing ./build/linux/wifi_broadcast/wifi_broadcast --rss=-96
+// With this value (or higher), the erasure rate goes to 1 and the packets can
+// not be recovered.
 //
 // Note that all ns-3 attributes (not just the ones exposed in the below
 // script) can be changed at command line; see the documentation.
 //
-// This script can also be helpful to put the Wifi layer into verbose
-// logging mode by setting the verbose variable to true.
-//
 // When you are done, you will notice two pcap trace files in your directory.
-// If you have tcpdump installed, you can try this:
+// You can review the files with Wireshark or tcpdump. If you have tcpdump
+// installed, you can try this:
 //
 // tcpdump -r wifi-simple-adhoc-0-0.pcap -nn -tt
-//
 
 #include <ns3/core-module.h>
 #include <ns3/network-module.h>
@@ -61,19 +62,25 @@
 #include <ns3/internet-module.h>
 
 #include <kodo/rlnc/full_rlnc_codes.hpp>
+#include <kodo/trace.hpp>
 
 #include <iostream>
 #include <fstream>
 #include <vector>
 #include <string>
-
-NS_LOG_COMPONENT_DEFINE ("KodoWifiSimpleAdhoc");
+#include <ctime>
 
 using namespace ns3;
 
 // The encoder / decoder type we will use
-typedef kodo::full_rlnc_encoder<fifi::binary> rlnc_encoder;
-typedef kodo::full_rlnc_decoder<fifi::binary> rlnc_decoder;
+
+// The encoder / decoder type we will use. Here we consider GF(2). For GF(2^8)
+// just change "binary" for "binary8"
+
+// Also we implement the Kodo traces (available since V.17.0.0). Here, we have
+// enabled the decoder trace and disabled the encoder trace.
+typedef kodo::full_rlnc_encoder<fifi::binary,kodo::disable_trace> rlnc_encoder;
+typedef kodo::full_rlnc_decoder<fifi::binary,kodo::enable_trace> rlnc_decoder;
 
 // Just for illustration purposes, this simple objects implements both
 // the sender (encoder) and receiver (decoder).
@@ -91,17 +98,36 @@ public:
     std::vector<uint8_t> data(encoder->block_size(), 'x');
     m_encoder->set_symbols(sak::storage(data));
 
+    m_encoder->set_systematic_off();
+    m_encoder->seed(time(0));
+
     m_payload_buffer.resize(m_encoder->payload_size());
+    m_transmission_count = 0;
   }
 
   void ReceivePacket (Ptr<Socket> socket)
   {
-    NS_LOG_UNCOND ("Received one packet!");
+
+    std::cout << "Received one packet at decoder" << std::endl;
 
     auto packet = socket->Recv();
     packet->CopyData(&m_payload_buffer[0], m_decoder->payload_size());
 
     m_decoder->decode(&m_payload_buffer[0]);
+
+    if (kodo::has_trace<rlnc_decoder>::value)
+    {
+        auto filter = [](const std::string& zone)
+        {
+            std::set<std::string> filters =
+                {"input_symbol_coefficients","decoder_state"};
+
+            return filters.count(zone);
+        };
+
+        std::cout << "Trace decoder:" << std::endl;
+        kodo::trace(m_decoder, std::cout, filter);
+    }
 
   }
 
@@ -113,11 +139,22 @@ public:
         auto packet = Create<Packet> (&m_payload_buffer[0],
                                       bytes_used);
         socket->Send (packet);
+        m_transmission_count++;
+
+        if (kodo::has_trace<rlnc_encoder>::value)
+        {
+            std::cout << "Trace encoder:" << std::endl;
+            kodo::trace(m_encoder, std::cout);
+        }
+
         Simulator::Schedule (pktInterval, &KodoSimulation::GenerateTraffic, this,
                              socket, pktInterval);
+
       }
     else
       {
+        std::cout << "Decoding completed! Total transmissions: "
+                  << m_transmission_count << std::endl;
         socket->Close ();
       }
   }
@@ -129,17 +166,18 @@ private:
 
   std::vector<uint8_t> m_payload_buffer;
 
+  uint32_t m_transmission_count;
+
 };
 
 
 int main (int argc, char *argv[])
 {
   std::string phyMode ("DsssRate1Mbps");
-  double rss = -80;  // -dBm
+  double rss = -93;  // -dBm
   uint32_t packetSize = 1000; // bytes
   double interval = 1.0; // seconds
-  bool verbose = false;
-  uint32_t generationSize = 32;
+  uint32_t generationSize = 5;
 
   CommandLine cmd;
 
@@ -147,8 +185,8 @@ int main (int argc, char *argv[])
   cmd.AddValue ("rss", "received signal strength", rss);
   cmd.AddValue ("packetSize", "size of application packet sent", packetSize);
   cmd.AddValue ("interval", "interval (seconds) between packets", interval);
-  cmd.AddValue ("verbose", "turn on all WifiNetDevice log components", verbose);
-  cmd.AddValue ("generationSize", "Set the generation size to use", generationSize);
+  cmd.AddValue ("generationSize", "Set the generation size to use",
+                generationSize);
 
   cmd.Parse (argc, argv);
 
@@ -167,15 +205,12 @@ int main (int argc, char *argv[])
   Config::SetDefault ("ns3::WifiRemoteStationManager::NonUnicastMode",
                       StringValue (phyMode));
 
+  // Source and destination
   NodeContainer c;
   c.Create (2);
 
   // The below set of helpers will help us to put together the wifi NICs we want
   WifiHelper wifi;
-  if (verbose)
-    {
-      wifi.EnableLogComponents ();  // Turn on all Wifi logging
-    }
   wifi.SetStandard (WIFI_PHY_STANDARD_80211b);
 
   YansWifiPhyHelper wifiPhy =  YansWifiPhyHelper::Default ();
@@ -189,7 +224,8 @@ int main (int argc, char *argv[])
   wifiChannel.SetPropagationDelay ("ns3::ConstantSpeedPropagationDelayModel");
   // The below FixedRssLossModel will cause the rss to be fixed regardless
   // of the distance between the two stations, and the transmit power
-  wifiChannel.AddPropagationLoss ("ns3::FixedRssLossModel","Rss",DoubleValue (rss));
+  wifiChannel.AddPropagationLoss ("ns3::FixedRssLossModel","Rss",
+                                  DoubleValue (rss));
   wifiPhy.SetChannel (wifiChannel.Create ());
 
   // Add a non-QoS upper mac, and disable rate control
@@ -202,9 +238,11 @@ int main (int argc, char *argv[])
   NetDeviceContainer devices = wifi.Install (wifiPhy, wifiMac, c);
 
   // Note that with FixedRssLossModel, the positions below are not
-  // used for received signal strength.
+  // used for received signal strength. However, they are required for the
+  // YansWiFiChannelHelper
   MobilityHelper mobility;
-  Ptr<ListPositionAllocator> positionAlloc = CreateObject<ListPositionAllocator> ();
+  Ptr<ListPositionAllocator> positionAlloc =
+    CreateObject<ListPositionAllocator> ();
   positionAlloc->Add (Vector (0.0, 0.0, 0.0));
   positionAlloc->Add (Vector (5.0, 0.0, 0.0));
   mobility.SetPositionAllocator (positionAlloc);
@@ -233,19 +271,17 @@ int main (int argc, char *argv[])
                                            &kodoSimulator));
 
   Ptr<Socket> source = Socket::CreateSocket (c.Get (1), tid);
-  InetSocketAddress remote = InetSocketAddress (Ipv4Address ("255.255.255.255"), 80);
+  InetSocketAddress remote = InetSocketAddress (Ipv4Address ("255.255.255.255"),
+                                                80);
   source->SetAllowBroadcast (true);
   source->Connect (remote);
 
-  // Tracing
+  // Pcap tracing
   wifiPhy.EnablePcap ("wifi-simple-adhoc", devices);
 
-  // Output what we are doing
-  NS_LOG_UNCOND ("Testing " << generationSize  << " packets sent "
-                 << "with receiver rss " << rss );
-
   Simulator::ScheduleWithContext (source->GetNode ()->GetId (),
-                                  Seconds (1.0), &KodoSimulation::GenerateTraffic,
+                                  Seconds (1.0),
+                                  &KodoSimulation::GenerateTraffic,
                                   &kodoSimulator,
                                   source, interPacketInterval);
 

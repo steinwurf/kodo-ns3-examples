@@ -28,7 +28,14 @@
 
 // You can change the generation size or another parameter, by running (for
 // example with a different generation size):
-// ./errorless_broadcast_rlnc --generationSize=MY_GENERATION_SIZE
+// ./build/linux/wired_broadcast/wired_broadcast --generationSize=GENERATION_SIZE
+
+// When you are done, you will notice four pcap trace files in your directory.
+// You can review the files with Wireshark or tcpdump. If you have tcpdump
+// installed, you can try this:
+//
+// tcpdump -r star-0-0.pcap -nn -tt
+
 
 #include <ns3/core-module.h>
 #include <ns3/point-to-point-star.h>
@@ -49,6 +56,9 @@ using namespace ns3;
 
 // The encoder / decoder type we will use. Here we consider GF(2). For GF(2^8)
 // just change "binary" for "binary8"
+
+// Also we implement the Kodo traces (available since V.17.0.0). Here, we have
+// enabled the decoder trace and disabled the encoder trace.
 typedef kodo::full_rlnc_encoder<fifi::binary,kodo::disable_trace> rlnc_encoder;
 typedef kodo::full_rlnc_decoder<fifi::binary,kodo::enable_trace> rlnc_decoder;
 
@@ -72,6 +82,7 @@ public:
     m_encoder->set_symbols(sak::storage(data));
 
     m_payload_buffer.resize(m_encoder->payload_size());
+    m_transmission_count = 0;
   }
 
   void ReceivePacket1 (Ptr<Socket> socket)
@@ -131,6 +142,7 @@ public:
         uint32_t bytes_used = m_encoder->encode(&m_payload_buffer[0]);
         auto packet = Create<Packet> (&m_payload_buffer[0],bytes_used);
         socket->Send (packet);
+        m_transmission_count++;
 
         if (kodo::has_trace<rlnc_encoder>::value)
         {
@@ -143,7 +155,8 @@ public:
       }
     else
       {
-        std::cout << "Decoding completed!" << std::endl;
+        std::cout << "Decoding completed! Total transmissions: "
+                  << m_transmission_count << std::endl;
         socket->Close ();
       }
   }
@@ -155,6 +168,7 @@ private:
   rlnc_decoder::pointer m_decoder_2;
 
   std::vector<uint8_t> m_payload_buffer;
+  uint32_t m_transmission_count;
 
 };
 

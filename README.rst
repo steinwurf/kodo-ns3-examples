@@ -10,8 +10,8 @@ you can see the details here_.
 .. _form: http://steinwurf.com/license/
 .. _here: https://github.com/steinwurf/kodo/blob/master/LICENSE.rst
 
-ns-3 (http://nsnam.org) is a discrete-event network simulator, targeted primarily for
-research and educational use. ns-3 is licensed under the GNU GPLv2 license.
+ns-3 (http://nsnam.org) is a discrete-event network simulator, targeted primarily
+for research and educational use. ns-3 is licensed under the GNU GPLv2 license.
 
 Using ns-3 as a Library
 -----------------------
@@ -62,7 +62,7 @@ We will select the currently newest release: ::
 
   hg checkout ns-3.20
 
-Configure the project by running: ::
+Configure the ns-3 project by running: ::
 
   ./waf configure
 
@@ -96,20 +96,28 @@ And as previously described to switch to version ``xx`` do a
 Now you have to go through the ``configure`` and ``build`` steps again,
 described in the previous section.
 
-Building an Example Simulation.
--------------------------------
-After building ns-3 you can build the example simulations
-provided by this repository.
+Examples Description and Repository Building
+--------------------------------------------
+After building ns-3 you can build the example simulations provided by this
+repository. Currently we have the following examples:
+
+ * ``wifi_broadcast``: Broadcasting packets with RLNC on single
+   transmitter - receiver pair with an IEEE 802.11b WiFi channel.
+ * ``wired_broadcast``: Broadcasting packets with RLNC on a single transmitter -
+    2 receivers without erasure channels.
+
+You can see more documentation of each example in the ``main.cpp`` file comments
+regarding what the example does. There you can also check how to control and set
+up the simulation parameters like packet, field and generation size among others.
 
 Configure the project by running: ::
 
   ./waf configure --bundle-path=~/dev/bundle_dependencies --ns3-path=~/dev/ns-3-dev
 
-The ``waf configure`` ensures that all tools needed by Kodo are
-available and prepares to build Kodo.
-Kodo relies on a number of auxiliary libraries (see kodo.readthedocs.org).
-By specifying the ``--bundle-path`` option, this informs ``waf``
-about where the downloaded libraries should be placed. You may
+The ``waf configure`` ensures that all tools needed by Kodo are available and
+prepares to build Kodo. Kodo relies on a number of auxiliary libraries
+(see kodo.readthedocs.org). By specifying the ``--bundle-path`` option, this
+informs ``waf`` about where the downloaded libraries should be placed. You may
 omit the ``--bundle-path`` option which in that case ``waf`` will create a
 local directory in the Kodo folder called  ``bundle_dependencies`` and
 store the libraries there. The ``--ns3-path`` specifies the folder where
@@ -119,16 +127,18 @@ Now you should be able to build the simulation by running: ::
 
   ./waf build
 
-Which will produce a binary in the ``build/linux/`` folder called
-``simple_udp_broadcast``. Probably the build will throw some warnings, but if
-it is successful, you will be able to continue the test.
+Which will produce different binaries in the ``./build/linux/`` folder, one per
+each example. Probably the build will throw some warnings, but if it is
+successful, you will be able to continue the test.
 
-Try running it by typing: ::
+Try running the ``wifi_broadcast`` example by typing: ::
 
-  ./build/linux/simple_udp_broadcast/simple_udp_broadcast --verbose=1
+  ./build/linux/wifi_broadcast/wifi_broadcast
 
-In your terminal the ``--verbose`` option will make it print a lot
-of info, just to see it works.
+You should see how the decoding matrix changes with each combination sent. Due
+to the channel nature, here you will only see the linear dependence effect. You
+will also see when the decoding process is completed and how many transmissions
+where required.
 
 Comments, Feedback & Bugs
 -------------------------
