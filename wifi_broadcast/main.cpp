@@ -21,6 +21,7 @@
 // The code below is based on the wifi-simple-adhoc example, which can
 // be found here ns-3-dev/examples/wireless/wifi-simple-adhoc.cc in the
 // ns-3 source code.
+
 // In the script below the sender transmits encoded packets in a non-systematic
 // way from a block of data. The sender continues until the receiver has all
 // the packets. The description below is from the original example, we modified
@@ -66,8 +67,6 @@
 #include <string>
 #include <ctime>
 
-//NS_LOG_COMPONENT_DEFINE ("KodoWifiSimpleAdhoc");
-
 using namespace ns3;
 
 // The encoder / decoder type we will use
@@ -111,7 +110,7 @@ public:
         auto filter = [](const std::string& zone)
         {
             std::set<std::string> filters =
-                {"decoder_state"};
+                {"input_symbol_coefficients","decoder_state"};
 
             return filters.count(zone);
         };
