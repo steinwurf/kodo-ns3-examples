@@ -101,14 +101,14 @@ Examples Description and Repository Building
 After building ns-3 you can build the example simulations provided by this
 repository. Currently we have the following examples:
 
-* ``wifi_broadcast``: Broadcasting packets with RLNC on single transmitter
-  receiver pair with an IEEE 802.11b WiFi channel.
-* ``wired_broadcast``: Broadcasting packets with RLNC on a single transmitter
-  with 2 receivers without erasure channels.
+* ``wifi_broadcast``: This example consists on broadcasting packets with RLNC
+  on a single transmitter receiver pair with an IEEE 802.11b WiFi channel.
+* ``wired_broadcast``: This example consists on broadcasting packets with RLNC
+  from a transmitter to 2 receivers without erasure channels.
 
 You can see more documentation of each example in the ``main.cpp`` file comments
-regarding what the example does. There you can also check how to control and set
-up the simulation parameters like packet, field and generation size among others.
+regarding what each example does. There you can also check how to control and set
+up the simulation parameters like packet, field and generation sizes among others.
 
 Configure the project by running: ::
 
@@ -123,12 +123,12 @@ local directory in the Kodo folder called  ``bundle_dependencies`` and
 store the libraries there. The ``--ns3-path`` specifies the folder where
 you have made the ns-3 checkout and built the ns-3 libraries.
 
-Now you should be able to build the simulation by running: ::
+Now you should be able to build the examples by running: ::
 
   ./waf build
 
-Which will produce different binaries in the ``./build/linux/`` folder, one per
-each example. Probably the build will throw some warnings, but if it is
+This will produce different binaries in the ``./build/linux/`` folder, one per
+example. Probably the build will throw some warnings, but if it is
 successful, you will be able to continue the test.
 
 Try running the ``wifi_broadcast`` example by typing: ::
