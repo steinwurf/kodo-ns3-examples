@@ -72,6 +72,7 @@ public:
     m_encoder->set_symbols(sak::storage(data));
 
     m_payload_buffer.resize(m_encoder->payload_size());
+    m_transmission_count = 0;
   }
 
   void ReceivePacket1 (Ptr<Socket> socket)
@@ -131,6 +132,7 @@ public:
         uint32_t bytes_used = m_encoder->encode(&m_payload_buffer[0]);
         auto packet = Create<Packet> (&m_payload_buffer[0],bytes_used);
         socket->Send (packet);
+        m_transmission_count++;
 
         if (kodo::has_trace<rlnc_encoder>::value)
         {
@@ -143,7 +145,8 @@ public:
       }
     else
       {
-        std::cout << "Decoding completed!" << std::endl;
+        std::cout << "Decoding completed! Total transmissions: "
+                  << m_transmission_count << std::endl;
         socket->Close ();
       }
   }
@@ -155,6 +158,7 @@ private:
   rlnc_decoder::pointer m_decoder_2;
 
   std::vector<uint8_t> m_payload_buffer;
+  uint32_t m_transmission_count;
 
 };
 
