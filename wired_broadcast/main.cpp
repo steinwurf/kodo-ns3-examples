@@ -69,10 +69,11 @@ class KodoSimulation
 public:
 
   KodoSimulation(const rlnc_encoder::pointer& encoder,
-                 const rlnc_decoder::pointer& decoder)
+                 const rlnc_decoder::pointer& decoder1,
+                 const rlnc_decoder::pointer& decoder2)
     : m_encoder(encoder),
-      m_decoder_1(decoder),
-      m_decoder_2(decoder)
+      m_decoder_1(decoder1),
+      m_decoder_2(decoder2)
   {
     m_encoder->set_systematic_off();
     m_encoder->seed(time(0));
@@ -94,18 +95,16 @@ public:
 
     if (kodo::has_trace<rlnc_decoder>::value)
     {
-        auto filter = [](const std::string& zone)
-        {
-            std::set<std::string> filters =
-                {"decoder_state","input_symbol_coefficients"};
+      auto filter = [](const std::string& zone)
+      {
+        std::set<std::string> filters =
+          {"decoder_state","input_symbol_coefficients"};
+        return filters.count(zone);
+      };
 
-            return filters.count(zone);
-        };
-
-        std::cout << "Trace decoder 1:" << std::endl;
-        kodo::trace(m_decoder_1, std::cout, filter);
+      std::cout << "Trace decoder 1:" << std::endl;
+      kodo::trace(m_decoder_1, std::cout, filter);
     }
-
   }
 
   void ReceivePacket2 (Ptr<Socket> socket)
@@ -117,46 +116,43 @@ public:
 
     if (kodo::has_trace<rlnc_decoder>::value)
     {
-        auto filter = [](const std::string& zone)
-        {
-            std::set<std::string> filters =
-                {"decoder_state","input_symbol_coefficients"};
+      auto filter = [](const std::string& zone)
+      {
+        std::set<std::string> filters =
+          {"decoder_state","input_symbol_coefficients"};
+        return filters.count(zone);
+      };
 
-            return filters.count(zone);
-        };
-
-        std::cout << "Trace decoder 2:" << std::endl;
-        kodo::trace(m_decoder_2, std::cout, filter);
+      std::cout << "Trace decoder 2:" << std::endl;
+      kodo::trace(m_decoder_2, std::cout, filter);
     }
-
   }
 
   void GenerateTraffic (Ptr<Socket> socket, Time pktInterval )
   {
-    if(!m_decoder_1->is_complete() || !m_decoder_2->is_complete())
+    if (!m_decoder_1->is_complete() || !m_decoder_2->is_complete())
+    {
+      std::cout << "Sending a combination" << std::endl;
+      uint32_t bytes_used = m_encoder->encode(&m_payload_buffer[0]);
+      auto packet = Create<Packet> (&m_payload_buffer[0], bytes_used);
+      socket->Send (packet);
+      m_transmission_count++;
+
+      if (kodo::has_trace<rlnc_encoder>::value)
       {
-
-        std::cout << "Sending a combination" << std::endl;
-        uint32_t bytes_used = m_encoder->encode(&m_payload_buffer[0]);
-        auto packet = Create<Packet> (&m_payload_buffer[0],bytes_used);
-        socket->Send (packet);
-        m_transmission_count++;
-
-        if (kodo::has_trace<rlnc_encoder>::value)
-        {
-            std::cout << "Trace encoder:" << std::endl;
-            kodo::trace(m_encoder, std::cout);
-        }
-
-        Simulator::Schedule (pktInterval, &KodoSimulation::GenerateTraffic, this,
-                             socket, pktInterval);
+        std::cout << "Trace encoder:" << std::endl;
+        kodo::trace(m_encoder, std::cout);
       }
+
+      Simulator::Schedule (pktInterval, &KodoSimulation::GenerateTraffic,
+                           this, socket, pktInterval);
+    }
     else
-      {
-        std::cout << "Decoding completed! Total transmissions: "
-                  << m_transmission_count << std::endl;
-        socket->Close ();
-      }
+    {
+      std::cout << "Decoding completed! Total transmissions: "
+                << m_transmission_count << std::endl;
+      socket->Close ();
+    }
   }
 
 private:
@@ -167,12 +163,10 @@ private:
 
   std::vector<uint8_t> m_payload_buffer;
   uint32_t m_transmission_count;
-
 };
 
 int main (int argc, char *argv[])
 {
-
   uint32_t packetSize = 1000; // Application bytes per packet
   double interval = 1.0; // Time between events
   uint32_t generationSize = 5; // RLNC generation size
@@ -224,6 +218,7 @@ int main (int argc, char *argv[])
 
   // The member build function creates differents instances of each object
   KodoSimulation kodoSimulator(encoder_factory.build(),
+                               decoder_factory.build(),
                                decoder_factory.build());
 
   // Setting up application sockets for receivers and senders
