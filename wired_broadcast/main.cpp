@@ -87,11 +87,10 @@ public:
 
   void ReceivePacket1 (Ptr<Socket> socket)
   {
-    std::cout << "Received one packet at decoder 1" << std::endl;
-
     auto packet = socket->Recv();
     packet->CopyData(&m_payload_buffer[0], m_decoder_1->payload_size());
     m_decoder_1->decode(&m_payload_buffer[0]);
+    std::cout << "Received one packet at decoder 1" << std::endl;
 
     if (kodo::has_trace<rlnc_decoder>::value)
     {
@@ -111,11 +110,10 @@ public:
 
   void ReceivePacket2 (Ptr<Socket> socket)
   {
-    std::cout << "Received one packet at decoder 2" << std::endl;
-
     auto packet = socket->Recv();
     packet->CopyData(&m_payload_buffer[0], m_decoder_2->payload_size());
     m_decoder_2->decode(&m_payload_buffer[0]);
+    std::cout << "Received one packet at decoder 2" << std::endl;
 
     if (kodo::has_trace<rlnc_decoder>::value)
     {
@@ -178,6 +176,7 @@ int main (int argc, char *argv[])
   uint32_t packetSize = 1000; // Application bytes per packet
   double interval = 1.0; // Time between events
   uint32_t generationSize = 5; // RLNC generation size
+  double errorRate = 0.3; // Error rate for all the links
 
   Time interPacketInterval = Seconds (interval);
 
@@ -187,6 +186,7 @@ int main (int argc, char *argv[])
   cmd.AddValue ("interval", "interval (seconds) between packets", interval);
   cmd.AddValue ("generationSize", "Set the generation size to use",
                 generationSize);
+  cmd.AddValue ("errorRate", "Packet erasure rate for the links", errorRate);
 
   cmd.Parse (argc, argv);
 
@@ -197,6 +197,19 @@ int main (int argc, char *argv[])
 
   // Two receivers against a centralized hub. Note: DO NOT CHANGE THIS LINE
   PointToPointStarHelper star (2,pointToPoint);
+
+  // Set error model for the net devices
+  Config::SetDefault ("ns3::RateErrorModel::ErrorUnit",
+                      StringValue ("ERROR_UNIT_PACKET"));
+
+  Ptr<RateErrorModel> error_model = CreateObject<RateErrorModel> ();
+  error_model->SetAttribute ("ErrorRate", DoubleValue (errorRate));
+
+  star.GetSpokeNode(0)->GetDevice(0)->SetAttribute ("ReceiveErrorModel",
+                                                    PointerValue (error_model));
+  star.GetSpokeNode(1)->GetDevice(0)->SetAttribute ("ReceiveErrorModel",
+                                                    PointerValue (error_model));
+  error_model->Enable ();
 
   // Setting IP protocol stack
   InternetStackHelper internet;
