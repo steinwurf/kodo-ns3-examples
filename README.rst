@@ -104,7 +104,7 @@ repository. Currently we have the following examples:
 * ``wifi_broadcast``: This example consists on broadcasting packets with RLNC
   on a single transmitter receiver pair with an IEEE 802.11b WiFi channel.
 * ``wired_broadcast``: This example consists on broadcasting packets with RLNC
-  from a transmitter to 2 receivers without erasure channels.
+  from a transmitter to 2 receivers with the same erasure channel.
 
 You can see more documentation of each example in the ``main.cpp`` file comments
 regarding what each example does. There you can also check how to control and set
