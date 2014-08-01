@@ -33,7 +33,7 @@
 
 // When you are done, you will notice four pcap trace files in your directory.
 // You can review the files with Wireshark or tcpdump. If you have tcpdump
-// installed, you can try this:
+// installed, you can try (for example) this:
 //
 // tcpdump -r star-0-0.pcap -nn -tt
 
@@ -94,17 +94,17 @@ public:
     std::cout << "Received one packet at decoder 1" << std::endl;
 
     if (kodo::has_trace<rlnc_decoder>::value)
-    {
-      auto filter = [](const std::string& zone)
       {
-        std::set<std::string> filters =
-          {"decoder_state","input_symbol_coefficients"};
-        return filters.count(zone);
-      };
+        auto filter = [](const std::string& zone)
+        {
+          std::set<std::string> filters =
+            {"decoder_state","input_symbol_coefficients"};
+          return filters.count(zone);
+        };
 
-      std::cout << "Trace decoder 1:" << std::endl;
-      kodo::trace(m_decoder_1, std::cout, filter);
-    }
+        std::cout << "Trace decoder 1:" << std::endl;
+        kodo::trace(m_decoder_1, std::cout, filter);
+      }
   }
 
   void ReceivePacket2 (Ptr<Socket> socket)
@@ -115,44 +115,44 @@ public:
     std::cout << "Received one packet at decoder 2" << std::endl;
 
     if (kodo::has_trace<rlnc_decoder>::value)
-    {
-      auto filter = [](const std::string& zone)
       {
-        std::set<std::string> filters =
-          {"decoder_state","input_symbol_coefficients"};
-        return filters.count(zone);
-      };
+        auto filter = [](const std::string& zone)
+        {
+          std::set<std::string> filters =
+            {"decoder_state","input_symbol_coefficients"};
+          return filters.count(zone);
+        };
 
-      std::cout << "Trace decoder 2:" << std::endl;
-      kodo::trace(m_decoder_2, std::cout, filter);
-    }
+        std::cout << "Trace decoder 2:" << std::endl;
+        kodo::trace(m_decoder_2, std::cout, filter);
+      }
   }
 
   void GenerateTraffic (Ptr<Socket> socket, Time pktInterval )
   {
     if (!m_decoder_1->is_complete() || !m_decoder_2->is_complete())
-    {
-      std::cout << "Sending a combination" << std::endl;
-      uint32_t bytes_used = m_encoder->encode(&m_payload_buffer[0]);
-      auto packet = Create<Packet> (&m_payload_buffer[0], bytes_used);
-      socket->Send (packet);
-      m_transmission_count++;
-
-      if (kodo::has_trace<rlnc_encoder>::value)
       {
-        std::cout << "Trace encoder:" << std::endl;
-        kodo::trace(m_encoder, std::cout);
-      }
+        std::cout << "Sending a combination" << std::endl;
+        uint32_t bytes_used = m_encoder->encode(&m_payload_buffer[0]);
+        auto packet = Create<Packet> (&m_payload_buffer[0], bytes_used);
+        socket->Send (packet);
+        m_transmission_count++;
 
-      Simulator::Schedule (pktInterval, &KodoSimulation::GenerateTraffic,
-                           this, socket, pktInterval);
-    }
+        if (kodo::has_trace<rlnc_encoder>::value)
+          {
+            std::cout << "Trace encoder:" << std::endl;
+            kodo::trace(m_encoder, std::cout);
+          }
+
+        Simulator::Schedule (pktInterval, &KodoSimulation::GenerateTraffic,
+                             this, socket, pktInterval);
+      }
     else
-    {
-      std::cout << "Decoding completed! Total transmissions: "
-                << m_transmission_count << std::endl;
-      socket->Close ();
-    }
+      {
+        std::cout << "Decoding completed! Total transmissions: "
+                  << m_transmission_count << std::endl;
+        socket->Close ();
+      }
   }
 
 private:

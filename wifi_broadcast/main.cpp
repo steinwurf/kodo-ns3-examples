@@ -107,31 +107,27 @@ public:
 
   void ReceivePacket (Ptr<Socket> socket)
   {
-
-    std::cout << "Received one packet at decoder" << std::endl;
-
     auto packet = socket->Recv();
     packet->CopyData(&m_payload_buffer[0], m_decoder->payload_size());
-
     m_decoder->decode(&m_payload_buffer[0]);
+    std::cout << "Received one packet at decoder" << std::endl;
 
     if (kodo::has_trace<rlnc_decoder>::value)
-    {
+      {
         auto filter = [](const std::string& zone)
-        {
+          {
             std::set<std::string> filters =
-                {"input_symbol_coefficients","decoder_state"};
-
+              {"input_symbol_coefficients","decoder_state"};
             return filters.count(zone);
-        };
+          };
 
         std::cout << "Trace decoder:" << std::endl;
         kodo::trace(m_decoder, std::cout, filter);
-    }
+      }
 
   }
 
-  void GenerateTraffic (Ptr<Socket> socket, Time pktInterval )
+  void GenerateTraffic (Ptr<Socket> socket, Time pktInterval)
   {
     if(!m_decoder->is_complete())
       {
@@ -142,10 +138,10 @@ public:
         m_transmission_count++;
 
         if (kodo::has_trace<rlnc_encoder>::value)
-        {
-            std::cout << "Trace encoder:" << std::endl;
-            kodo::trace(m_encoder, std::cout);
-        }
+          {
+              std::cout << "Trace encoder:" << std::endl;
+              kodo::trace(m_encoder, std::cout);
+          }
 
         Simulator::Schedule (pktInterval, &KodoSimulation::GenerateTraffic, this,
                              socket, pktInterval);
