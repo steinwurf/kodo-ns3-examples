@@ -18,16 +18,17 @@
  */
 
 // This example shows how to use the Kodo library in a broadcast scenario
-// within a ns-3 simulation. The code below is based on the
-// udp_simple_broadcast example, which can be found in this repository.
+// within a ns-3 simulation. The code below is based on the wifi_broadcast
+// example, which can be found in this repository.
 
 // In the script below the sender transmits encoded packets from a block of
-// data to two receivers. The sender continues until all receivers have received
-// all packets. Here the packets are sent using the binary field, GF(2)  with
-// a generation of 5 packets and 1000 (application) bytes to the other node.
+// data to two receivers with the same packet erasure rate. The sender
+// continues until all receivers have received all packets. Here the packets
+// are sent using the binary field, GF(2) with a generation of 5 packets and
+// 1000 (application) bytes to the other node.
 
-// You can change the generation size or another parameter, by running (for
-// example with a different generation size):
+// You can change any parameter, by running (for example with a different
+// generation size):
 // ./build/linux/wired_broadcast/wired_broadcast --generationSize=GENERATION_SIZE
 
 // When you are done, you will notice four pcap trace files in your directory.
@@ -35,7 +36,6 @@
 // installed, you can try this:
 //
 // tcpdump -r star-0-0.pcap -nn -tt
-
 
 #include <ns3/core-module.h>
 #include <ns3/point-to-point-star.h>
@@ -176,8 +176,8 @@ int main (int argc, char *argv[])
 
   CommandLine cmd;
 
-  cmd.AddValue ("packetSize", "size of application packet sent", packetSize);
-  cmd.AddValue ("interval", "interval (seconds) between packets", interval);
+  cmd.AddValue ("packetSize", "Size of application packet sent", packetSize);
+  cmd.AddValue ("interval", "Interval (seconds) between packets", interval);
   cmd.AddValue ("generationSize", "Set the generation size to use",
                 generationSize);
   cmd.AddValue ("errorRate", "Packet erasure rate for the links", errorRate);
