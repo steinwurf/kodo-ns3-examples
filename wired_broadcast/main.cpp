@@ -190,7 +190,7 @@ int main (int argc, char *argv[])
   PointToPointHelper pointToPoint;
 
   // Two receivers against a centralized hub. Note: DO NOT CHANGE THIS LINE
-  PointToPointStarHelper star (2,pointToPoint);
+  PointToPointStarHelper star (2, pointToPoint);
 
   // Set error model for the net devices
   Config::SetDefault ("ns3::RateErrorModel::ErrorUnit",
@@ -199,10 +199,10 @@ int main (int argc, char *argv[])
   Ptr<RateErrorModel> error_model = CreateObject<RateErrorModel> ();
   error_model->SetAttribute ("ErrorRate", DoubleValue (errorRate));
 
-  star.GetSpokeNode(0)->GetDevice(0)->SetAttribute ("ReceiveErrorModel",
-                                                    PointerValue (error_model));
-  star.GetSpokeNode(1)->GetDevice(0)->SetAttribute ("ReceiveErrorModel",
-                                                    PointerValue (error_model));
+  star.GetSpokeNode (0)->GetDevice (0)->
+    SetAttribute ("ReceiveErrorModel", PointerValue (error_model));
+  star.GetSpokeNode (1)->GetDevice (0)->
+    SetAttribute ("ReceiveErrorModel", PointerValue (error_model));
   error_model->Enable ();
 
   // Setting IP protocol stack
@@ -227,18 +227,18 @@ int main (int argc, char *argv[])
   InetSocketAddress local = InetSocketAddress (Ipv4Address::GetAny (), port);
 
   // Receivers
-  Ptr<Socket> recvSink1 = Socket::CreateSocket (star.GetSpokeNode(0), tid);
+  Ptr<Socket> recvSink1 = Socket::CreateSocket (star.GetSpokeNode (0), tid);
   recvSink1->Bind (local);
   recvSink1->SetRecvCallback (MakeCallback (&KodoSimulation::ReceivePacket1,
                                             &kodoSimulator));
 
-  Ptr<Socket> recvSink2 = Socket::CreateSocket (star.GetSpokeNode(1), tid);
+  Ptr<Socket> recvSink2 = Socket::CreateSocket (star.GetSpokeNode (1), tid);
   recvSink2->Bind (local);
   recvSink2->SetRecvCallback (MakeCallback (&KodoSimulation::ReceivePacket2,
                                             &kodoSimulator));
 
   // Sender
-  Ptr<Socket> source = Socket::CreateSocket (star.GetHub(), tid);
+  Ptr<Socket> source = Socket::CreateSocket (star.GetHub (), tid);
   InetSocketAddress remote = InetSocketAddress (Ipv4Address ("255.255.255.255"),
                                                 port);
   source->SetAllowBroadcast (true);
