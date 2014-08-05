@@ -13,6 +13,10 @@ you can see the details here_.
 ns-3 (http://nsnam.org) is a discrete-event network simulator, targeted primarily
 for research and educational use. ns-3 is licensed under the GNU GPLv2 license.
 
+.. image:: http://buildbot.steinwurf.dk/svgstatus?project=kodo-ns3-examples
+    :target: http://buildbot.steinwurf.dk/stats?projects=kodo-ns3-examples
+    :alt: Buildbot status
+
 Using ns-3 as a Library
 -----------------------
 In the example provided in this repository we use ns-3 as a library, i.e.
