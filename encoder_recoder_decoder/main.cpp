@@ -60,7 +60,7 @@ using namespace ns3;
 // Also we implement the Kodo traces (available since V.17.0.0). Here, we have
 // enabled the decoder trace and disabled the encoder trace.
 typedef kodo::full_rlnc_encoder<fifi::binary,kodo::disable_trace> rlnc_encoder;
-typedef kodo::full_rlnc_decoder<fifi::binary,kodo::enable_trace> rlnc_decoder;
+typedef kodo::full_rlnc_decoder<fifi::binary,kodo::disable_trace> rlnc_decoder;
 
 // Just for illustration purposes, this simple objects implements both
 // the sender (encoder) and receiver (decoder).
@@ -83,7 +83,8 @@ public:
     m_encoder->set_symbols(sak::storage(data));
 
     m_payload_buffer.resize(m_encoder->payload_size());
-    m_transmission_count = 0;
+    m_encoder_transmission_count = 0;
+    m_recoder_transmission_count = 0;
   }
 
   void ReceivePacketRecoder (Ptr<Socket> socket)
@@ -105,13 +106,19 @@ public:
         std::cout << "Trace recoder:" << std::endl;
         kodo::trace(m_recoder, std::cout, filter);
       }
+
+    uint32_t bytes_used = m_recoder->recode(&m_payload_buffer[0]);
+    auto recodedPacket = Create<Packet> (&m_payload_buffer[0], bytes_used);
+    std::cout << "Recoded one packet at recoder" << std::endl;
+    socket->Send (recodedPacket);
+    m_recoder_transmission_count++;
   }
 
   void ReceivePacketDecoder (Ptr<Socket> socket)
   {
     auto packet = socket->Recv();
-    packet->CopyData(&m_payload_buffer[0], m_decoder_2->payload_size());
-    m_decoder_2->decode(&m_payload_buffer[0]);
+    packet->CopyData(&m_payload_buffer[0], m_decoder->payload_size());
+    m_decoder->decode(&m_payload_buffer[0]);
     std::cout << "Received one packet at decoder" << std::endl;
 
     if (kodo::has_trace<rlnc_decoder>::value)
@@ -123,12 +130,12 @@ public:
           return filters.count(zone);
         };
 
-        std::cout << "Trace decoder 2:" << std::endl;
-        kodo::trace(m_decoder_2, std::cout, filter);
+        std::cout << "Trace decoder:" << std::endl;
+        kodo::trace(m_decoder, std::cout, filter);
       }
   }
 
-  void GenerateTraffic (Ptr<Socket> socket, Time pktInterval )
+  void GenerateTraffic (Ptr<Socket> socket, Time pktInterval)
   {
     if (!m_decoder->is_complete())
       {
@@ -136,7 +143,7 @@ public:
         uint32_t bytes_used = m_encoder->encode(&m_payload_buffer[0]);
         auto packet = Create<Packet> (&m_payload_buffer[0], bytes_used);
         socket->Send (packet);
-        m_transmission_count++;
+        m_encoder_transmission_count++;
 
         if (kodo::has_trace<rlnc_encoder>::value)
           {
@@ -149,8 +156,15 @@ public:
       }
     else
       {
-        std::cout << "Decoding completed! Total transmissions: "
-                  << m_transmission_count << std::endl;
+
+        std::cout << "Decoding completed! " << std::endl;
+        std::cout << "Encoder transmissions: " << m_encoder_transmission_count
+                  << std::endl;
+        std::cout << "Recoder transmissions: " << m_recoder_transmission_count
+                  << std::endl;
+        std::cout << "Total transmissions: "
+                  << m_encoder_transmission_count + m_recoder_transmission_count
+                  << std::endl;
         socket->Close ();
       }
   }
@@ -162,8 +176,9 @@ private:
   rlnc_decoder::pointer m_decoder;
 
   std::vector<uint8_t> m_payload_buffer;
-  uint32_t m_transmission_count;
-  bool m_recoding_flag;
+  uint32_t m_encoder_transmission_count;
+  uint32_t m_recoder_transmission_count;
+  //bool m_recoding_flag;
 };
 
 int main (int argc, char *argv[])
@@ -171,7 +186,8 @@ int main (int argc, char *argv[])
   uint32_t packetSize = 1000; // Application bytes per packet
   double interval = 1.0; // Time between events
   uint32_t generationSize = 5; // RLNC generation size
-  //double errorRate = 0.3; // Error rate for all the links
+  double errorRateEncoderRecoder = 0.4; // Error rate for encoder-recoder link
+  double errorRateRecoderDecoder = 0.2; // Error rate for recoder-decoder link
 
   Time interPacketInterval = Seconds (interval);
 
@@ -181,7 +197,12 @@ int main (int argc, char *argv[])
   cmd.AddValue ("interval", "Interval (seconds) between packets", interval);
   cmd.AddValue ("generationSize", "Set the generation size to use",
                 generationSize);
-  //cmd.AddValue ("errorRate", "Packet erasure rate for the links", errorRate);
+  cmd.AddValue ("errorRateEncoderRecoder",
+                "Packet erasure rate for the encoder-decoder link",
+                errorRateEncoderRecoder);
+  cmd.AddValue ("errorRateRecoderDecoder",
+                "Packet erasure rate for the recoder-decoder link",
+                errorRateEncoderRecoder);
 
   cmd.Parse (argc, argv);
 
@@ -196,9 +217,15 @@ int main (int argc, char *argv[])
   NodeContainer encoderRecoderNodes = NodeContainer (c.Get (0), c.Get (1));
   NodeContainer recoderDecoderNodes = NodeContainer (c.Get (1), c.Get (2));
 
+  // Internet stack for the nodes
+  InternetStackHelper internet;
+  internet.Install (c);
+
   // Create net device containers
-  NetDeviceContainer encoderRecoderDevices = pointToPoint.Install (encoderRecoderNodes);
-  NetDeviceContainer recoderDecoderDevices = pointToPoint.Install (recoderDecoderNodes);
+  NetDeviceContainer encoderRecoderDevices =
+    pointToPoint.Install (encoderRecoderNodes);
+  NetDeviceContainer recoderDecoderDevices =
+    pointToPoint.Install (recoderDecoderNodes);
 
   // Set IP addresses
   Ipv4AddressHelper ipv4;
@@ -209,7 +236,11 @@ int main (int argc, char *argv[])
   ipv4.SetBase ("10.1.2.0", "255.255.255.0");
   ipv4.Assign (recoderDecoderDevices);
 
+  // Turn on global static routing so we can actually be routed across the hops
   Ipv4GlobalRoutingHelper::PopulateRoutingTables ();
+
+  // Do pcap tracing on all point-to-point devices on all nodes
+  pointToPoint.EnablePcapAll ("multihop");
 
   // Set error model for the net devices
   Config::SetDefault ("ns3::RateErrorModel::ErrorUnit",
@@ -219,15 +250,15 @@ int main (int argc, char *argv[])
   errorEncoderRecoder->SetAttribute ("ErrorRate",
                                      DoubleValue (errorRateEncoderRecoder));
 
-  encoderRecoderDevices->SetAttribute ("ReceiveErrorModel",
-                                       PointerValue (errorEncoderRecoder));
+  encoderRecoderDevices.Get (1)->
+    SetAttribute ("ReceiveErrorModel", PointerValue (errorEncoderRecoder));
 
   Ptr<RateErrorModel> errorRecoderDecoder = CreateObject<RateErrorModel> ();
   errorRecoderDecoder->SetAttribute ("ErrorRate",
                                      DoubleValue (errorRateRecoderDecoder));
 
-  recoderDecoderDevices->SetAttribute ("ReceiveErrorModel",
-                                       PointerValue (errorRecoderDecoder));
+  recoderDecoderDevices.Get (1)->
+    SetAttribute ("ReceiveErrorModel", PointerValue (errorRecoderDecoder));
   errorEncoderRecoder->Enable ();
   errorRecoderDecoder->Enable ();
 
@@ -241,39 +272,39 @@ int main (int argc, char *argv[])
                                decoder_factory.build(),
                                decoder_factory.build());
 
-  // Setting up application sockets for receivers and senders
+  // Setting up application sockets for recoder and decoder
   uint16_t port = 80;
   TypeId tid = TypeId::LookupByName ("ns3::UdpSocketFactory");
-  InetSocketAddress local = InetSocketAddress (Ipv4Address::GetAny (), port);
 
-  // Receivers
-  Ptr<Socket> recoderSocket = Socket::CreateSocket (c.Get (1), tid);
-  recoderSocket->Bind (local);
-  recoderSocket->SetRecvCallback (MakeCallback (&KodoSimulation::ReceivePacketRecoder,
-                                                &kodoSimulator));
+  // Socket Addresses
+  InetSocketAddress recoderSocketAddress =
+    InetSocketAddress (Ipv4Address("10.1.2.1"), port);
+  InetSocketAddress decoderSocketAddress =
+    InetSocketAddress (Ipv4Address("10.1.2.2"), port);
 
-  Ptr<Socket> decoderSocket = Socket::CreateSocket (c.Get (2), tid);
-  decoderSocket->Bind (local);
-  decoderSocket->SetRecvCallback (MakeCallback (&KodoSimulation::ReceivePacketDecoder,
-                                                &kodoSimulator));
-
-  // Sender
+  // Encoder
   Ptr<Socket> encoderSocket = Socket::CreateSocket (c.Get (0), tid);
-  InetSocketAddress remote = InetSocketAddress (Ipv4Address ("255.255.255.255"),
-                                                port);
-  encoderSocket->SetAllowBroadcast (true);
-  encoderSocket->Connect (remote);
+  encoderSocket->Connect (recoderSocketAddress);
 
-  // Turn on global static routing so we can actually be routed across the star
-  Ipv4GlobalRoutingHelper::PopulateRoutingTables ();
-
-  // Do pcap tracing on all point-to-point devices on all nodes
-  pointToPoint.EnablePcapAll ("multihop");
-
+  // Recoder
+  Ptr<Socket> recoderSocket = Socket::CreateSocket (c.Get (1), tid);
+  recoderSocket->Bind (recoderSocketAddress);
+  recoderSocket->Connect (decoderSocketAddress);
+  recoderSocket->
+    SetRecvCallback (MakeCallback (&KodoSimulation::ReceivePacketRecoder,
+                                   &kodoSimulator));
+  // Decoder
+  Ptr<Socket> decoderSocket = Socket::CreateSocket (c.Get (2), tid);
+  decoderSocket->Bind (decoderSocketAddress);
+  decoderSocket->
+    SetRecvCallback (MakeCallback (&KodoSimulation::ReceivePacketDecoder,
+                                   &kodoSimulator));
+  // Simulation setup
   Simulator::ScheduleWithContext (encoderSocket->GetNode ()->GetId (),
                                   Seconds (1.0),
                                   &KodoSimulation::GenerateTraffic,
-                                  &kodoSimulator, encoder, interPacketInterval);
+                                  &kodoSimulator, encoderSocket,
+                                  interPacketInterval);
   Simulator::Run ();
   Simulator::Destroy ();
 
