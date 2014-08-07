@@ -17,19 +17,32 @@
  *
  */
 
-// This example shows how to use the Kodo library in a broadcast scenario
-// within a ns-3 simulation. The code below is based on the wifi_broadcast
-// example, which can be found in this repository.
+// This example shows how to use the Kodo library for recoding at an
+// intermediate node in the network within a ns-3 simulation. Recoding is
+// one of the characteristic features of network coding because it
+// differentiates from end-to-end codes by allowing any intermediate node
+// to recode a coded packet, even if its data set has not been completely
+// decoded yet.
 
-// In the script below the sender transmits encoded packets from a block of
-// data to two receivers with the same packet erasure rate. The sender
-// continues until all receivers have received all packets. Here the packets
-// are sent using the binary field, GF(2) with a generation of 5 packets and
-// 1000 (application) bytes to the other node.
+// In the script below an encoder transmits coded packets from a block of
+// data to a node through an erasure channel with a given rate, which may or
+// may not recode the data. This node transmits its packets to a decoder
+// (thorugh another erasure channel) until it has received a complete
+// generation. Here the packets are sent using the binary field, GF(2) with a
+// generation of 5 packets and 1000 (application) bytes to the other node.
+// Topology is as follows:
+
+//         +-----------+  e1  +-----------+  e2  +------------+
+//         |  encoder  |+---->|  recoder  |+---->|  decoder_2 |
+//         +-----------+      +-----------+      +------------+
+
+// In the previous figure: e1 is the packet error rate between encoder and
+// recoder, namely errorRateEncoderRecoder. e2 is the packet error rate
+// between recoder and decoder, namely errorRateRecoderDecoder.
 
 // You can change any parameter, by running (for example with a different
 // generation size):
-// ./build/linux/wired_broadcast/wired_broadcast --generationSize=GENERATION_SIZE
+// ./build/linux/encoder_recoder_decoder/encoder_recoder_decoder --generationSize=GENERATION_SIZE
 
 // When you are done, you will notice four pcap trace files in your directory.
 // You can review the files with Wireshark or tcpdump. If you have tcpdump
@@ -62,8 +75,8 @@ using namespace ns3;
 typedef kodo::full_rlnc_encoder<fifi::binary,kodo::disable_trace> rlnc_encoder;
 typedef kodo::full_rlnc_decoder<fifi::binary,kodo::disable_trace> rlnc_decoder;
 
-// Just for illustration purposes, this simple objects implements both
-// the sender (encoder) and receiver (decoder).
+// Just for illustration purposes, this object implements both
+// the encoder, recoder and decoder.
 class KodoSimulation
 {
 public:
