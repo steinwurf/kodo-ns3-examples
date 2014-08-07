@@ -159,3 +159,4 @@ def build(bld):
 
     bld.recurse('wired_broadcast')
     bld.recurse('wifi_broadcast')
+    bld.recurse('encoder_recoder_decoder')
