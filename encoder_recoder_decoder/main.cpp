@@ -48,7 +48,8 @@
 // You can review the files with Wireshark or tcpdump. If you have tcpdump
 // installed, you can try (for example) this:
 //
-// tcpdump -r star-0-0.pcap -nn -tt
+// tcpdump -r multihop-0-0.pcap -nn -tt
+
 
 #include <ns3/core-module.h>
 #include <ns3/point-to-point-star.h>
@@ -72,8 +73,8 @@ using namespace ns3;
 
 // Also we implement the Kodo traces (available since V.17.0.0). Here, we have
 // enabled the decoder trace and disabled the encoder trace.
-typedef kodo::full_rlnc_encoder<fifi::binary,kodo::disable_trace> rlnc_encoder;
-typedef kodo::full_rlnc_decoder<fifi::binary,kodo::disable_trace> rlnc_decoder;
+typedef kodo::full_rlnc_encoder<fifi::binary8,kodo::disable_trace> rlnc_encoder;
+typedef kodo::full_rlnc_decoder<fifi::binary8,kodo::disable_trace> rlnc_decoder;
 
 // Just for illustration purposes, this object implements both
 // the encoder, recoder and decoder.
@@ -83,10 +84,12 @@ public:
 
   KodoSimulation(const rlnc_encoder::pointer& encoder,
                  const rlnc_decoder::pointer& recoder,
-                 const rlnc_decoder::pointer& decoder)
+                 const rlnc_decoder::pointer& decoder,
+                 const bool recoding_flag)
     : m_encoder(encoder),
       m_recoder(recoder),
-      m_decoder(decoder)
+      m_decoder(decoder),
+      m_recoding_flag(recoding_flag)
   {
     m_encoder->set_systematic_off();
     m_encoder->seed(time(0));
@@ -120,10 +123,25 @@ public:
         kodo::trace(m_recoder, std::cout, filter);
       }
 
-    uint32_t bytes_used = m_recoder->recode(&m_payload_buffer[0]);
-    auto recodedPacket = Create<Packet> (&m_payload_buffer[0], bytes_used);
-    std::cout << "Recoded one packet at recoder" << std::endl;
-    socket->Send (recodedPacket);
+    if (m_recoding_flag)
+      {
+        uint32_t bytes_used = m_recoder->recode(&m_payload_buffer[0]);
+        auto recodedPacket = Create<Packet> (&m_payload_buffer[0], bytes_used);
+        std::cout << "Recoded one packet at recoder" << std::endl;
+        socket->Send (recodedPacket);
+      }
+    else
+      {
+        // Remove all packet tags in order to the callback retag them to avoid
+        // ~/ns-3-dev/src/common/packet-tag-list.cc, line=139 assert failure.
+        // Tag removal is shown in ~/ns-3-dev/src/applications/udp-echo/
+        // udp-echo-server.cci for packet forwarding
+
+        packet->RemoveAllPacketTags ();
+        socket->Send (packet);
+        std::cout << "Forwarded one packet at recoder" << std::endl;
+      }
+
     m_recoder_transmission_count++;
   }
 
@@ -169,7 +187,6 @@ public:
       }
     else
       {
-
         std::cout << "Decoding completed! " << std::endl;
         std::cout << "Encoder transmissions: " << m_encoder_transmission_count
                   << std::endl;
@@ -191,7 +208,7 @@ private:
   std::vector<uint8_t> m_payload_buffer;
   uint32_t m_encoder_transmission_count;
   uint32_t m_recoder_transmission_count;
-  //bool m_recoding_flag;
+  bool m_recoding_flag;
 };
 
 int main (int argc, char *argv[])
@@ -201,6 +218,7 @@ int main (int argc, char *argv[])
   uint32_t generationSize = 5; // RLNC generation size
   double errorRateEncoderRecoder = 0.4; // Error rate for encoder-recoder link
   double errorRateRecoderDecoder = 0.2; // Error rate for recoder-decoder link
+  bool recodingFlag = true; // Flag to control recoding
 
   Time interPacketInterval = Seconds (interval);
 
@@ -216,6 +234,7 @@ int main (int argc, char *argv[])
   cmd.AddValue ("errorRateRecoderDecoder",
                 "Packet erasure rate for the recoder-decoder link",
                 errorRateEncoderRecoder);
+  cmd.AddValue ("recodingFlag", "Enable packet recoding", recodingFlag);
 
   cmd.Parse (argc, argv);
 
@@ -283,7 +302,8 @@ int main (int argc, char *argv[])
   // The member build function creates differents instances of each object
   KodoSimulation kodoSimulator(encoder_factory.build(),
                                decoder_factory.build(),
-                               decoder_factory.build());
+                               decoder_factory.build(),
+                               recodingFlag);
 
   // Setting up application sockets for recoder and decoder
   uint16_t port = 80;
@@ -298,17 +318,23 @@ int main (int argc, char *argv[])
   // Encoder
   Ptr<Socket> encoderSocket = Socket::CreateSocket (c.Get (0), tid);
   encoderSocket->Connect (recoderSocketAddress);
+  //encoderSocket->Connect (InetSocketAddress (Ipv4Address::GetAny(), port));
 
   // Recoder
   Ptr<Socket> recoderSocket = Socket::CreateSocket (c.Get (1), tid);
   recoderSocket->Bind (recoderSocketAddress);
   recoderSocket->Connect (decoderSocketAddress);
+
+  //recoderSocket->Bind ();
+  //recoderSocket->Connect (InetSocketAddress (Ipv4Address::GetAny(), port));
+
   recoderSocket->
     SetRecvCallback (MakeCallback (&KodoSimulation::ReceivePacketRecoder,
                                    &kodoSimulator));
   // Decoder
   Ptr<Socket> decoderSocket = Socket::CreateSocket (c.Get (2), tid);
   decoderSocket->Bind (decoderSocketAddress);
+  //decoderSocket->Bind ();
   decoderSocket->
     SetRecvCallback (MakeCallback (&KodoSimulation::ReceivePacketDecoder,
                                    &kodoSimulator));
