@@ -30,15 +30,18 @@
 // (thorugh another erasure channel) until it has received a complete
 // generation. Here the packets are sent using the binary field, GF(2) with a
 // generation of 5 packets and 1000 (application) bytes to the other node.
-// Topology is as follows:
+// Topology with IP addresses per device is as follows:
 
 //         +-----------+  e1  +-----------+  e2  +------------+
 //         |  encoder  |+---->|  recoder  |+---->|  decoder_2 |
 //         +-----------+      +-----------+      +------------+
+//  IP:       10.1.1.1           10.1.1.2           10.1.1.4
+//                               10.1.1.3
 
 // In the previous figure: e1 is the packet error rate between encoder and
 // recoder, namely errorRateEncoderRecoder. e2 is the packet error rate
-// between recoder and decoder, namely errorRateRecoderDecoder.
+// between recoder and decoder, namely errorRateRecoderDecoder. Each IP address
+// represents a net device in the node.
 
 // You can change any parameter, by running (for example with a different
 // generation size):
@@ -330,7 +333,6 @@ int main (int argc, char *argv[])
                                    &kodoSimulator));
   // Decoder
   Ptr<Socket> decoderSocket = Socket::CreateSocket (nodes.Get (2), tid);
-  //decoderSocket->Bind (decoderSocketAddress);
   decoderSocket->Bind(local);
   decoderSocket->
     SetRecvCallback (MakeCallback (&KodoSimulation::ReceivePacketDecoder,
