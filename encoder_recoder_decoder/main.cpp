@@ -77,7 +77,7 @@ using namespace ns3;
 // Also we implement the Kodo traces (available since V.17.0.0). Here, we have
 // enabled the decoder trace and disabled the encoder trace.
 typedef kodo::full_rlnc_encoder<fifi::binary8,kodo::disable_trace> rlnc_encoder;
-typedef kodo::full_rlnc_decoder<fifi::binary8,kodo::disable_trace> rlnc_decoder;
+typedef kodo::full_rlnc_decoder<fifi::binary8,kodo::enable_trace> rlnc_decoder;
 
 // Just for illustration purposes, this object implements both
 // the encoder, recoder and decoder.
@@ -279,7 +279,6 @@ int main (int argc, char *argv[])
   Ptr<RateErrorModel> errorEncoderRecoder = CreateObject<RateErrorModel> ();
   errorEncoderRecoder->SetAttribute ("ErrorRate",
                                      DoubleValue (errorRateEncoderRecoder));
-  std::cout << "Error models created" << std::endl;
   devices.Get (1)->SetAttribute ("ReceiveErrorModel",
                                  PointerValue (errorEncoderRecoder));
 
@@ -287,7 +286,7 @@ int main (int argc, char *argv[])
   errorRecoderDecoder->SetAttribute ("ErrorRate",
                                      DoubleValue (errorRateRecoderDecoder));
 
-  devices.Get (2)->
+  devices.Get (3)->
     SetAttribute ("ReceiveErrorModel", PointerValue (errorRecoderDecoder));
   errorEncoderRecoder->Enable ();
   errorRecoderDecoder->Enable ();
