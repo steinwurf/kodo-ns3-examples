@@ -314,6 +314,7 @@ int main (int argc, char *argv[])
     InetSocketAddress (Ipv4Address("10.1.2.1"), port);
   InetSocketAddress decoderSocketAddress =
     InetSocketAddress (Ipv4Address("10.1.2.2"), port);
+  InetSocketAddress local = InetSocketAddress (Ipv4Address::GetAny(), port);
 
   // Encoder
   Ptr<Socket> encoderSocket = Socket::CreateSocket (c.Get (0), tid);
@@ -322,10 +323,9 @@ int main (int argc, char *argv[])
 
   // Recoder
   Ptr<Socket> recoderSocket = Socket::CreateSocket (c.Get (1), tid);
-  recoderSocket->Bind (recoderSocketAddress);
+  recoderSocket->Bind(local);
   recoderSocket->Connect (decoderSocketAddress);
 
-  //recoderSocket->Bind ();
   //recoderSocket->Connect (InetSocketAddress (Ipv4Address::GetAny(), port));
 
   recoderSocket->
@@ -333,8 +333,8 @@ int main (int argc, char *argv[])
                                    &kodoSimulator));
   // Decoder
   Ptr<Socket> decoderSocket = Socket::CreateSocket (c.Get (2), tid);
-  decoderSocket->Bind (decoderSocketAddress);
-  //decoderSocket->Bind ();
+  //decoderSocket->Bind (decoderSocketAddress);
+  decoderSocket->Bind(local);
   decoderSocket->
     SetRecvCallback (MakeCallback (&KodoSimulation::ReceivePacketDecoder,
                                    &kodoSimulator));
