@@ -30,7 +30,7 @@
 // (thorugh another erasure channel) until it has received a complete
 // generation. Here the packets are sent using the binary field, GF(2) with a
 // generation of 5 packets and 1000 (application) bytes to the other node.
-// Topology with IP addresses per device is as follows:
+// Topology with IP addresses per net device is as follows:
 
 //         +-----------+  e1  +-----------+  e2  +------------+
 //         |  encoder  |+---->|  recoder  |+---->|  decoder_2 |
@@ -131,6 +131,7 @@ public:
         uint32_t bytes_used = m_recoder->recode(&m_payload_buffer[0]);
         auto recodedPacket = Create<Packet> (&m_payload_buffer[0], bytes_used);
         std::cout << "Recoded one packet at recoder" << std::endl;
+        m_recoder_transmission_count++;
         socket->Send (recodedPacket);
       }
     else
@@ -142,10 +143,9 @@ public:
 
         packet->RemoveAllPacketTags ();
         socket->Send (packet);
+        m_recoder_transmission_count++;
         std::cout << "Forwarded one packet at recoder" << std::endl;
       }
-
-    m_recoder_transmission_count++;
   }
 
   void ReceivePacketDecoder (Ptr<Socket> socket)
@@ -232,11 +232,11 @@ int main (int argc, char *argv[])
   cmd.AddValue ("generationSize", "Set the generation size to use",
                 generationSize);
   cmd.AddValue ("errorRateEncoderRecoder",
-                "Packet erasure rate for the encoder-decoder link",
+                "Packet erasure rate for the encoder-recoder link",
                 errorRateEncoderRecoder);
   cmd.AddValue ("errorRateRecoderDecoder",
                 "Packet erasure rate for the recoder-decoder link",
-                errorRateEncoderRecoder);
+                errorRateRecoderDecoder);
   cmd.AddValue ("recodingFlag", "Enable packet recoding", recodingFlag);
   cmd.Parse (argc, argv);
 
@@ -285,9 +285,8 @@ int main (int argc, char *argv[])
   Ptr<RateErrorModel> errorRecoderDecoder = CreateObject<RateErrorModel> ();
   errorRecoderDecoder->SetAttribute ("ErrorRate",
                                      DoubleValue (errorRateRecoderDecoder));
-
-  devices.Get (3)->
-    SetAttribute ("ReceiveErrorModel", PointerValue (errorRecoderDecoder));
+  devices.Get (3)->SetAttribute ("ReceiveErrorModel",
+                                 PointerValue (errorRecoderDecoder));
   errorEncoderRecoder->Enable ();
   errorRecoderDecoder->Enable ();
 
