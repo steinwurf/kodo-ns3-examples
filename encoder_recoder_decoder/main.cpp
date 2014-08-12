@@ -77,7 +77,7 @@ using namespace ns3;
 // Also we implement the Kodo traces (available since V.17.0.0). Here, we have
 // enabled the decoder trace and disabled the encoder trace.
 typedef kodo::full_rlnc_encoder<fifi::binary8,kodo::disable_trace> rlnc_encoder;
-typedef kodo::full_rlnc_decoder<fifi::binary8,kodo::enable_trace> rlnc_decoder;
+typedef kodo::full_rlnc_decoder<fifi::binary8,kodo::disable_trace> rlnc_decoder;
 
 // Just for illustration purposes, this object implements both
 // the encoder, recoder and decoder.
@@ -130,7 +130,7 @@ public:
       {
         uint32_t bytes_used = m_recoder->recode(&m_payload_buffer[0]);
         auto recodedPacket = Create<Packet> (&m_payload_buffer[0], bytes_used);
-        std::cout << "Recoded one packet at recoder" << std::endl;
+        std::cout << "Sending a combination from recoder" << std::endl;
         m_recoder_transmission_count++;
         socket->Send (recodedPacket);
       }
@@ -153,7 +153,7 @@ public:
     auto packet = socket->Recv();
     packet->CopyData(&m_payload_buffer[0], m_decoder->payload_size());
     m_decoder->decode(&m_payload_buffer[0]);
-    std::cout << "Received one packet at decoder" << std::endl;
+    std::cout << "Received one packet at decoder (*)" << std::endl;
 
     if (kodo::has_trace<rlnc_decoder>::value)
       {
@@ -169,14 +169,15 @@ public:
       }
   }
 
-  void GenerateTraffic (Ptr<Socket> socket, Time pktInterval)
+  void GenerateTraffic (Ptr<Socket> socketEncoder, Ptr<Socket> socketRecoder,
+                        Time pktInterval)
   {
-    if (!m_decoder->is_complete())
+    if (!m_recoder->is_complete() && !m_decoder->is_complete())
       {
-        std::cout << "Sending a combination" << std::endl;
+        std::cout << "Sending a combination from encoder" << std::endl;
         uint32_t bytes_used = m_encoder->encode(&m_payload_buffer[0]);
         auto packet = Create<Packet> (&m_payload_buffer[0], bytes_used);
-        socket->Send (packet);
+        socketEncoder->Send (packet);
         m_encoder_transmission_count++;
 
         if (kodo::has_trace<rlnc_encoder>::value)
@@ -186,19 +187,35 @@ public:
           }
 
         Simulator::Schedule (pktInterval, &KodoSimulation::GenerateTraffic,
-                             this, socket, pktInterval);
+                             this, socketEncoder, socketRecoder, pktInterval);
       }
     else
       {
-        std::cout << "Decoding completed! " << std::endl;
-        std::cout << "Encoder transmissions: " << m_encoder_transmission_count
-                  << std::endl;
-        std::cout << "Recoder transmissions: " << m_recoder_transmission_count
-                  << std::endl;
-        std::cout << "Total transmissions: "
-                  << m_encoder_transmission_count + m_recoder_transmission_count
-                  << std::endl;
-        socket->Close ();
+        if (!m_decoder->is_complete())
+          {
+            std::cout << "Sending a combination from recoder" << std::endl;
+            uint32_t bytes_used = m_recoder->recode(&m_payload_buffer[0]);
+            auto packet = Create<Packet> (&m_payload_buffer[0], bytes_used);
+            socketRecoder->Send (packet);
+            m_recoder_transmission_count++;
+
+            Simulator::Schedule (pktInterval, &KodoSimulation::GenerateTraffic,
+                                 this, socketEncoder, socketRecoder,
+                                 pktInterval);
+          }
+        else
+          {
+            std::cout << "Decoding completed! " << std::endl;
+            std::cout << "Encoder transmissions: " << m_encoder_transmission_count
+                      << std::endl;
+            std::cout << "Recoder transmissions: " << m_recoder_transmission_count
+                   << std::endl;
+            std::cout << "Total transmissions: "
+                   << m_encoder_transmission_count + m_recoder_transmission_count
+                   << std::endl;
+            socketEncoder->Close ();
+            socketRecoder->Close ();
+          }
       }
   }
 
@@ -339,7 +356,7 @@ int main (int argc, char *argv[])
   Simulator::ScheduleWithContext (encoderSocket->GetNode ()->GetId (),
                                   Seconds (1.0),
                                   &KodoSimulation::GenerateTraffic,
-                                  &kodoSimulator, encoderSocket,
+                                  &kodoSimulator, encoderSocket, recoderSocket,
                                   interPacketInterval);
   Simulator::Run ();
   Simulator::Destroy ();
