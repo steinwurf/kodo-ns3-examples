@@ -29,7 +29,7 @@
 // may not recode the data. This node transmits its packets to a decoder
 // (thorugh another erasure channel) until it has received a complete
 // generation. Here the packets are sent using the binary field, GF(2) with a
-// generation of 5 packets and 1000 (application) bytes to the other node.
+// generation of 3 packets and 1000 (application) bytes to the other node.
 // Topology with IP addresses per net device is as follows:
 
 //         +-----------+  e1  +-----------+  e2  +------------+
@@ -77,7 +77,7 @@ using namespace ns3;
 // Also we implement the Kodo traces (available since V.17.0.0). Here, we have
 // enabled the decoder trace and disabled the encoder trace.
 typedef kodo::full_rlnc_encoder<fifi::binary,kodo::disable_trace> rlnc_encoder;
-typedef kodo::full_rlnc_decoder<fifi::binary,kodo::enable_trace> rlnc_decoder;
+typedef kodo::full_rlnc_decoder<fifi::binary,kodo::disable_trace> rlnc_decoder;
 
 // Just for illustration purposes, this object implements both
 // the encoder, recoder and decoder.
@@ -109,11 +109,14 @@ public:
 
   void SendPacketEncoder (Ptr<Socket> socket, Time pktInterval)
   {
-    if (!m_recoder->is_complete() && !m_decoder->is_complete())
+    if (!m_recoder->is_complete() ||
+       (!m_recoding_flag && !m_decoder->is_complete()))
       {
         uint32_t bytes_used = m_encoder->encode(&m_payload_buffer[0]);
         auto packet = Create<Packet> (&m_payload_buffer[0], bytes_used);
-        std::cout << "Sending a combination from encoder\n" << std::endl;
+        std::cout << "+----------------------------------+"   << std::endl;
+        std::cout << "|Sending a combination from ENCODER|"   << std::endl;
+        std::cout << "+----------------------------------+\n" << std::endl;
         socket->Send (packet);
         m_encoder_transmission_count++;
 
@@ -136,8 +139,14 @@ public:
   {
     auto packet = socket->Recv();
     packet->CopyData(&m_payload_buffer[0], m_recoder->payload_size());
+
+    if (!m_recoding_flag)
+      {
+        m_previous_packet = packet;
+      }
+
     m_recoder->decode(&m_payload_buffer[0]);
-    std::cout << "Received one packet at recoder\n" << std::endl;
+    std::cout << "Received a coded packet at RECODER!\n" << std::endl;
 
     if (kodo::has_trace<rlnc_decoder>::value)
       {
@@ -151,6 +160,10 @@ public:
         std::cout << "Trace recoder:" << std::endl;
         kodo::trace(m_recoder, std::cout, filter);
       }
+    if (m_recoder->is_complete())
+      {
+        std::cout << "*** Recoder is full rank! ***\n" << std::endl;
+      }
   }
 
   void SendPacketRecoder (Ptr<Socket> socket, Time pktInterval)
@@ -162,25 +175,33 @@ public:
             // Recode a new packet and send
             uint32_t bytes_used = m_recoder->recode(&m_payload_buffer[0]);
             auto packet = Create<Packet> (&m_payload_buffer[0], bytes_used);
-            std::cout << "Sending a coded packet from recoder\n" << std::endl;
+            std::cout << "+----------------------------------+"   << std::endl;
+            std::cout << "|Sending a combination from RECODER|"   << std::endl;
+            std::cout << "+----------------------------------+\n" << std::endl;
             socket->Send (packet);
             m_recoder_transmission_count++;
           }
         else
           {
             if(!m_recoder->rank ())
-            {
-                std::cout << "No packet from encoder to forward" << std::endl;
-            }
+              {
+                std::cout << "No packet from ENCODER to forward!" << std::endl;
+              }
             else
-            {
-                 auto packet = Create<Packet> (&m_payload_buffer[0],
-                                               m_recoder->payload_size());
-                 socket->Send (packet);
-                 m_recoder_transmission_count++;
-                 std::cout << "Forwarding a previous packet from recoder\n"
-                           << std::endl;
-            }
+              {
+                auto packet = m_previous_packet;
+
+                // Remove all packet tags in order to the callback retag them to avoid
+                // ~/ns-3-dev/src/common/packet-tag-list.cc, line=139 assert failure.
+                // Tag removal is shown in ~/ns-3-dev/src/applications/udp-echo/
+                // udp-echo-server.cc for packet forwarding
+
+                packet->RemoveAllPacketTags ();
+                socket->Send (packet);
+                m_recoder_transmission_count++;
+                std::cout << "Forwarding a previous packet from RECODER...\n"
+                          << std::endl;
+              }
          }
 
         Simulator::Schedule (pktInterval, &KodoSimulation::SendPacketRecoder,
@@ -189,7 +210,7 @@ public:
     else
       {
         socket->Close ();
-        std::cout << "Decoding completed! " << std::endl;
+        std::cout << "*** Decoding completed! ***" << std::endl;
         std::cout << "Encoder transmissions: " << m_encoder_transmission_count
                   << std::endl;
         std::cout << "Recoder transmissions: " << m_recoder_transmission_count
@@ -208,14 +229,14 @@ public:
 
     if (m_decoder_rank != m_decoder->rank ())
       {
-        std::cout << "Received a l.i. packet at decoder (I)\n" << std::endl;
+        std::cout << "Received a l.i. packet at DECODER!! (I)\n" << std::endl;
         std::cout << "Decoder rank is: " << m_decoder->rank() << "\n"
                   << std::endl;
         m_decoder_rank++;
       }
     else
       {
-        std::cout << "Received a l.d. packet at decoder (D)\n" << std::endl;
+        std::cout << "Received a l.d. packet at DECODER!! (D)\n" << std::endl;
       }
 
     if (kodo::has_trace<rlnc_decoder>::value)
@@ -243,13 +264,14 @@ private:
   uint32_t m_recoder_transmission_count;
   uint32_t m_decoder_rank;
   const bool m_recoding_flag;
+  Ptr<Packet> m_previous_packet;
 };
 
 int main (int argc, char *argv[])
 {
   uint32_t packetSize = 1000; // Application bytes per packet
   double interval = 1.0; // Time between events
-  uint32_t generationSize = 5; // RLNC generation size
+  uint32_t generationSize = 3; // RLNC generation size
   double errorRateEncoderRecoder = 0.4; // Error rate for encoder-recoder link
   double errorRateRecoderDecoder = 0.2; // Error rate for recoder-decoder link
   bool recodingFlag = true; // Flag to control recoding
