@@ -109,6 +109,10 @@ repository. Currently we have the following examples:
   on a single transmitter receiver pair with an IEEE 802.11b WiFi channel.
 * ``wired_broadcast``: This example consists on broadcasting packets with RLNC
   from a transmitter to 2 receivers with the same erasure channel.
+* ``encoder_recoder_decoder``: This example shows the gain of RLNC with recoding
+  in 2-hop line network consisting of an encoder, recoder and decoder with
+  different erasure rates. Recoding can be set on or off and erasures rate
+  modifieds by command line parsing.
 
 You can see more documentation of each example in the ``main.cpp`` file comments
 regarding what each example does. There you can also check how to control and set
