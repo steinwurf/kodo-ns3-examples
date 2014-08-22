@@ -183,6 +183,16 @@ constructor) every ``pktInterval`` units of ``Time`` (which is a ns-3 type) and
 sends them to the decoder through its socket connection, represented by the
 ns-3 template-based smart pointer object ``Ptr<Socket>``. Several ns-3 objects
 are represented in this way. As we will check later, ``void
-ReceivePacket(Ptr<Socket> socket)`` will be called whenever a packet is received
-at the decoder.
+ReceivePacket(Ptr<Socket> socket)`` will be invoked through a callback whenever
+a packet is received at the decoder.
+
+Both sockets make use of ``m_payload_buffer``. The transmitter creates coded
+packets from the data and puts them in the buffer. Conversely, a received coded
+packet is placed in the buffer and then to the decoding matrix. You can check
+the source code to verify that these functionalities are performed by the APIs
+``m_encoder->encode()`` and ``m_decoder->decode()``. For the encoding case, the
+amount of bytes required from the buffer to store the coded packet and its
+coefficients is returned. This amount is needed for the ns-3 ``Create<Packet>``
+template-based constructor to create the ns-3 coded packet that is actually sent
+(and received).
 
