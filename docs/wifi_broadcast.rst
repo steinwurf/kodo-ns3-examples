@@ -194,5 +194,183 @@ the source code to verify that these functionalities are performed by the APIs
 amount of bytes required from the buffer to store the coded packet and its
 coefficients is returned. This amount is needed for the ns-3 ``Create<Packet>``
 template-based constructor to create the ns-3 coded packet that is actually sent
-(and received).
+(and received). Finally, ``m_transmission_count`` indicates how many packets
+were sent by the encoder during the whole process.
 
+Default parameters and command parsing
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. code:: c++
+
+ int main (int argc, char *argv[])
+ {
+   std::string phyMode ("DsssRate1Mbps");
+   double rss = -93;  // -dBm
+   uint32_t packetSize = 1000; // bytes
+   double interval = 1.0; // seconds
+   uint32_t generationSize = 5;
+
+   CommandLine cmd;
+
+   cmd.AddValue ("phyMode", "Wifi Phy mode", phyMode);
+   cmd.AddValue ("rss", "received signal strength", rss);
+   cmd.AddValue ("packetSize", "size of application packet sent", packetSize);
+   cmd.AddValue ("interval", "interval (seconds) between packets", interval);
+   cmd.AddValue ("generationSize", "Set the generation size to use",
+                 generationSize);
+
+   cmd.Parse (argc, argv);
+
+   // Convert to time object
+   Time interPacketInterval = Seconds (interval);
+
+Before continuing, you will see many features of ns-3's WiFi implementation. So,
+a good preview for this can be found `here <http://www.nsnam.org/docs/release/3.20/models/singlehtml/index.html#document-wifi>`_.
+Besides the WiFi properties you will find a typical workflow about setting and
+configuring WiFi devices in your simulation.
+
+The first part of the ``main`` function introduces us to the basic simulation
+parameters regarding physical layer mode for WiFi (Direct Sequence Spread
+Spectrum of 1 Mbps rate), receiver signal strength of -93 dBm (decibels with
+respect to 1 mW of received power), 1 KB for packet size, 1 second interval
+duration between ns-3 events (we will use it later) and a generation size of
+5 packets. After that, the ``CommandLine`` class is ns-3's command line parser
+used to modify those values (if required) with ``AddValue`` and ``Parse``. Then,
+the interval duration is converted to the ns-3 ``Time`` format.
+
+
+Configuration defaults
+^^^^^^^^^^^^^^^^^^^^^^
+
+.. code:: c++
+
+  // disable fragmentation for frames below 2200 bytes
+  Config::SetDefault ("ns3::WifiRemoteStationManager::FragmentationThreshold",
+                      StringValue ("2200"));
+
+  // turn off RTS/CTS for frames below 2200 bytes
+  Config::SetDefault ("ns3::WifiRemoteStationManager::RtsCtsThreshold",
+                      StringValue ("2200"));
+
+  // Fix non-unicast data rate to be the same as that of unicast
+  Config::SetDefault ("ns3::WifiRemoteStationManager::NonUnicastMode",
+                      StringValue (phyMode));
+Before continuing, you will see many features of ns-3's WiFi implementation. So,
+a good preview for this can be found `here <http://www.nsnam.org/docs/release/3.20/models/singlehtml/index.html#document-wifi>`_.
+Besides the WiFi properties you will find a typical workflow about setting and
+configuring WiFi devices in your simulation.
+
+This part basically sets some MAC properties that we will not need (at least for
+our purposes), namely frame fragmentation to be applied for frames larger
+than 2200 bytes, disabling the RTS/CTS frame collision protocol for the less
+than 2200 bytes and setting the broadcast data rate to be the same as unicast
+for the given ``phyMode``.
+
+WiFi PHY and channel helpers for nodes
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. code:: c++
+
+  // Source and destination
+  NodeContainer c;
+  c.Create (2);
+
+  // The below set of helpers will help us to put together the wifi NICs we want
+  WifiHelper wifi;
+  wifi.SetStandard (WIFI_PHY_STANDARD_80211b);
+
+  YansWifiPhyHelper wifiPhy =  YansWifiPhyHelper::Default ();
+  // This is one parameter that matters when using FixedRssLossModel
+  // set it to zero; otherwise, gain will be added
+  wifiPhy.Set ("RxGain", DoubleValue (0) );
+  // ns-3 supports RadioTap and Prism tracing extensions for 802.11b
+  wifiPhy.SetPcapDataLinkType (YansWifiPhyHelper::DLT_IEEE802_11_RADIO);
+
+  YansWifiChannelHelper wifiChannel;
+  wifiChannel.SetPropagationDelay ("ns3::ConstantSpeedPropagationDelayModel");
+  // The below FixedRssLossModel will cause the rss to be fixed regardless
+  // of the distance between the two stations, and the transmit power
+  wifiChannel.AddPropagationLoss ("ns3::FixedRssLossModel","Rss",
+                                  DoubleValue (rss));
+  wifiPhy.SetChannel (wifiChannel.Create ());
+
+
+
+In this part we start to build the topology for our simulation following
+a typical ns-3 workflow. By typical we mean that this can be done in different
+ways, but this one you might see regularly within ns-3 simulations. We start by
+creating the nodes that we need with the ``NodeContainer`` class. You can create
+the nodes separately but this way offers the possibility to easily assign
+common properties to the nodes.
+
+We aid ourselves by using the ``WiFiHelper`` class to set the standard to use.
+Since we are working with DSSS, this means we need to use IEEE 802.11b. For the
+physical layer we use the ``YansWifiPhyHelper::Default()`` constructor and from
+it, we disable any gains in the receiver and set the pcap (packet capture)
+tracing format at the data link layer. ns-3 supports different formats, here
+we picked the `RadioTap <http://www.radiotap.org/>`_ format but you can choose
+other format available in the helper description in its Doxygen documentation.
+In a similar way, we use the ``YansWifiChannelHelper`` to create our WiFi
+channel, where we have set the class property named ``SetPropagationDelay`` to
+``ConstantSpeedPropagationDelayMode``. This means that the delay between the
+transmitter and the receiver signals is set by their distance between them,
+divided by the speed of light. The ``AddPropagationLoss`` defines how do we
+calculate the receiver signal strength (received power) in our model. In this
+case, we have chosen a ``FixedRssLossModel`` which sets the received power to
+a fixed value regardless of the position the nodes have. This fixed value is
+set to -93 dBm, but we can modify through argument parsing. With these settings
+we create our WiFi PHY layer and channel by doing ``wifiPhy.SetChannel
+(wifiChannel.Create ());``. If you want to read more about how the helpers are
+implemented, you can check the `Yans description <http://cutebugs.net/files/wns2-yans.pdf>`_
+for further details.
+
+WiFi MAC and net device helpers
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. code:: c++
+
+  // Add a non-QoS upper mac, and disable rate control
+  NqosWifiMacHelper wifiMac = NqosWifiMacHelper::Default ();
+  wifi.SetRemoteStationManager ("ns3::ConstantRateWifiManager",
+                                "DataMode",StringValue (phyMode),
+                                "ControlMode",StringValue (phyMode));
+  // Set it to adhoc mode
+  wifiMac.SetType ("ns3::AdhocWifiMac");
+  NetDeviceContainer devices = wifi.Install (wifiPhy, wifiMac, c);
+
+Now that we have created the physical objects (remember our previous
+definition), we proceed to create the network interface cards (NIC, i.e. net
+devices) that will communicate the different nodes. But first, we need to set
+up the MAC layer. For this we use the ``NqosWifiMacHelper`` which provides an
+object factory to create instances of WiFi MACs that do not have
+802.11e/WMM-style QoS support enabled. We picked this one because we are just
+interested in sending and receiving some dat without QoS. By setting the type
+as ``AdhocWifiMac``, we tell ns-3 that the nodes work in a decentralized way.
+We also need to set the devices data rate control algorithms, which we do with
+the ``WifiHelper`` by setting the remote station manager property to
+``ConstantRateWifiManager`` for data and control packets using the given
+``phyMode``. This implies that we a fixed data rate for data and control packet
+transmissions. With all the previous settings we create our (2) WiFi cards
+and put them in a container by doing
+``NetDeviceContainer devices = wifi.Install (wifiPhy, wifiMac, c);``
+
+Mobility model and helper
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. code:: c++
+
+  MobilityHelper mobility;
+  Ptr<ListPositionAllocator> positionAlloc =
+    CreateObject<ListPositionAllocator> ();
+  positionAlloc->Add (Vector (0.0, 0.0, 0.0));
+  positionAlloc->Add (Vector (5.0, 0.0, 0.0));
+  mobility.SetPositionAllocator (positionAlloc);
+  mobility.SetMobilityModel ("ns3::ConstantPositionMobilityModel");
+  mobility.Install (c);
+
+The ns-3 ``MobilityHelper`` class assigns a model for the velocities of the
+within ns-3. Even though we had fixed the received power of the decoder, it is
+a necessary component for the ``YansWiFiChannelHelper``. We create a ``Vector``
+describing the initial (and remaining) coordinates for both transmitter and
+receiver in a 3D grid. Then, we put them in the helper with a
+``ConstantPositionMobilityModel`` for the nodes.
