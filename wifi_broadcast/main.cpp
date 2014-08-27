@@ -33,11 +33,6 @@
 // layer is configured to receive at a fixed RSS (regardless of the distance
 // and transmit power); therefore, changing position of the nodes has no effect.
 //
-// There are a number of command-line options available to control
-// the default behavior.  The list of available command-line options
-// can be listed with the following command:
-// ./waf --run "wifi-simple-adhoc --help"
-//
 // For instance, for this configuration, the physical layer will
 // stop successfully receiving packets when rss drops below -96 dBm.
 // To see this effect, try by changing the rss parameter on the simulation
@@ -65,14 +60,11 @@
 #include <kodo/trace.hpp>
 
 #include <iostream>
-#include <fstream>
 #include <vector>
 #include <string>
 #include <ctime>
 
 using namespace ns3;
-
-// The encoder / decoder type we will use
 
 // The encoder / decoder type we will use. Here we consider GF(2). For GF(2^8)
 // just change "binary" for "binary8"
@@ -210,9 +202,11 @@ int main (int argc, char *argv[])
   wifi.SetStandard (WIFI_PHY_STANDARD_80211b);
 
   YansWifiPhyHelper wifiPhy =  YansWifiPhyHelper::Default ();
+
   // This is one parameter that matters when using FixedRssLossModel
   // set it to zero; otherwise, gain will be added
   wifiPhy.Set ("RxGain", DoubleValue (0) );
+
   // ns-3 supports RadioTap and Prism tracing extensions for 802.11b
   wifiPhy.SetPcapDataLinkType (YansWifiPhyHelper::DLT_IEEE802_11_RADIO);
 
@@ -249,7 +243,6 @@ int main (int argc, char *argv[])
   internet.Install (c);
 
   Ipv4AddressHelper ipv4;
-  NS_LOG_INFO ("Assign IP Addresses.");
   ipv4.SetBase ("10.1.1.0", "255.255.255.0");
   Ipv4InterfaceContainer i = ipv4.Assign (devices);
 
@@ -260,13 +253,13 @@ int main (int argc, char *argv[])
                                decoder_factory.build());
 
   TypeId tid = TypeId::LookupByName ("ns3::UdpSocketFactory");
-  Ptr<Socket> recvSink = Socket::CreateSocket (c.Get (0), tid);
+  Ptr<Socket> recvSink = Socket::CreateSocket (c.Get (1), tid);
   InetSocketAddress local = InetSocketAddress (Ipv4Address::GetAny (), 80);
   recvSink->Bind (local);
   recvSink->SetRecvCallback (MakeCallback (&KodoSimulation::ReceivePacket,
                                            &kodoSimulator));
 
-  Ptr<Socket> source = Socket::CreateSocket (c.Get (1), tid);
+  Ptr<Socket> source = Socket::CreateSocket (c.Get (0), tid);
   InetSocketAddress remote = InetSocketAddress (Ipv4Address ("255.255.255.255"),
                                                 80);
   source->SetAllowBroadcast (true);
