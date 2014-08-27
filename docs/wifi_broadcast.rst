@@ -29,7 +29,7 @@ We will consider the following guidelines for our simulation:
   vary the channel.
 
 Program description
-------------------------
+-------------------
 
 After the project has been properly configured and built, you should have
 a folder named ``~/dev/kodo-ns3-examples/wifi_broadcast/`` where ``~/dev/`` is
@@ -81,7 +81,7 @@ within ns-3 and Kodo. From ns-3, the necessary modules are:
   deal with the physical layer. A node may have various net devices, but a net
   device cannot be shared by various nodes. We will also use the ``Packet``
   and ``ErrorModel`` classes from this module to represent other simulation
-  objects.
+  objects in future examples.
 * Mobility module: For providing a description of how the nodes move in an
   environment. We will use briefly this module for a representation of our
   physical channel.
@@ -493,3 +493,132 @@ more details about event scheduling in ns-3
 `here <http://www.nsnam.org/docs/manual/singlehtml/index.html#document-events>`_.
 With all previous descriptions, we are able to run the simulation to see some
 basic effects of network coding in ns-3.
+
+Simulation runs
+---------------
+
+Now that we know each part of our setup, we will run some simulations in order
+that you should know what to expect. We will run the default behaviour and
+change some parameters to check known results.
+
+Default run
+^^^^^^^^^^^
+
+First type ``cd ~/dev/kodo-ns3-examples`` in your terminal for you to be in
+the main path of your cloned repository. Remember that at this point, you need
+to have configured and built the projects with no errors. The default run goes
+with 5 packets in the binary field with only the decoder trace enabled. For the
+trace, we have only set ``input_symbol_coefficients`` to see the coding
+coefficients of a received packet and ``decoder_state`` to see how the state
+matrix evolves. As a starter, type: ::
+
+  ./build/linux/wifi_broadcast/wifi_broadcast
+
+You should see an output similar to this: ::
+
+  Received one packet at decoder
+  Trace decoder:
+  input_symbol_coefficients:
+  C: 0 1 0 1 0
+
+  decoder_state:
+  000 ?:  0 0 0 0 0
+  001 C:  0 1 0 1 0
+  002 ?:  0 0 0 0 0
+  003 ?:  0 0 0 0 0
+  004 ?:  0 0 0 0 0
+
+  Received one packet at decoder
+  Trace decoder:
+  input_symbol_coefficients:
+  C: 0 0 0 1 0
+
+  decoder_state:
+  000 ?:  0 0 0 0 0
+  001 C:  0 1 0 0 0
+  002 ?:  0 0 0 0 0
+  003 C:  0 0 0 1 0
+  004 ?:  0 0 0 0 0
+
+  Received one packet at decoder
+  Trace decoder:
+  input_symbol_coefficients:
+  C: 1 0 0 0 1
+
+  decoder_state:
+  000 C:  1 0 0 0 1
+  001 C:  0 1 0 0 0
+  002 ?:  0 0 0 0 0
+  003 C:  0 0 0 1 0
+  004 ?:  0 0 0 0 0
+
+  Received one packet at decoder
+  Trace decoder:
+  input_symbol_coefficients:
+  C: 1 0 1 0 0
+
+  decoder_state:
+  000 C:  1 0 0 0 1
+  001 C:  0 1 0 0 0
+  002 C:  0 0 1 0 1
+  003 C:  0 0 0 1 0
+  004 ?:  0 0 0 0 0
+
+  Received one packet at decoder
+  Trace decoder:
+  input_symbol_coefficients:
+  C: 0 1 0 0 1
+
+  decoder_state:
+  000 U:  1 0 0 0 0
+  001 U:  0 1 0 0 0
+  002 U:  0 0 1 0 0
+  003 U:  0 0 0 1 0
+  004 U:  0 0 0 0 1
+
+  Decoding completed! Total transmissions: 5
+
+Here we observe that everytime a packet is received, the previously
+mentioned information is printed. For the ``input_symbols_coefficients`` output,
+``C:`` indicates that we have a received a *coded* packet with the given
+coding vector. In this output, the first given coded packet (CP) is:
+:math: `CP_1 = p_2 + p_4`.
+
+.. note:: Normally the ``rlnc_encoder`` type (based on the
+   ``full_rlnc_encoder``), would have generated packet in the systematic way,
+   but here we set that feature off in the ``KodoSimulation`` class constructor,
+   through the encoder API ``m_encoder->set_systematic_off()``. Also, normally
+   the encoder starts with the same seed in every run but have also changed that
+   too in the constructor with ``m_encoder->seed(time(0))``. So, we proceed
+   with this example to explain the simulation, but you will obtain another
+   result in your runs. However, the results obtained with this example are
+   general.
+
+After the input symbols have been checked, the decoder trace shows the
+``decoder_state``. This is the current decoding matrix in an equivalent row
+echelon form. Given that we have received :math: `p_2 + p_4`, we put them in the
+second row because the pivot for :math: `p_2` is there. Also, we can argue that
+the pivot for :math: `p_1` is in first row and so on. The second received coded
+packet is :math: `CP_2 = p_4`. Notice that when we print the decoder state
+again, we have changed the equation of the second row because with the current
+information we can calculate :math: `p_2 = CP_1 + CP_2` (remember we are in
+modulo-2 arithmetic). However, we still keep these values as "coded" (``C:``),
+because we need to receive the complete generation to guarantee full decoding.
+Packet reception continues until we have :math: `g` linearly independent (l.i.)
+coded packets. You can also see there two more types of symbols indicators.
+``?:`` indicates that the corresponding pivot packet has not been *seen* by the
+decoder. Seeing packet :math: `k` means that we are able to compute :math: `p_k
++ \sum_{l \gt k} \alpha_l p_l`, i.e. to be able to compute :math: `p_k` plus a
+combinations of packets of indexes greater than :math: `k`. Even though it seems
+simple, the concept of seeing a packet will prove to be useful in future
+examples. Finally, ``U:`` indicates that the packet is uncoded, normally you
+will see this when the generation is decoded.
+
+At the end, we see that decoding was performed after 5 transmissions. There are
+two reasons for this to occur. First, randomly no linearly dependent (l.d.)
+combinations ocurred during the process. Second, there were no packet erasures
+during the process. We will make some changes to see that
+
+Try to run the example again several times, you
+should see that the amount tranmissions vary between 5 and 7, maybe sometimes a
+little more.
