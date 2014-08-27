@@ -441,4 +441,55 @@ We will focus on the ns-3 socket API variant.
 
 The first two lines are meant to create the socket type from a lookup search
 given by the name ``UdpSocketFactory`` and create this type of socket on the
-receiver and the transmitter
+receiver and the transmitter. We have chosen the previous socket type in order
+to represent a UDP connection that sends RLNC coded packets. Then, we create
+the local socket address for binding purposes. For it, we choose the default
+``0.0.0.0`` address obtained from ``Ipv4Address::GetAny ()`` and port 80 (to
+represent random HTTP traffic). The receiver binds to this address for socket
+hearing. Everytime a packet is received we trigger a callback to the reference
+``&KodoSimulation::ReceivePacket`` which takes the hearing socket as an argument.
+This executes the respective member function of the reference ``&kodoSimulator``.
+For the transmitter (source) we make a similar process but instead we allow
+broadcasting with ``source->SetAllowBroadcast (true)`` and connect to the
+broadcast address. This completes our socket connection process and links the
+pieces for the simulation.
+
+Simulation event handler
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. code:: c++
+
+  // Pcap tracing
+  wifiPhy.EnablePcap ("wifi-simple-adhoc", devices);
+
+  Simulator::ScheduleWithContext (source->GetNode ()->GetId (),
+                                  Seconds (1.0),
+                                  &KodoSimulation::GenerateTraffic,
+                                  &kodoSimulator,
+                                  source, interPacketInterval);
+
+  Simulator::Run ();
+  Simulator::Destroy ();
+
+Finally, ``wifiPhy.EnablePcap ("wifi-simple-adhoc", devices);`` allows the net
+devices to create pcap files from the given devices. One file per net device.
+File naming would be: ``wifi-simple-adhoc-[NODE_ID]-[DEVICE_ID].pcap`` and the
+format of these files should be the one of RadioTap and should be located on your
+``~/kodo-ns3-examples/`` folder. Later we will review how to read those files.
+
+After the pcap setting, we use one of the ns-3 core features, event scheduling.
+The ``Simulator`` is inherent to ns-3 and defines how event are handling
+discretely. The ``ScheduleWithContext`` member function basically tells ns-3
+to schedule the ``KodoSimulation::GenerateTraffic`` function every second from
+the transmitter instance of ``kodoSimulator`` and provide its arguments, e.g.
+ns-3 socket pointer ``source`` and ``Time`` packet interval
+``interPacketInterval``. Among the event schedulers you will see ``Schedule`` vs.
+``ScheduleWithContext``. The main difference between these two functions is that
+the ``ScheduleWithContext`` tells ns-3 that the scheduled's event context
+(the node identifier of the currently executed network node) belongs to the
+given node. While, ``Schedule`` may receive the context from a previous
+scheduled event which can have the context from a different node. You can find
+more details about event scheduling in ns-3
+`here <http://www.nsnam.org/docs/manual/singlehtml/index.html#document-events>`_.
+With all previous descriptions, we are able to run the simulation to see some
+basic effects of network coding in ns-3.
