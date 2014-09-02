@@ -585,13 +585,13 @@ coding vector. In this output, the first given coded packet (CP) is:
 :math: `CP_1 = p_2 + p_4`.
 
 .. note:: Normally the ``rlnc_encoder`` type (based on the
-   ``full_rlnc_encoder``), would have generated packet in the systematic way,
+   ``full_rlnc_encoder``), would have generated packets in a systematic way,
    but here we set that feature off in the ``KodoSimulation`` class constructor,
    through the encoder API ``m_encoder->set_systematic_off()``. Also, normally
    the encoder starts with the same seed in every run but have also changed that
    too in the constructor with ``m_encoder->seed(time(0))``. So, we proceed
    with this example to explain the simulation, but you will obtain another
-   result in your runs. However, the results obtained with this example are
+   result in your runs. However, the results obtained with this example apply in
    general.
 
 After the input symbols have been checked, the decoder trace shows the
@@ -610,15 +610,118 @@ coded packets. You can also see there two more types of symbols indicators.
 decoder. Seeing packet :math: `k` means that we are able to compute :math: `p_k
 + \sum_{l \gt k} \alpha_l p_l`, i.e. to be able to compute :math: `p_k` plus a
 combinations of packets of indexes greater than :math: `k`. Even though it seems
-simple, the concept of seeing a packet will prove to be useful in future
-examples. Finally, ``U:`` indicates that the packet is uncoded, normally you
-will see this when the generation is decoded.
+simple and unrelated, the concept of seeing a packet will prove to be useful in
+future examples. Finally, ``U:`` indicates that the packet is uncoded, normally
+you will see this when the complete generation is decoded.
 
 At the end, we see that decoding was performed after 5 transmissions. There are
 two reasons for this to occur. First, randomly no linearly dependent (l.d.)
 combinations ocurred during the process. Second, there were no packet erasures
-during the process. We will make some changes to see that
+during the process. We will make some changes to see that.
 
-Try to run the example again several times, you
-should see that the amount tranmissions vary between 5 and 7, maybe sometimes a
-little more.
+Changing the field and generation size
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Try to run the example again several times, you should see that the amount of
+tranmissions vary between 5 and 7, maybe sometimes a little more, due to
+randomness. On average, for :math: `q = 2` you should expect that
+:math: `g + 1.6` transmissions are necessary to transmit :math: `g` l.i.
+packets. To verify this, you can save the following bash script as
+``extra_packet_per_generation.bash`` in your ``~/dev/kodo-ns3-examples``:
+
+.. code:: bash
+
+   #!/bin/bash
+
+   #Check the number of extra transmission per generation
+
+   SUM=0
+   N=$1  # Number of runs
+   GENERATION_SIZE=$2  #  Generation size
+
+   #  For-loop with range for bash
+   #  Basically run the experiment several times and collect the total transmissions
+   #  to get the average
+
+   for (( c=1; c<=${N}; c++ ))
+   do
+       COMB=`./build/linux/wifi_broadcast/wifi_broadcast | grep "Total transmissions:" | cut -f5 -d\ `
+       SUM=$(( ${SUM} + ${COMB} ))
+   done
+
+   EXTRA=`echo "scale= 4; (${SUM} / ${N}) - ${GENERATION_SIZE}" | bc`
+
+   echo "Extra packets per generation: ${EXTRA}"
+
+To set the permissions for this file, type in type in your
+terminal: ::
+
+   chmod 755 extra_packet_per_generation.bash
+
+This enables you and others to run and read the script, but only you to write it.
+You can set this according to the needs in your system. For further permissions,
+you can refer to the ``chmod`` instruction for Unix-like systems.
+
+The script receives two arguments: numbers of runs and generation size.
+Basically it returns how much extra packets per generation were necessary for
+decoding. Try to running as follows: ::
+
+   ./extra_packet_per_generation.bash 100 5
+   Extra packets per generation: .9400
+   ./extra_packet_per_generation.bash 1000 5
+   Extra packets per generation: 1.4790
+   ./extra_packet_per_generation.bash 10000 5
+   Extra packets per generation: 1.5657
+
+You can see that as we increase the amount of runs, we approach to 1.6 extra
+packets per generation. This is due to the linear dependency process of the
+coded packets. However, this happens because we are using the binary field.
+Set the field to :math: `q = 2^8` by setting ``fifi::binary8`` in the encoder
+and decoder templates, rebuild the project (by typing again ``./waf build`` in
+your ``~/dev/kodo-ns3-examples`` folder) and rerun the script even with 100
+samples, to see that the amount of extra packets is zero (at least with 4
+decimal places). This is because it is very unlikely to receive linearly
+dependent packets, even when the last coded packet is being sent.
+
+To see the new coding coefficients for :math: `q = 2^8`, but for only a
+generation size of 3 packets, type now: ::
+
+  ./build/linux/wifi_broadcast/wifi_broadcast --generationSize=3
+
+You should see something similar to: ::
+
+  Received one packet at decoder
+  Trace decoder:
+  input_symbol_coefficients:
+  C: 224 129 0
+
+  decoder_state:
+  000 C:  1 198 0
+  001 ?:  0 0 0
+  002 ?:  0 0 0
+
+  Received one packet at decoder
+  Trace decoder:
+  input_symbol_coefficients:
+  C: 159 115 75
+
+  decoder_state:
+  000 C:  1 0 56
+  001 C:  0 1 74
+  002 ?:  0 0 0
+
+  Received one packet at decoder
+  Trace decoder:
+  input_symbol_coefficients:
+  C: 240 92 115
+
+  decoder_state:
+  000 U:  1 0 0
+  001 U:  0 1 0
+  002 U:  0 0 1
+
+  Decoding completed! Total transmissions: 3
+
+Notice how the size of the decoding matrix changes due to the effect of the
+generation size. This is expected because the size of the decoding matrix is
+given by the minimum amount of linear combinations required to decode.
