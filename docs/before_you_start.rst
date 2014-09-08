@@ -47,12 +47,12 @@ What do we assume you know before the tutorial?
 Kodo
 ^^^^
 
-Kodo is a C++ ... ok I guess you know the story ;)
+I guess you know the story.
 
 ns-3
 ^^^^^^^
 
-Same here ;)
+Same here.
 
 C++
 ^^^

@@ -724,4 +724,15 @@ You should see something similar to: ::
 
 Notice how the size of the decoding matrix changes due to the effect of the
 generation size. This is expected because the size of the decoding matrix is
-given by the minimum amount of linear combinations required to decode.
+given by the minimum amount of linear combinations required to decode. Also you
+can verify the coding coefficients now vary between 0 and 255 given that we
+have changed the field size. Try running the example with these changes a
+couple of times so you can verify the above in general.
+
+Changing the receiver signal strength
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+As we mentioned earlier, our WiFi PHY layer relies on constant position and
+power values. We originally set up the ``rss`` value to -93 dBm to indicate our
+receive power. In general, the bit error rate varies with signal reception
+level, so we will adjust this.
