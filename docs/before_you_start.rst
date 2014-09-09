@@ -47,12 +47,21 @@ What do we assume you know before the tutorial?
 Kodo
 ^^^^
 
-I guess you know the story.
+Kodo is a C++ library from `Steinwurf <http://www.steinwurf.com>`_ that
+implements Random Linear Network Coding. The links you should review first to
+get a clear idea of what the library does, are:
+
+* `Kodo documentation <http://kodo.readthedocs.org/en/latest/>`_
+* `Kodo source code <https://github.com/steinwurf/kodo>`_
+* `Steinwurf buildbot <http://buildbot.steinwurf.dk/>`_
 
 ns-3
 ^^^^^^^
 
-Same here.
+`ns-3 <http://www.nsnam.org/>`_ is a network simulator of the OSI layers
+written in C++ for research and educational purposes under the GPLv2 license.
+You can find documentation regarding a tutorial, manual and model description
+`here <http://www.nsnam.org/documentation/>`_.
 
 C++
 ^^^
