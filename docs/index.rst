@@ -17,4 +17,6 @@ Documentation
 
 .. toctree::
    :maxdepth: 2
+
    before_you_start
+   wifi_broadcast
