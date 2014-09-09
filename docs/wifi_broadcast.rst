@@ -3,10 +3,10 @@ Broadcast RLNC with a WiFi channel
 
 .. _wifi_broadcast:
 
-The topology shown in Fig. **XX** describes a transmitter sending coded packets
-with RLNC from a generation size :math: `g` and field size :math: `q` in a
+The topology considered describes a transmitter sending coded packets
+with RLNC from a generation size :math:`g` and field size :math:`q` in a
 broadcast fashion through a 802.11b channel. For the purpose of our example
-we will start with :math: `g = 5` and :math: `q = 2` (i.e. the binary field) and
+we will start with :math:`g = 5` and :math:`q = 2` (i.e. the binary field) and
 we will check the completion time in terms of transmissions through the WiFi
 channel under different situations.
 
@@ -16,7 +16,7 @@ What to simulate?
 We will consider the following guidelines for our simulation:
 
 * Behaviour: The sender keeps transmitting the generation until the
-  receiver has :math: `g` linearly independent (l.i.) coded packets
+  receiver has :math:`g` linearly independent (l.i.) coded packets
   (combinations). Packets might or might not be loss due to channel
   impairments.
 * Inputs: As main parameters regarding RLNC, we choose the generation
@@ -118,9 +118,9 @@ The RLNC encoder and decoder are template classes. The first input type is the
 field size represented through an object (``struct`` in this case) from our
 `Fifi  <https://github.com/steinwurf/fifi>`_ library. Fifi is a dependency for
 Kodo where all the finite field arithmetics resides. Since we are interested in
-:math: `q = 2` we choose ``fifi:binary``, however other field types from Fifi
+:math:`q = 2` we choose ``fifi:binary``, however other field types from Fifi
 might be chosen too according to your application. Current available filed sizes
-are: :math: `q = {2^4, 2^8, 2^{16}, 2^{32}-5}`.
+are: :math:`q = {2^4, 2^8, 2^{16}, 2^{32}-5}`.
 
 The second input is a ``struct`` that controls the use of tracing in the given
 object. ``kodo::enable_trace`` or ``kodo::disable_trace`` respectively enables
@@ -582,7 +582,7 @@ Here we observe that everytime a packet is received, the previously
 mentioned information is printed. For the ``input_symbols_coefficients`` output,
 ``C:`` indicates that we have a received a *coded* packet with the given
 coding vector. In this output, the first given coded packet (CP) is:
-:math: `CP_1 = p_2 + p_4`.
+:math:`CP_1 = p_2 + p_4`.
 
 .. note:: Normally the ``rlnc_encoder`` type (based on the
    ``full_rlnc_encoder``), would have generated packets in a systematic way,
@@ -596,20 +596,20 @@ coding vector. In this output, the first given coded packet (CP) is:
 
 After the input symbols have been checked, the decoder trace shows the
 ``decoder_state``. This is the current decoding matrix in an equivalent row
-echelon form. Given that we have received :math: `p_2 + p_4`, we put them in the
-second row because the pivot for :math: `p_2` is there. Also, we can argue that
-the pivot for :math: `p_1` is in first row and so on. The second received coded
-packet is :math: `CP_2 = p_4`. Notice that when we print the decoder state
+echelon form. Given that we have received :math:`p_2 + p_4`, we put them in the
+second row because the pivot for :math:`p_2` is there. Also, we can argue that
+the pivot for :math:`p_1` is in first row and so on. The second received coded
+packet is :math:`CP_2 = p_4`. Notice that when we print the decoder state
 again, we have changed the equation of the second row because with the current
-information we can calculate :math: `p_2 = CP_1 + CP_2` (remember we are in
+information we can calculate :math:`p_2 = CP_1 + CP_2` (remember we are in
 modulo-2 arithmetic). However, we still keep these values as "coded" (``C:``),
 because we need to receive the complete generation to guarantee full decoding.
-Packet reception continues until we have :math: `g` linearly independent (l.i.)
+Packet reception continues until we have :math:`g` linearly independent (l.i.)
 coded packets. You can also see there two more types of symbols indicators.
 ``?:`` indicates that the corresponding pivot packet has not been *seen* by the
-decoder. Seeing packet :math: `k` means that we are able to compute :math: `p_k
-+ \sum_{l \gt k} \alpha_l p_l`, i.e. to be able to compute :math: `p_k` plus a
-combinations of packets of indexes greater than :math: `k`. Even though it seems
+decoder. Seeing packet :math:`k` means that we are able to compute :math:`p_k
++ \sum_{l \gt k} \alpha_l p_l`, i.e. to be able to compute :math:`p_k` plus a
+combinations of packets of indexes greater than :math:`k`. Even though it seems
 simple and unrelated, the concept of seeing a packet will prove to be useful in
 future examples. Finally, ``U:`` indicates that the packet is uncoded, normally
 you will see this when the complete generation is decoded.
@@ -624,8 +624,8 @@ Changing the field and generation size
 
 Try to run the example again several times, you should see that the amount of
 tranmissions vary between 5 and 7, maybe sometimes a little more, due to
-randomness. On average, for :math: `q = 2` you should expect that
-:math: `g + 1.6` transmissions are necessary to transmit :math: `g` l.i.
+randomness. On average, for :math:`q = 2` you should expect that
+:math:`g + 1.6` transmissions are necessary to transmit :math:`g` l.i.
 packets. To verify this, you can save the following bash script as
 ``extra_packet_per_generation.bash`` in your ``~/dev/kodo-ns3-examples``:
 
@@ -676,14 +676,14 @@ decoding. Try to running as follows: ::
 You can see that as we increase the amount of runs, we approach to 1.6 extra
 packets per generation. This is due to the linear dependency process of the
 coded packets. However, this happens because we are using the binary field.
-Set the field to :math: `q = 2^8` by setting ``fifi::binary8`` in the encoder
+Set the field to :math:`q = 2^8` by setting ``fifi::binary8`` in the encoder
 and decoder templates, rebuild the project (by typing again ``./waf build`` in
 your ``~/dev/kodo-ns3-examples`` folder) and rerun the script even with 100
 samples, to see that the amount of extra packets is zero (at least with 4
 decimal places). This is because it is very unlikely to receive linearly
 dependent packets, even when the last coded packet is being sent.
 
-To see the new coding coefficients for :math: `q = 2^8`, but for only a
+To see the new coding coefficients for :math:`q = 2^8`, but for only a
 generation size of 3 packets, type now: ::
 
   ./build/linux/wifi_broadcast/wifi_broadcast --generationSize=3
