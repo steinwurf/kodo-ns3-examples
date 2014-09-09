@@ -734,5 +734,165 @@ Changing the receiver signal strength
 
 As we mentioned earlier, our WiFi PHY layer relies on constant position and
 power values. We originally set up the ``rss`` value to -93 dBm to indicate our
-receive power. In general, the bit error rate varies with signal reception
-level, so we will adjust this.
+received power. In general, the packet error rate varies with the signal
+reception level, so we will adjust this. The receiver (sensitivity) for this
+channel is -96 dBm. It means that for rss values lower than this, we will have
+no packet recovery. This goes a little further from a typical erasure channel
+where we may or may not have packet losses regurlarly, the reason being that
+receiver position and received power are fixed.
+
+To change the rss, simply type: ::
+
+  ./build/linux/wifi_broadcast/wifi_broadcast --rss=-96
+
+You will see no output because the program gets into an infinite loop. To finish
+the program type ``Ctrl+C`` in your terminal. To verify that the running
+program endend properly, verify that a ``^C`` sign appears in your terminal. The
+program enters a loop because we receive no packets at all and the decoder will
+never be full rank.
+
+Using other tracing features
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+So far we have seen only the decoder state in terms of rank and symbol
+coefficients. In the ``filters`` construct on the ``ReceivePacket``  function
+in the ``main.cpp`` file, you can add the ``"symbol_storage"`` option to see a
+hex dump of the packets. Rebuild and type: ::
+
+  ./build/linux/wifi_broadcast/wifi_broadcast --generationSize=3
+
+Them you will get an output like this (here we used the binary field): ::
+
+  Received one packet at decoder
+  Trace decoder:
+  input_symbol_coefficients:
+  C: 0 1 1
+
+  decoder_state:
+  000 ?:  0 0 0
+  001 C:  0 1 1
+  002 ?:  0 0 0
+
+  symbol_storage:
+  0 A:
+  0000  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+  0010  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+  ....
+  03e0
+  1 I:
+  0000  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+  0010  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+  ....
+  03e0
+  2 A:
+  0000  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+  0010  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+  ....
+  03e0
+
+  Received one packet at decoder
+  Trace decoder:
+  input_symbol_coefficients:
+  C: 0 0 1
+
+  decoder_state:
+  000 ?:  0 0 0
+  001 C:  0 1 0
+  002 C:  0 0 1
+
+  symbol_storage:
+  0 A:
+  0000  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+  0010  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+  ....
+  03e0
+  1 I:
+  0000  78 78 78 78 78 78 78 78 78 78 78 78 78 78 78 78  xxxxxxxxxxxxxxxx
+  0010  78 78 78 78 78 78 78 78 78 78 78 78 78 78 78 78  xxxxxxxxxxxxxxxx
+  ....
+  03e0
+  2 I:
+  0000  78 78 78 78 78 78 78 78 78 78 78 78 78 78 78 78  xxxxxxxxxxxxxxxx
+  0010  78 78 78 78 78 78 78 78 78 78 78 78 78 78 78 78  xxxxxxxxxxxxxxxx
+  ....
+  03e0
+
+  Received one packet at decoder
+  Trace decoder:
+  input_symbol_coefficients:
+  C: 1 0 1
+
+  decoder_state:
+  000 U:  1 0 0
+  001 U:  0 1 0
+  002 U:  0 0 1
+
+  symbol_storage:
+  0 I:
+  0000  78 78 78 78 78 78 78 78 78 78 78 78 78 78 78 78  xxxxxxxxxxxxxxxx
+  0010  78 78 78 78 78 78 78 78 78 78 78 78 78 78 78 78  xxxxxxxxxxxxxxxx
+  ....
+  03e0
+  1 I:
+  0000  78 78 78 78 78 78 78 78 78 78 78 78 78 78 78 78  xxxxxxxxxxxxxxxx
+  0010  78 78 78 78 78 78 78 78 78 78 78 78 78 78 78 78  xxxxxxxxxxxxxxxx
+  ....
+  03e0
+  2 I:
+  0000  78 78 78 78 78 78 78 78 78 78 78 78 78 78 78 78  xxxxxxxxxxxxxxxx
+  0010  78 78 78 78 78 78 78 78 78 78 78 78 78 78 78 78  xxxxxxxxxxxxxxxx
+  ....
+  03e0
+
+  Decoding completed! Total transmissions: 5
+
+Now, we see the data in rows of 16 bytes. If you look at the constructor in
+``main.cpp``, you can confirm that we constantly fill the buffer with ``"x"``,
+since the example is just for showing purposes. The symbol storage can be
+mainly in 3 states depending on how the memory is assigned in Kodo. You
+can refer to the description of these states
+`here <https://github.com/steinwurf/kodo/blob/master/src/kodo/trace_symbol_storage.hpp>`_.
+For this implementation, we will only have 2 of them, namely ``A:`` (available)
+and ``I:`` (initiliazed) meaning that the memory is ready and initialized to
+be used, respectively. Notice that whenever we still have coded packets, we only
+print zeros. This trace feature is useful particularly we you want to debug the
+decoding process with some known data.
+
+Finally, try disabling the decoder trace and enable the encoder trace. This
+trace only has the symbol storage feature. Simply switch the structs in the
+encoder and decoder templates, rebuild your project and rerun the example with
+the previous setting, you will only see your data in the encoder.
+
+Review pcap traces
+^^^^^^^^^^^^^^^^^^
+
+As we described earlier, the simulation leaves pcap format files
+(``wifi-simple-adhoc-[NODE_ID]-[DEVICE_ID].pcap``) in your
+``~/dev/kodo-ns3-examples`` folder. You can read this files with the following
+commands with different programs like tcpdump or Wireshark. tcpdump is standard
+on most Unix-like systems and is based on the libpcap library.
+`Wireshark <https://www.wireshark.org/>`_ is another free, open-source packet
+analyzer which you can get online. Just for showing purposes we will use
+tcpdump, but you can choose the one you prefer the most. For reading both files
+at the same time (0-0/1-0 is the encoder/decoder device), simply type: ::
+
+  tcpdump -r wifi-simple-adhoc-0-0.pcap -nn -tt; echo; tcpdump -r wifi-simple-adhoc-1-0.pcap -nn -tt;
+
+You will get this output: ::
+
+  reading from file wifi-simple-adhoc-0-0.pcap, link-type IEEE802_11_RADIO (802.11 plus radiotap header)
+  1.000000 1000000us tsft 1.0 Mb/s 2412 MHz 11b IP 10.1.1.1.49153 > 10.1.1.255.80: UDP, length 1002
+  2.000000 2000000us tsft 1.0 Mb/s 2412 MHz 11b IP 10.1.1.1.49153 > 10.1.1.255.80: UDP, length 1002
+  3.000000 3000000us tsft 1.0 Mb/s 2412 MHz 11b IP 10.1.1.1.49153 > 10.1.1.255.80: UDP, length 1002
+  4.000000 4000000us tsft 1.0 Mb/s 2412 MHz 11b IP 10.1.1.1.49153 > 10.1.1.255.80: UDP, length 1002
+
+  reading from file wifi-simple-adhoc-1-0.pcap, link-type IEEE802_11_RADIO (802.11 plus radiotap header)
+  1.008720 1008720us tsft 1.0 Mb/s 2412 MHz 11b -93dB signal -101dB noise IP 10.1.1.1.49153 > 10.1.1.255.80: UDP, length 1002
+  2.008720 2008720us tsft 1.0 Mb/s 2412 MHz 11b -93dB signal -101dB noise IP 10.1.1.1.49153 > 10.1.1.255.80: UDP, length 1002
+  3.008720 3008720us tsft 1.0 Mb/s 2412 MHz 11b -93dB signal -101dB noise IP 10.1.1.1.49153 > 10.1.1.255.80: UDP, length 1002
+  4.008720 4008720us tsft 1.0 Mb/s 2412 MHz 11b -93dB signal -101dB noise IP 10.1.1.1.49153 > 10.1.1.255.80: UDP, length 1002
+
+There you can confirm the RadioTap format of the pcap files and also can
+check other features like bit rate, frequency channel, protocol used, rss,
+noise floor and the transmitter and receiver IP addresses with their respective
+ports. Notice that these fit with our settings configuration.
