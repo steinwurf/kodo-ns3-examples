@@ -148,6 +148,13 @@ to the channel nature, here you will only see the linear dependence effect. You
 will also see when the decoding process is completed and how many transmissions
 where required.
 
+Tutorial
+--------
+To follow a more comprehensive description of the examples, please follow
+the tutorial in the `Kodo-ns3 tutorial <http://kodo-ns3-examples.readthedocs.org/en/latest/>`_.
+Currently we only describe the first example, but we will be adding more
+description regarding the others.
+
 Comments, Feedback & Bugs
 -------------------------
 All comments, questions, and feedback regarding the examples can be
@@ -162,3 +169,4 @@ Any bugs and patches should be posted to the github issue tracker:
 If you make new examples or use the examples provided here for your
 research please let us know - we would be happy to add links to your
 work or potentially include it as new examples.
+
