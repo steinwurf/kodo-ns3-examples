@@ -4,16 +4,13 @@
    contain the root `toctree` directive.
 
 ===============================
-kodo-ns3-examples documentation
+Kodo-ns3-examples documentation
 ===============================
 
 Welcome to the Kodo with ns-3 examples documentation!
 
 This set of documents provides a tutorial showing how to use Steinwurf C++
 Kodo library together with the ns-3 simulator.
-
-Documentation
--------------
 
 .. toctree::
    :maxdepth: 2
