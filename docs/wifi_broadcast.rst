@@ -40,7 +40,7 @@ to review the source code. We will briefly review some of its parts.
 
 Overview comments and includes
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-.. code:: c++
+.. code-block:: c++
 
    // ns-3 document style descriptor for e-macs
 
@@ -102,14 +102,14 @@ Required identifiers and types
 We will be working within the ns-3 scope given that most of our objects are from
 this library. This is typical across ns-3 code.
 
-.. code:: c++
+.. code-block:: c++
 
    using namespace ns3;
 
 Also, for our enconder and decoder types, we need some ``typedefs`` to make
 easy calls on them.
 
-.. code:: c++
+.. code-block:: c++
 
    typedef kodo::full_rlnc_encoder<fifi::binary,kodo::disable_trace> rlnc_encoder;
    typedef kodo::full_rlnc_decoder<fifi::binary,kodo::enable_trace> rlnc_decoder;
@@ -141,7 +141,7 @@ information from it in an easy way.
 
 The ``KodoSimulation`` class can be roughly defined in the following way:
 
-.. code:: c++
+.. code-block:: c++
 
    class KodoSimulation
    {
@@ -201,7 +201,7 @@ expected behaviour of the nodes when packets are sent or received respectively.
 Default parameters and command parsing
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. code:: c++
+.. code-block:: c++
 
  int main (int argc, char *argv[])
  {
@@ -238,7 +238,7 @@ the interval duration is converted to the ns-3 ``Time`` format.
 Configuration defaults
 ^^^^^^^^^^^^^^^^^^^^^^
 
-.. code:: c++
+.. code-block:: c++
 
   // disable fragmentation for frames below 2200 bytes
   Config::SetDefault ("ns3::WifiRemoteStationManager::FragmentationThreshold",
@@ -266,7 +266,7 @@ for the given ``phyMode``.
 WiFi PHY and channel helpers for nodes
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. code:: c++
+.. code-block:: c++
 
   // Source and destination
   NodeContainer c;
@@ -325,7 +325,7 @@ for further details.
 WiFi MAC and net device helpers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. code:: c++
+.. code-block:: c++
 
   // Add a non-QoS upper mac, and disable rate control
   NqosWifiMacHelper wifiMac = NqosWifiMacHelper::Default ();
@@ -355,7 +355,7 @@ and put them in a container by doing
 Mobility model and helper
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. code:: c++
+.. code-block:: c++
 
   MobilityHelper mobility;
   Ptr<ListPositionAllocator> positionAlloc =
@@ -376,7 +376,7 @@ receiver in a 3D grid. Then, we put them in the helper with a
 Internet and application protocol helpers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. code:: c++
+.. code-block:: c++
 
   InternetStackHelper internet;
   internet.Install (c);
@@ -397,7 +397,7 @@ range ``10.1.1.0`` with the subnet mask ``255.255.255.0`` we assign it to the
 Simulation calls
 ^^^^^^^^^^^^^^^^
 
-.. code:: c++
+.. code-block:: c++
 
   rlnc_encoder::factory encoder_factory(generationSize, packetSize);
   rlnc_decoder::factory decoder_factory(generationSize, packetSize);
@@ -415,7 +415,7 @@ and receiver.
 Socket creation and connections
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. code:: c++
+.. code-block:: c++
 
   TypeId tid = TypeId::LookupByName ("ns3::UdpSocketFactory");
   Ptr<Socket> recvSink = Socket::CreateSocket (c.Get (0), tid);
@@ -457,7 +457,7 @@ pieces for the simulation.
 Simulation event handler
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. code:: c++
+.. code-block:: c++
 
   // Pcap tracing
   wifiPhy.EnablePcap ("wifi-simple-adhoc", devices);
@@ -629,7 +629,7 @@ randomness. On average, for :math:`q = 2` you should expect that
 packets. To verify this, you can save the following bash script as
 ``extra_packet_per_generation.bash`` in your ``~/dev/kodo-ns3-examples``:
 
-.. code:: bash
+.. code-block:: bash
 
    #!/bin/bash
 
