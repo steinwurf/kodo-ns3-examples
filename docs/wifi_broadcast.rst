@@ -608,7 +608,7 @@ Packet reception continues until we have :math:`g` linearly independent (l.i.)
 coded packets. You can also see there two more types of symbols indicators.
 ``?:`` indicates that the corresponding pivot packet has not been *seen* by the
 decoder. Seeing packet :math:`k` means that we are able to compute :math:`p_k
-+ \sum_{l \gt k} \alpha_l p_l`, i.e. to be able to compute :math:`p_k` plus a
++ \sum_{l > k} \alpha_l p_l`, i.e. to be able to compute :math:`p_k` plus a
 combinations of packets of indexes greater than :math:`k`. Even though it seems
 simple and unrelated, the concept of seeing a packet will prove to be useful in
 future examples. Finally, ``U:`` indicates that the packet is uncoded, normally
