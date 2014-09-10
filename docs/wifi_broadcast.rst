@@ -252,10 +252,10 @@ Configuration defaults
   Config::SetDefault ("ns3::WifiRemoteStationManager::NonUnicastMode",
                       StringValue (phyMode));
 
-Before continuing, you will see many features of ns-3's WiFi implementation. So,
-a good preview for this can be found `here <http://www.nsnam.org/docs/release/3.20/models/singlehtml/index.html#document-wifi>`_.
-Besides the WiFi properties you will find a typical workflow about setting and
-configuring WiFi devices in your simulation.
+Before continuing, you will see many features of ns-3's `WiFi implementation
+<http://www.nsnam.org/docs/release/3.20/models/singlehtml/index.html#document-wifi>`_.
+Besides the WiFi properties, in the previous link you will find a typical
+workflow about setting and configuring WiFi devices in your simulation.
 
 This part basically sets some MAC properties that we will not need (at least for
 our purposes), namely frame fragmentation to be applied for frames larger
@@ -389,7 +389,7 @@ After we have set up the devices and the two lowest layers, we need to set up
 the network and application layer protocols. The ``InternetStackHelper``
 provides functionalities for IPv4, ARP, UDP, TCP, IPv6, Neighbor Discovery, and
 other related protocols. You can find more about the implementation of the
-helper `here <http://www.nsnam.org/docs/release/3.20/models/singlehtml/index.html#document-internet-models>`_.
+helper in this `link <http://www.nsnam.org/docs/release/3.20/models/singlehtml/index.html#document-internet-models>`_.
 A similar process is made for the IPv4 address assignment. We use the address
 range ``10.1.1.0`` with the subnet mask ``255.255.255.0`` we assign it to the
 ``devices`` and put the result in a container.
@@ -435,8 +435,8 @@ an IP address and a logical port to create a socket address for socket
 communication (besides of course, the socket itself). ns-3 supports two sockets
 API for user space applications. The first is ns-3 native, while the second
 (which is based on the first) resembles more a real system POSIX-like socket
-API. The differences between the two can be found
-`here <http://www.nsnam.org/docs/release/3.20/models/singlehtml/index.html#document-network>`_.
+API. For further information about the differences, please refer to ns-3's
+`socket implementation <http://www.nsnam.org/docs/release/3.20/models/singlehtml/index.html#document-network>`_.
 We will focus on the ns-3 socket API variant.
 
 The first two lines are meant to create the socket type from a lookup search
@@ -489,10 +489,10 @@ the ``ScheduleWithContext`` tells ns-3 that the scheduled's event context
 (the node identifier of the currently executed network node) belongs to the
 given node. While, ``Schedule`` may receive the context from a previous
 scheduled event which can have the context from a different node. You can find
-more details about event scheduling in ns-3
-`here <http://www.nsnam.org/docs/manual/singlehtml/index.html#document-events>`_.
-With all previous descriptions, we are able to run the simulation to see some
-basic effects of network coding in ns-3.
+more details about  the simulator functions in the ns-3
+`event scheduling <http://www.nsnam.org/docs/manual/singlehtml/index.html#document-events>`_
+manual. With all previous descriptions, we are able to run the simulation to
+see some basic effects of network coding in ns-3.
 
 Simulation runs
 ---------------
@@ -849,14 +849,16 @@ Them you will get an output like this (here we used the binary field): ::
 Now, we see the data in rows of 16 bytes. If you look at the constructor in
 ``main.cpp``, you can confirm that we constantly fill the buffer with ``"x"``,
 since the example is just for showing purposes. The symbol storage can be
-mainly in 3 states depending on how the memory is assigned in Kodo. You
-can refer to the description of these states
-`here <https://github.com/steinwurf/kodo/blob/master/src/kodo/trace_symbol_storage.hpp>`_.
-For this implementation, we will only have 2 of them, namely ``A:`` (available)
-and ``I:`` (initiliazed) meaning that the memory is ready and initialized to
-be used, respectively. Notice that whenever we still have coded packets, we only
-print zeros. This trace feature is useful particularly we you want to debug the
-decoding process with some known data.
+mainly in 3 states depending on how the memory is assigned in Kodo. In the
+library we have 2 types of memory assigment for object creation, i.e. we
+can create a `shallow copy or a deep copy <http://stackoverflow.com/a/184745>`_.
+For this implementation, we use a deep copy by default and we will only have 2
+of them, namely ``A:`` (available) and ``I:`` (initiliazed) meaning that the
+memory is ready and initialized to be used, respectively. Notice that whenever
+we still have coded packets, we only print zeros. In the case of a shallow
+copy, we might see the ``?:`` indicator that will tell us that the storage
+has not been assigned. This trace feature is useful particularly we you want to
+debug the decoding process with some known data.
 
 Finally, try disabling the decoder trace and enable the encoder trace. This
 trace only has the symbol storage feature. Simply switch the structs in the

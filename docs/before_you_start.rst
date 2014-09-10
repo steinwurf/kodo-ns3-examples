@@ -27,8 +27,8 @@ in its main path regarding how to use the library with ns-3, namely:
 Examples builds
 ---------------
 
-You can check the build status of the repository master branch in our buildbot
-page `here <http://buildbot.steinwurf.dk/stats?projects=kodo-ns3-examples>`_.
+You can check the build status of the repository master branch in our
+`buildbot <http://buildbot.steinwurf.dk/stats?projects=kodo-ns3-examples>`_ page.
 There you can check statistics and builds for different platforms and compilers
 this and also other projects like Kodo itself.
 
