@@ -61,7 +61,7 @@ ns-3
 `ns-3 <http://www.nsnam.org/>`_ is a network simulator of the OSI layers
 written in C++ for research and educational purposes under the GPLv2 license.
 You can find documentation regarding a tutorial, manual and model description
-`here <http://www.nsnam.org/documentation/>`_.
+in this `link <http://www.nsnam.org/documentation/>`_.
 
 C++
 ^^^
