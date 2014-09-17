@@ -30,7 +30,7 @@ Examples builds
 You can check the build status of the repository master branch in our
 `buildbot <http://buildbot.steinwurf.dk/stats?projects=kodo-ns3-examples>`_ page.
 There you can check statistics and builds for different platforms and compilers
-this and also other projects like Kodo itself.
+for this but also other projects like Kodo itself.
 
 Platform and compiler support
 -----------------------------
@@ -60,18 +60,18 @@ ns-3
 
 `ns-3 <http://www.nsnam.org/>`_ is a network simulator of the OSI layers
 written in C++ for research and educational purposes under the GPLv2 license.
-You can find documentation regarding a tutorial, manual and model description
-in this `link <http://www.nsnam.org/documentation/>`_.
+You can find documentation regarding a tutorial, a manual and a model
+description in this `link <http://www.nsnam.org/documentation/>`_.
 
 C++
 ^^^
 
-In order for the tutorial to be easy to read some basic knowledge of C++ is
+In order for the tutorial to be easy to read, some basic knowledge of C++ is
 recommended. If you are also a C++ beginner, you can refer to this
 `tutorial <http://www.cplusplus.com/doc/tutorial/>`_ as a guide from the basics
 to more advanced features of the language. Given that both ns-3 and Kodo are
 highly based object oriented projects, we strongly recommend you to spend some
-time on the classes related topics, particularly object properties (polymorphism,
+time on class related topics, particularly object properties (polymorphism,
 inheritance) and templates (generic classes or functions based on abstract
 types). In the mentioned C++ tutorial you may find plenty examples for this.
 
@@ -79,16 +79,18 @@ Waf
 ^^^
 
 Our main building tool is ``waf`` in the same way it is for ns-3. So, if you
-have used ns-3 before this should be transparent to you. Nevertheless, we
-differ from ns-3's waf implemantion and ``wscripts`` to fit our particular
-needs. For this reason, we highly recommend you to follow the instructions in
-the repository link mentioned at the beginning of this document.
+have used ns-3 before this should be transparent to you. If you have not used
+``waf`` , you can review a description of the tool with some examples in the
+`waf documentation <http://docs.waf.googlecode.com/git/apidocs_17/index.html>`_.
+Nevertheless, we differ from ns-3's waf implemantion and ``wscripts`` to fit
+our particular needs. For this reason, we highly recommend you to follow the
+instructions in the repository link mentioned at the beginning of this document.
 
 Comments and questions
 ----------------------
 
-If for some reason your project does not build or you have any other issues
-related to the project, please feel free to contact us through our
+If for some reason your project does not build or you have any other issues or
+questions related to the project, please feel free to contact us through our
 `developers mailing list <http://groups.google.com/group/steinwurf-dev>`_.
 Also, ns-3 users have their
 `mailing list <https://groups.google.com/d/forum/ns-3-users>`_ so you can ask

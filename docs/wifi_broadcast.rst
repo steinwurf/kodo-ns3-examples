@@ -21,11 +21,11 @@ We will consider the following guidelines for our simulation:
   impairments.
 * Inputs: As main parameters regarding RLNC, we choose the generation
   and field size. A parameter regarding channel control should be included
-* Outputs: A counter to indicate how much transmission did the process
+* Outputs: A counter to indicate how much transmissions did the process
   required and some prints to indicate when decoding is completed.
 * Scenarios: We will variate the generation and field size to verify
   theoretical expected values regarding the amount of transmissions to
-  decode. Also, the number of transmission should somehow change as we
+  decode. Also, the number of transmissions should somehow change as we
   vary the channel.
 
 Program description
@@ -34,7 +34,7 @@ Program description
 After the project has been properly configured and built, you should have
 a folder named ``~/dev/kodo-ns3-examples/wifi_broadcast/`` where ``~/dev/`` is
 the folder where you cloned the project repository. If you check the
-``wifi_broadcast`` folder, you will see the ``main.cpp`` file with contains
+``wifi_broadcast`` folder, you will see the ``main.cpp`` file which contains
 the source code of this simulation. You can open it with your preferred editor
 to review the source code. We will briefly review some of its parts.
 
@@ -81,7 +81,7 @@ within ns-3 and Kodo. From ns-3, the necessary modules are:
   deal with the physical layer. A node may have various net devices, but a net
   device cannot be shared by various nodes. We will also use the ``Packet``
   and ``ErrorModel`` classes from this module to represent other simulation
-  objects in future examples.
+  objects in the examples.
 * Mobility module: For providing a description of how the nodes move in an
   environment. We will use briefly this module for a representation of our
   physical channel.
@@ -94,7 +94,8 @@ within ns-3 and Kodo. From ns-3, the necessary modules are:
 From Kodo, the header ``full_rlnc_codes`` contains the description of the
 encoder and decoder objects that we use. ``trace`` is an internal class to
 provide a visual description of internal encoder and decoder processing. Other
-includes are particular to this implementation.
+includes are particular to this implementation and they can be found in standard
+C++ code.
 
 Required identifiers and types
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -118,15 +119,15 @@ The RLNC encoder and decoder are template classes. The first input type is the
 field size represented through an object (``struct`` in this case) from our
 `Fifi  <https://github.com/steinwurf/fifi>`_ library. Fifi is a dependency for
 Kodo where all the finite field arithmetics resides. Since we are interested in
-:math:`q = 2` we choose ``fifi:binary``, however other field types from Fifi
+:math:`q = 2`, we choose ``fifi:binary``. However, other field types from Fifi
 might be chosen too according to your application. Current available filed sizes
 are: :math:`q = {2^4, 2^8, 2^{16}, 2^{32}-5}`.
 
 The second input is a ``struct`` that controls the use of tracing in the given
 object. ``kodo::enable_trace`` or ``kodo::disable_trace`` respectively enables
-or disables the tracing functionality in the objects where they are mployed.
+or disables the tracing functionality in the objects where they are employed.
 For our implementation, we enable tracing for our decoder and disable it for
-the encoder. Later in the simulation parameters we will check what options does
+the encoder. Later in the simulation runs, we will check what options does
 tracing has on each device type.
 
 Main simulation class
@@ -157,7 +158,7 @@ The ``KodoSimulation`` class can be roughly defined in the following way:
 
      void ReceivePacket (Ptr<Socket> socket)
      {
-       // Receiver actions when a packet is received on its socket
+       // Receiver actions performed when a packet is received on its socket
      }
 
      void GenerateTraffic (Ptr<Socket> socket, Time pktInterval)
@@ -170,7 +171,8 @@ The ``KodoSimulation`` class can be roughly defined in the following way:
      rlnc_encoder::pointer m_encoder;  // Pointer to encoder
      rlnc_decoder::pointer m_decoder;  // Pointer to decoder
 
-     std::vector<uint8_t> m_payload_buffer; // Buffer for handling current coded packet and its coded coefficients
+     std::vector<uint8_t> m_payload_buffer; // Buffer for handling current
+                                            // coded packet and its coefficients
 
      uint32_t m_transmission_count;  // Amount of transmissions from the encoder
 
@@ -181,22 +183,25 @@ pktInterval)`` generates coded packets from generic data (created in the
 constructor) every ``pktInterval`` units of ``Time`` (which is a ns-3 type) and
 sends them to the decoder through its socket connection, represented by the
 ns-3 template-based smart pointer object ``Ptr<Socket>``. Several ns-3 objects
-are represented in this way. As we will check later, ``void
-ReceivePacket(Ptr<Socket> socket)`` will be invoked through a callback whenever
-a packet is received at the decoder.
+are represented in this way. So quite often you will see this kind of pointer
+employed. This type of pointer is made to make a proper memory usage.
 
-Both sockets make use of ``m_payload_buffer``. The transmitter creates coded
+As we will check later, ``void ReceivePacket(Ptr<Socket> socket)`` will be
+invoked through a callback whenever a packet is received at the decoder. Both
+sockets make use of ``m_payload_buffer``. The transmitter creates coded
 packets from the data and puts them in the buffer. Conversely, a received coded
-packet is placed in the buffer and then to the decoding matrix. You can check
-the source code to verify that these functionalities are performed by the APIs
-``m_encoder->encode()`` and ``m_decoder->decode()``. For the encoding case, the
-amount of bytes required from the buffer to store the coded packet and its
-coefficients is returned. This amount is needed for the ns-3 ``Create<Packet>``
-template-based constructor to create the ns-3 coded packet that is actually sent
-(and received). Finally, ``m_transmission_count`` indicates how many packets
-were sent by the encoder during the whole process. Please make a review to
-the implementation of ``GenerateTraffic`` and ``ReceivePacket`` to verify the
-expected behaviour of the nodes when packets are sent or received respectively.
+packet is placed in the buffer and then to the decoding matrix.
+
+You can check the source code to verify that these functionalities are
+performed by the APIs ``m_encoder->encode()`` and ``m_decoder->decode()``. For
+the encoding case, the amount of bytes required from the buffer to store the
+coded packet and its coefficients is returned. This amount is needed for the
+ns-3 ``Create<Packet>`` template-based constructor to create the ns-3 coded
+packet that is actually sent (and received). Finally, ``m_transmission_count``
+indicates how many packets were sent by the encoder during the whole process.
+Please make a review to the implementation of ``GenerateTraffic`` and
+``ReceivePacket`` to verify the expected behaviour of the nodes when packets
+are sent or received respectively.
 
 Default parameters and command parsing
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -206,7 +211,7 @@ Default parameters and command parsing
  int main (int argc, char *argv[])
  {
    std::string phyMode ("DsssRate1Mbps");
-   double rss = -93;  // -dBm
+   double rss = -93;  // dBm
    uint32_t packetSize = 1000; // bytes
    double interval = 1.0; // seconds
    uint32_t generationSize = 5;
@@ -227,12 +232,12 @@ Default parameters and command parsing
 
 The first part of the ``main`` function introduces us to the basic simulation
 parameters regarding physical layer mode for WiFi (Direct Sequence Spread
-Spectrum of 1 Mbps rate), receiver signal strength of -93 dBm (decibels with
-respect to 1 mW of received power), 1 KB for packet size, 1 second interval
-duration between ns-3 events (we will use it later) and a generation size of
-5 packets. After that, the ``CommandLine`` class is ns-3's command line parser
-used to modify those values (if required) with ``AddValue`` and ``Parse``. Then,
-the interval duration is converted to the ns-3 ``Time`` format.
+Spectrum of 1 Mbps rate), receiver signal strength of -93 dBm, 1 KB for packet
+size, 1 second interval duration between ns-3 events (we will use it later) and
+a generation size of 5 packets. After that, the ``CommandLine`` class is ns-3's
+command line parser used to modify those values (if required) with ``AddValue``
+and ``Parse``. Then, the interval duration is converted to the ns-3 ``Time``
+format.
 
 
 Configuration defaults
@@ -257,11 +262,12 @@ Before continuing, you will see many features of ns-3's `WiFi implementation
 Besides the WiFi properties, in the previous link you will find a typical
 workflow about setting and configuring WiFi devices in your simulation.
 
-This part basically sets some MAC properties that we will not need (at least for
-our purposes), namely frame fragmentation to be applied for frames larger
+This part basically sets off some MAC properties that we do not need (at least
+for our purposes), namely frame fragmentation to be applied for frames larger
 than 2200 bytes, disabling the RTS/CTS frame collision protocol for the less
 than 2200 bytes and setting the broadcast data rate to be the same as unicast
-for the given ``phyMode``.
+for the given ``phyMode``. However, they need to be included in order to work
+with the WiFi MAC.
 
 WiFi PHY and channel helpers for nodes
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -272,7 +278,7 @@ WiFi PHY and channel helpers for nodes
   NodeContainer c;
   c.Create (2);
 
-  // The below set of helpers will help us to put together the wifi NICs we want
+  // The below set of helpers will help us to put together the WiFi NICs we want
   WifiHelper wifi;
   wifi.SetStandard (WIFI_PHY_STANDARD_80211b);
 
@@ -303,7 +309,7 @@ common properties to the nodes.
 
 We aid ourselves by using the ``WiFiHelper`` class to set the standard to use.
 Since we are working with DSSS, this means we need to use IEEE 802.11b. For the
-physical layer we use the ``YansWifiPhyHelper::Default()`` constructor and from
+physical layer, we use the ``YansWifiPhyHelper::Default()`` constructor and from
 it, we disable any gains in the receiver and set the pcap (packet capture)
 tracing format at the data link layer. ns-3 supports different formats, here
 we picked the `RadioTap <http://www.radiotap.org/>`_ format but you can choose
@@ -316,8 +322,8 @@ divided by the speed of light. The ``AddPropagationLoss`` defines how do we
 calculate the receiver signal strength (received power) in our model. In this
 case, we have chosen a ``FixedRssLossModel`` which sets the received power to
 a fixed value regardless of the position the nodes have. This fixed value is
-set to -93 dBm, but we can modify through argument parsing. With these settings
-we create our WiFi PHY layer and channel by doing ``wifiPhy.SetChannel
+set to -93 dBm, but we can modify it through argument parsing. With these
+settings, we create our WiFi PHY layer channel by doing ``wifiPhy.SetChannel
 (wifiChannel.Create ());``. If you want to read more about how the helpers are
 implemented, you can check the `Yans description <http://cutebugs.net/files/wns2-yans.pdf>`_
 for further details.
@@ -336,11 +342,11 @@ WiFi MAC and net device helpers
   wifiMac.SetType ("ns3::AdhocWifiMac");
   NetDeviceContainer devices = wifi.Install (wifiPhy, wifiMac, c);
 
-Now that we have created the physical objects (remember our previous
-definition), we proceed to create the network interface cards (NIC, i.e. net
-devices) that will communicate the different nodes. But first, we need to set
-up the MAC layer. For this we use the ``NqosWifiMacHelper`` which provides an
-object factory to create instances of WiFi MACs that do not have
+Now that we have created the physical objects (the nodes, remember our previous
+definition), we proceed to create the network interface cards (NICs, i.e. net
+devices) that will communicate the different nodes. But first we need to set
+up the MAC layer. For this, we use the ``NqosWifiMacHelper`` which provides an
+object factory to create instances of WiFi MACs, that do not have
 802.11e/WMM-style QoS support enabled. We picked this one because we are just
 interested in sending and receiving some dat without QoS. By setting the type
 as ``AdhocWifiMac``, we tell ns-3 that the nodes work in a decentralized way.
