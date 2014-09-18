@@ -5,10 +5,10 @@ Broadcast RLNC with a WiFi channel
 
 The topology considered describes a transmitter sending coded packets
 with RLNC from a generation size :math:`g` and field size :math:`q` in a
-broadcast fashion through a 802.11b channel. For the purpose of our example
-we will start with :math:`g = 5` and :math:`q = 2` (i.e. the binary field) and
-we will check the completion time in terms of transmissions through the WiFi
-channel under different situations.
+broadcast fashion through a 802.11b channel to a single receiver. For the
+purpose of our example, we will start with :math:`g = 5` and :math:`q = 2`
+(i.e. the binary field) and we will check the completion time in terms of
+transmissions through the WiFi channel under different situations.
 
 What to simulate?
 -----------------
