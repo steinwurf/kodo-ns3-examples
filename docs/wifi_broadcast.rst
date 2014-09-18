@@ -344,19 +344,19 @@ WiFi MAC and net device helpers
 
 Now that we have created the physical objects (the nodes, remember our previous
 definition), we proceed to create the network interface cards (NICs, i.e. net
-devices) that will communicate the different nodes. But first we need to set
+devices) that will communicate the different nodes. But first, we need to set
 up the MAC layer. For this, we use the ``NqosWifiMacHelper`` which provides an
 object factory to create instances of WiFi MACs, that do not have
 802.11e/WMM-style QoS support enabled. We picked this one because we are just
-interested in sending and receiving some dat without QoS. By setting the type
+interested in sending and receiving some data without QoS. By setting the type
 as ``AdhocWifiMac``, we tell ns-3 that the nodes work in a decentralized way.
 We also need to set the devices data rate control algorithms, which we do with
-the ``WifiHelper`` by setting the remote station manager property to
-``ConstantRateWifiManager`` for data and control packets using the given
-``phyMode``. This implies that we a fixed data rate for data and control packet
-transmissions. With all the previous settings we create our (2) WiFi cards
-and put them in a container by doing
-``NetDeviceContainer devices = wifi.Install (wifiPhy, wifiMac, c);``
+the ``WifiHelper``. This is achieved by setting the remote station manager
+property to ``ConstantRateWifiManager`` for data and control packets using the
+given ``phyMode``. This implies that we a fixed data rate for data and control
+packet transmissions. With all the previous settings we create our (2) WiFi
+cards and put them in a container by doing
+``NetDeviceContainer devices = wifi.Install (wifiPhy, wifiMac, c);``.
 
 Mobility model and helper
 ^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -372,11 +372,11 @@ Mobility model and helper
   mobility.SetMobilityModel ("ns3::ConstantPositionMobilityModel");
   mobility.Install (c);
 
-The ns-3 ``MobilityHelper`` class assigns a model for the velocities of the
-within ns-3. Even though we had fixed the received power of the decoder, it is
-a necessary component for the ``YansWiFiChannelHelper``. We create a ``Vector``
-describing the initial (and remaining) coordinates for both transmitter and
-receiver in a 3D grid. Then, we put them in the helper with a
+The ns-3 ``MobilityHelper`` class assigns a model for the velocities of
+the receivers within ns-3. Even though we had fixed the received power of the
+decoder, it is a necessary component for the ``YansWiFiChannelHelper``. We
+create a ``Vector`` describing the initial (and remaining) coordinates for both
+transmitter and receiver in a 3D grid. Then, we put them in the helper with a
 ``ConstantPositionMobilityModel`` for the nodes.
 
 Internet and application protocol helpers
@@ -397,7 +397,7 @@ provides functionalities for IPv4, ARP, UDP, TCP, IPv6, Neighbor Discovery, and
 other related protocols. You can find more about the implementation of the
 helper in this `link <http://www.nsnam.org/docs/release/3.20/models/singlehtml/index.html#document-internet-models>`_.
 A similar process is made for the IPv4 address assignment. We use the address
-range ``10.1.1.0`` with the subnet mask ``255.255.255.0`` we assign it to the
+range ``10.1.1.0`` with the subnet mask ``255.255.255.0``, assign it to the
 ``devices`` and put the result in a container.
 
 Simulation calls
@@ -411,8 +411,8 @@ Simulation calls
   KodoSimulation kodoSimulator(encoder_factory.build(),
                                decoder_factory.build());
 
-With previous defined typedefs, we call the encoder and decoder factory to
-set and generate object with the defined inputs. Then, we create the instances
+With previous defined typedefs, we call the encoder and decoder factories to
+set and generate objects with the defined inputs. Then, we create the instances
 with ``encoder_factory.build()`` and ``decoder_factory.build()`` to call the
 simulation class constructor. This does not run the simulation as we will see,
 but it creates the objets called by ns-3 to perform the tasks of the transmitter
@@ -439,14 +439,14 @@ Socket creation and connections
 For the application protocols to work with a given data, we need a pair between
 an IP address and a logical port to create a socket address for socket
 communication (besides of course, the socket itself). ns-3 supports two sockets
-API for user space applications. The first is ns-3 native, while the second
+APIs for user space applications. The first is ns-3 native, while the second
 (which is based on the first) resembles more a real system POSIX-like socket
 API. For further information about the differences, please refer to ns-3's
 `socket implementation <http://www.nsnam.org/docs/release/3.20/models/singlehtml/index.html#document-network>`_.
 We will focus on the ns-3 socket API variant.
 
 The first two lines are meant to create the socket type from a lookup search
-given by the name ``UdpSocketFactory`` and create this type of socket on the
+given by the name ``UdpSocketFactory``. They create this type of socket on the
 receiver and the transmitter. We have chosen the previous socket type in order
 to represent a UDP connection that sends RLNC coded packets. Then, we create
 the local socket address for binding purposes. For it, we choose the default
@@ -479,26 +479,26 @@ Simulation event handler
 
 Finally, ``wifiPhy.EnablePcap ("wifi-simple-adhoc", devices);`` allows the net
 devices to create pcap files from the given devices. One file per net device.
-File naming would be: ``wifi-simple-adhoc-[NODE_ID]-[DEVICE_ID].pcap`` and the
+File naming will be: ``wifi-simple-adhoc-[NODE_ID]-[DEVICE_ID].pcap`` and the
 format of these files should be the one of RadioTap and should be located on your
-``~/kodo-ns3-examples/`` folder. Later we will review how to read those files.
+``~/kodo-ns3-examples/`` folder. Later, we will review how to read those files.
 
 After the pcap setting, we use one of the ns-3 core features, event scheduling.
-The ``Simulator`` is inherent to ns-3 and defines how event are handling
+The ``Simulator`` is inherent to ns-3 and defines how events are handled
 discretely. The ``ScheduleWithContext`` member function basically tells ns-3
 to schedule the ``KodoSimulation::GenerateTraffic`` function every second from
 the transmitter instance of ``kodoSimulator`` and provide its arguments, e.g.
 ns-3 socket pointer ``source`` and ``Time`` packet interval
-``interPacketInterval``. Among the event schedulers you will see ``Schedule`` vs.
-``ScheduleWithContext``. The main difference between these two functions is that
-the ``ScheduleWithContext`` tells ns-3 that the scheduled's event context
-(the node identifier of the currently executed network node) belongs to the
-given node. While, ``Schedule`` may receive the context from a previous
-scheduled event which can have the context from a different node. You can find
-more details about  the simulator functions in the ns-3
+``interPacketInterval``. Among the event schedulers, you will see ``Schedule``
+vs. ``ScheduleWithContext``. The main difference between these two functions
+is that the ``ScheduleWithContext`` tells ns-3 that the scheduled's event
+context (the node identifier of the currently executed network node) belongs
+to the given node. Meanwhile, ``Schedule`` may receive the context from a
+previous scheduled event, which can have the context from a different node.
+You can find more details about  the simulator functions in the ns-3
 `event scheduling <http://www.nsnam.org/docs/manual/singlehtml/index.html#document-events>`_
 manual. With all previous descriptions, we are able to run the simulation to
-see some basic effects of network coding in ns-3.
+see some basic effects of network coding in ns-3 with Kodo.
 
 Simulation runs
 ---------------
@@ -511,8 +511,8 @@ Default run
 ^^^^^^^^^^^
 
 First type ``cd ~/dev/kodo-ns3-examples`` in your terminal for you to be in
-the main path of your cloned repository. Remember that at this point, you need
-to have configured and built the projects with no errors. The default run goes
+the main path of your cloned repository. Remember that at this point, **you need
+to have configured and built the projects with no errors**. The default run goes
 with 5 packets in the binary field with only the decoder trace enabled. For the
 trace, we have only set ``input_symbol_coefficients`` to see the coding
 coefficients of a received packet and ``decoder_state`` to see how the state
@@ -611,9 +611,11 @@ information we can calculate :math:`p_2 = CP_1 + CP_2` (remember we are in
 modulo-2 arithmetic). However, we still keep these values as "coded" (``C:``),
 because we need to receive the complete generation to guarantee full decoding.
 Packet reception continues until we have :math:`g` linearly independent (l.i.)
-coded packets. You can also see there two more types of symbols indicators.
-``?:`` indicates that the corresponding pivot packet has not been *seen* by the
-decoder. Seeing packet :math:`k` means that we are able to compute :math:`p_k
+coded packets.
+
+You can also see there two more types of symbols indicators. ``?:`` indicates
+that the corresponding pivot packet has not been *seen* by the decoder. Seeing
+packet :math:`k` means that we are able to compute :math:`p_k
 + \sum_{l > k} \alpha_l p_l`, i.e. to be able to compute :math:`p_k` plus a
 combinations of packets of indexes greater than :math:`k`. Even though it seems
 simple and unrelated, the concept of seeing a packet will prove to be useful in
@@ -621,9 +623,9 @@ future examples. Finally, ``U:`` indicates that the packet is uncoded, normally
 you will see this when the complete generation is decoded.
 
 At the end, we see that decoding was performed after 5 transmissions. There are
-two reasons for this to occur. First, randomly no linearly dependent (l.d.)
-combinations ocurred during the process. Second, there were no packet erasures
-during the process. We will make some changes to see that.
+two reasons for this to occur. First, no linearly dependent (l.d.)
+combinations ocurred during the random process. Second, there were no packet
+erasures neither. We will make some changes to see these effects.
 
 Changing the field and generation size
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -645,13 +647,13 @@ packets. To verify this, you can save the following bash script as
    N=$1  # Number of runs
    GENERATION_SIZE=$2  #  Generation size
 
-   #  For-loop with range for bash
-   #  Basically run the experiment several times and collect the total transmissions
-   #  to get the average
+   #  For-loop with range for bash to run the experiment many times
+   #  and collect the total transmissions to get the average
 
    for (( c=1; c<=${N}; c++ ))
    do
-       COMB=`./build/linux/wifi_broadcast/wifi_broadcast | grep "Total transmissions:" | cut -f5 -d\ `
+       COMB=`./build/linux/wifi_broadcast/wifi_broadcast | \
+             grep "Total transmissions:" | cut -f5 -d\ `
        SUM=$(( ${SUM} + ${COMB} ))
    done
 
@@ -730,7 +732,7 @@ You should see something similar to: ::
 
 Notice how the size of the decoding matrix changes due to the effect of the
 generation size. This is expected because the size of the decoding matrix is
-given by the minimum amount of linear combinations required to decode. Also you
+given by the minimum amount of linear combinations required to decode. Also, you
 can verify the coding coefficients now vary between 0 and 255 given that we
 have changed the field size. Try running the example with these changes a
 couple of times so you can verify the above in general.
@@ -740,14 +742,14 @@ Changing the receiver signal strength
 
 As we mentioned earlier, our WiFi PHY layer relies on constant position and
 power values. We originally set up the ``rss`` value to -93 dBm to indicate our
-received power. In general, the packet error rate varies with the signal
-reception level, so we will adjust this. The receiver (sensitivity) for this
-channel is -96 dBm. It means that for rss values lower than this, we will have
-no packet recovery. This goes a little further from a typical erasure channel
-where we may or may not have packet losses regurlarly, the reason being that
-receiver position and received power are fixed.
+received power. In general, packet error rate varies with the signal
+reception level, so we will adjust this. The receiver sensitivity for this
+channel is -96 dBm. It means that for ``rss`` values lower than this, we will
+have no packet recovery. This goes a little further from a typical erasure
+channel where we may or may not have packet losses regurlarly, the reason being
+that receiver position and received power are fixed.
 
-To change the rss, simply type: ::
+To change the ``rss`` value , simply type: ::
 
   ./build/linux/wifi_broadcast/wifi_broadcast --rss=-96
 
@@ -763,11 +765,11 @@ Using other tracing features
 So far we have seen only the decoder state in terms of rank and symbol
 coefficients. In the ``filters`` construct on the ``ReceivePacket``  function
 in the ``main.cpp`` file, you can add the ``"symbol_storage"`` option to see a
-hex dump of the packets. Rebuild and type: ::
+hex dump of the packets. Do so, save your files, rebuild and type: ::
 
   ./build/linux/wifi_broadcast/wifi_broadcast --generationSize=3
 
-Them you will get an output like this (here we used the binary field): ::
+Then, you will get an output like this (here we used the binary field): ::
 
   Received one packet at decoder
   Trace decoder:
@@ -853,11 +855,12 @@ Them you will get an output like this (here we used the binary field): ::
   Decoding completed! Total transmissions: 5
 
 Now, we see the data in rows of 16 bytes. If you look at the constructor in
-``main.cpp``, you can confirm that we constantly fill the buffer with ``"x"``,
-since the example is just for showing purposes. The symbol storage can be
-mainly in 3 states depending on how the memory is assigned in Kodo. In the
-library we have 2 types of memory assigment for object creation, i.e. we
-can create a `shallow copy or a deep copy <http://stackoverflow.com/a/184745>`_.
+``main.cpp``, you can confirm that we constantly fill the buffer with ``x``,
+since the example is just for showing purposes.
+
+The symbol storage can be mainly in 3 states depending on how the memory is
+assigned in Kodo. In the library we have 2 types of memory assigment for object
+creation, i.e. we can create a `shallow copy or a deep copy <http://stackoverflow.com/a/184745>`_.
 For this implementation, we use a deep copy by default and we will only have 2
 of them, namely ``A:`` (available) and ``I:`` (initiliazed) meaning that the
 memory is ready and initialized to be used, respectively. Notice that whenever
@@ -868,39 +871,50 @@ debug the decoding process with some known data.
 
 Finally, try disabling the decoder trace and enable the encoder trace. This
 trace only has the symbol storage feature. Simply switch the structs in the
-encoder and decoder templates, rebuild your project and rerun the example with
-the previous setting, you will only see your data in the encoder.
+encoder and decoder templates, save, rebuild your project and rerun the example
+with the previous setting, you will only see your data in the encoder.
 
 Review pcap traces
 ^^^^^^^^^^^^^^^^^^
 
 As we described earlier, the simulation leaves pcap format files
-(``wifi-simple-adhoc-[NODE_ID]-[DEVICE_ID].pcap``) in your
-``~/dev/kodo-ns3-examples`` folder. You can read this files with the following
-commands with different programs like tcpdump or Wireshark. tcpdump is standard
-on most Unix-like systems and is based on the libpcap library.
-`Wireshark <https://www.wireshark.org/>`_ is another free, open-source packet
-analyzer which you can get online. Just for showing purposes we will use
-tcpdump, but you can choose the one you prefer the most. For reading both files
-at the same time (0-0/1-0 is the encoder/decoder device), simply type: ::
+(``wifi-simple-adhoc-*-*.pcap``) in your ``~/dev/kodo-ns3-examples`` folder.
+You can read these files with different programs like tcpdump or Wireshark.
+tcpdump is standard on most Unix-like systems and is based on the libpcap
+library. `Wireshark <https://www.wireshark.org/>`_ is another free, open-source
+packet analyzer which you can get online. Just for showing purposes we will use
+tcpdump, but you can choose the one you prefer the most. For reading both files,
+simply type: ::
 
-  tcpdump -r wifi-simple-adhoc-0-0.pcap -nn -tt; echo; tcpdump -r wifi-simple-adhoc-1-0.pcap -nn -tt;
+  tcpdump -r wifi-simple-adhoc-0-0.pcap -nn -tt
+  tcpdump -r wifi-simple-adhoc-1-0.pcap -nn -tt
 
-You will get this output: ::
+You will get this output (it will look different on your terminal): ::
 
-  reading from file wifi-simple-adhoc-0-0.pcap, link-type IEEE802_11_RADIO (802.11 plus radiotap header)
-  1.000000 1000000us tsft 1.0 Mb/s 2412 MHz 11b IP 10.1.1.1.49153 > 10.1.1.255.80: UDP, length 1002
-  2.000000 2000000us tsft 1.0 Mb/s 2412 MHz 11b IP 10.1.1.1.49153 > 10.1.1.255.80: UDP, length 1002
-  3.000000 3000000us tsft 1.0 Mb/s 2412 MHz 11b IP 10.1.1.1.49153 > 10.1.1.255.80: UDP, length 1002
-  4.000000 4000000us tsft 1.0 Mb/s 2412 MHz 11b IP 10.1.1.1.49153 > 10.1.1.255.80: UDP, length 1002
+  reading from file wifi-simple-adhoc-0-0.pcap, link-type IEEE802_11_RADIO
+  (802.11 plus radiotap header)
+  1.000000 1000000us tsft 1.0 Mb/s 2412 MHz 11b IP 10.1.1.1.49153 >
+  10.1.1.255.80: UDP, length 1002
+  2.000000 2000000us tsft 1.0 Mb/s 2412 MHz 11b IP 10.1.1.1.49153 >
+  10.1.1.255.80: UDP, length 1002
+  3.000000 3000000us tsft 1.0 Mb/s 2412 MHz 11b IP 10.1.1.1.49153 >
+  10.1.1.255.80: UDP, length 1002
+  4.000000 4000000us tsft 1.0 Mb/s 2412 MHz 11b IP 10.1.1.1.49153 >
+  10.1.1.255.80: UDP, length 1002
 
-  reading from file wifi-simple-adhoc-1-0.pcap, link-type IEEE802_11_RADIO (802.11 plus radiotap header)
-  1.008720 1008720us tsft 1.0 Mb/s 2412 MHz 11b -93dB signal -101dB noise IP 10.1.1.1.49153 > 10.1.1.255.80: UDP, length 1002
-  2.008720 2008720us tsft 1.0 Mb/s 2412 MHz 11b -93dB signal -101dB noise IP 10.1.1.1.49153 > 10.1.1.255.80: UDP, length 1002
-  3.008720 3008720us tsft 1.0 Mb/s 2412 MHz 11b -93dB signal -101dB noise IP 10.1.1.1.49153 > 10.1.1.255.80: UDP, length 1002
-  4.008720 4008720us tsft 1.0 Mb/s 2412 MHz 11b -93dB signal -101dB noise IP 10.1.1.1.49153 > 10.1.1.255.80: UDP, length 1002
+  reading from file wifi-simple-adhoc-1-0.pcap, link-type IEEE802_11_RADIO
+  (802.11 plus radiotap header)
+  1.008720 1008720us tsft 1.0 Mb/s 2412 MHz 11b -93dB signal -101dB noise
+  IP 10.1.1.1.49153 > 10.1.1.255.80: UDP, length 1002
+  2.008720 2008720us tsft 1.0 Mb/s 2412 MHz 11b -93dB signal -101dB noise
+  IP 10.1.1.1.49153 > 10.1.1.255.80: UDP, length 1002
+  3.008720 3008720us tsft 1.0 Mb/s 2412 MHz 11b -93dB signal -101dB noise
+  IP 10.1.1.1.49153 > 10.1.1.255.80: UDP, length 1002
+  4.008720 4008720us tsft 1.0 Mb/s 2412 MHz 11b -93dB signal -101dB noise
+  IP 10.1.1.1.49153 > 10.1.1.255.80: UDP, length 1002
 
-There you can confirm the RadioTap format of the pcap files and also can
-check other features like bit rate, frequency channel, protocol used, rss,
-noise floor and the transmitter and receiver IP addresses with their respective
-ports. Notice that these fit with our settings configuration.
+The ``0-0`` file stands for the encoder net device and ``1-0`` for the receiver
+net device. There you can confirm the RadioTap format of the pcap files and
+also can check other features like bit rate, frequency channel, protocol used,
+rss, noise floor and the transmitter and receiver IP addresses with their
+respective ports. Notice that these fit with our settings configuration.
