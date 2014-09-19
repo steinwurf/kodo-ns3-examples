@@ -86,11 +86,11 @@ as follows:
     uint32_t m_transmission_count;
   };
 
-A main difference with the previous simulation is that now we define packet
+The main difference with the previous simulation is that now we define a packet
 reception function for each receiver. In the source code, you will notice that
 we have 2 instances of the decoder and a new stopping condition for the
 transmitter, e.g. to verify that both receivers are full rank. Otherwise,
-this part is the same as the first example.
+this part is the same as the respective one in the first example .
 
 Default parameters and command parsing
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -111,16 +111,55 @@ Configuration defaults
 ^^^^^^^^^^^^^^^^^^^^^^
 
 For this part, there are some changes because we have removed the WiFi protocol
-and we have represented our channel as a packet erasure channel.
+and we have represented our channel as a packet erasure channel. This implies to
+set a parameter for our error model. We employ the ``RateErrorModel`` class to
+implement this model and for it, we need to set up the error rate unit. This
+tells ns-3 on which datatype it should apply errors. For our case, we are
+interested that it occurs on packets (instead of bits), so we set it up by
+doing the following:
 
 .. code-block:: c++
 
-  // Describe packet loss model
+  Config::SetDefault ("ns3::RateErrorModel::ErrorUnit",
+                      StringValue ("ERROR_UNIT_PACKET"));
 
-Internet and application protocol helpers
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Topology and net helpers
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+For creating the topology, we proceed in a different way than the used for the
+first example. We use the ``PointToPointHelper`` to create a point-to-point
+link. Then, we create the links from the source to each receiver using the
+``PointToPointStarHelper`` which takes as an input the desired number of links
+and a ``PointToPointHelper`` instance, namely ``pointToPoint`` in our case.
+After that, we create the error rate model for each net device in the topology
+and enable them. Finally, we set up the Internet stack and IP addresses to our
+topology.
+
 
 .. code-block:: c++
+
+  // Set the basic helper for a single link
+  PointToPointHelper pointToPoint;
+
+  // Two receivers against a centralized hub
+  PointToPointStarHelper star (2, pointToPoint);
+
+  Ptr<RateErrorModel> error_model = CreateObject<RateErrorModel> ();
+  error_model->SetAttribute ("ErrorRate", DoubleValue (errorRate));
+
+  star.GetSpokeNode (0)->GetDevice (0)->
+    SetAttribute ("ReceiveErrorModel", PointerValue (error_model));
+  star.GetSpokeNode (1)->GetDevice (0)->
+    SetAttribute ("ReceiveErrorModel", PointerValue (error_model));
+  error_model->Enable ();
+
+  // Setting IP protocol stack
+  InternetStackHelper internet;
+  star.InstallStack(internet);
+
+  // Set IP addresses
+  star.AssignIpv4Addresses (Ipv4AddressHelper ("10.1.1.0", "255.255.255.0"));
 
   InternetStackHelper internet;
   internet.Install (c);
@@ -129,8 +168,42 @@ Internet and application protocol helpers
   ipv4.SetBase ("10.1.1.0", "255.255.255.0");
   Ipv4InterfaceContainer i = ipv4.Assign (devices);
 
-Simulation runs
----------------
+Socket connections, callback settings and pcap tracing
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Default run
-^^^^^^^^^^^
+The socket connections does not differ too much from the first example. The only
+difference is that each callback now points to the respective ``ReceivePacket``
+member class function. Also, we have enable the population of the routing
+tables through ``Ipv4GlobalRoutingHelper::PopulateRoutingTables()`` and again
+configured the pcap tracing by doing ``pointToPoint.EnablePcapAll ("star")``.
+
+.. code-block:: c++
+
+
+  Ptr<Soccket> recvSink1 = Socket::CreateSocket (star.GetSpokeNode (0), tid);
+  recvSink1->Bind (local);
+  recvSink1->SetRecvCallback (MakeCallback (&KodoSimulation::ReceivePacket1,
+                                            &kodoSimulator));
+
+  Ptr<Socket> recvSink2 = Socket::CreateSocket (star.GetSpokeNode (1), tid);
+  recvSink2->Bind (local);
+  recvSink2->SetRecvCallback (MakeCallback (&KodoSimulation::ReceivePacket2,
+                                            &kodoSimulator));
+
+  // Sender
+  Ptr<Socket> source = Socket::CreateSocket (star.GetHub (), tid);
+  InetSocketAddress remote = InetSocketAddress (Ipv4Address ("255.255.255.255"),
+                                               port);
+  source->SetAllowBroadcast (true);
+  source->Connect (remote);
+
+  // Turn on global static routing so we can actually be routed across the star
+  Ipv4GlobalRoutingHelper::PopulateRoutingTables ();
+
+  // Do pcap tracing on all point-to-point devices on all nodes
+  pointToPoint.EnablePcapAll ("star");
+
+Simulations runs
+----------------
+
+After building and configuring the project, run the example by typing....
