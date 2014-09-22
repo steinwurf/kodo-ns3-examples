@@ -206,4 +206,37 @@ configured the pcap tracing by doing ``pointToPoint.EnablePcapAll ("star")``.
 Simulations runs
 ----------------
 
-After building and configuring the project, run the example by typing....
+After building the project, run the example by typing: ::
+
+  ./build/linux/wired_broadcast/wired_broadcast
+
+You will get an output like this: ::
+
+  Sending a combination
+  Received one packet at decoder 1
+  Received one packet at decoder 2
+  Sending a combination
+  Received one packet at decoder 1
+  Received one packet at decoder 2
+  Sending a combination
+  Received one packet at decoder 1
+  Received one packet at decoder 2
+  Sending a combination
+  Received one packet at decoder 2
+  Sending a combination
+  Received one packet at decoder 1
+  Received one packet at decoder 2
+  Sending a combination
+  Received one packet at decoder 1
+  Received one packet at decoder 2
+  Decoding completed! Total transmissions: 6
+
+Now we can see when a packet is received at each decoder. As expected, a packet
+is sent every time slot to both decoders and the process stops when both
+decoders have :math:`g` l.i. combinations. We can observe this behaviour in the
+previous output. At the 4th transmission, receiver 1 did not get the combination
+although receiver 2 did. Nevertheless, this is compensated in the last
+transmission where receiver 1 gets its remaining combination. Besides,
+receiver 2 gets a non-innovative extra combination which occurs for the
+packet being sent to both decoders.
+
