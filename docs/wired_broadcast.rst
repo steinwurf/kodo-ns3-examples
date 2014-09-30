@@ -145,14 +145,18 @@ topology.
   // Two receivers against a centralized hub
   PointToPointStarHelper star (2, pointToPoint);
 
-  Ptr<RateErrorModel> error_model = CreateObject<RateErrorModel> ();
-  error_model->SetAttribute ("ErrorRate", DoubleValue (errorRate));
+  Ptr<RateErrorModel> errorModel1 = CreateObject<RateErrorModel> ();
+  errorModel1->SetAttribute ("ErrorRate", DoubleValue (errorRate));
+
+  Ptr<RateErrorModel> errorModel2 = CreateObject<RateErrorModel> ();
+  errorModel2->SetAttribute ("ErrorRate", DoubleValue (errorRate));
 
   star.GetSpokeNode (0)->GetDevice (0)->
-    SetAttribute ("ReceiveErrorModel", PointerValue (error_model));
+    SetAttribute ("ReceiveErrorModel", PointerValue (errorModel1));
   star.GetSpokeNode (1)->GetDevice (0)->
-    SetAttribute ("ReceiveErrorModel", PointerValue (error_model));
-  error_model->Enable ();
+    SetAttribute ("ReceiveErrorModel", PointerValue (errorModel2));
+  errorModel1->Enable ();
+  errorModel2->Enable ();
 
   // Setting IP protocol stack
   InternetStackHelper internet;
@@ -206,6 +210,9 @@ configured the pcap tracing by doing ``pointToPoint.EnablePcapAll ("star")``.
 Simulations runs
 ----------------
 
+Default run
+^^^^^^^^^^^
+
 After building the project, run the example by typing: ::
 
   ./build/linux/wired_broadcast/wired_broadcast
@@ -240,3 +247,72 @@ transmission where receiver 1 gets its remaining combination. Besides,
 receiver 2 gets a non-innovative extra combination which occurs for the
 packet being sent to both decoders.
 
+
+Again, we can verify for a broadcast with coding scenario that on average we
+need 9.4847 transmissions for :math:`q = 2, g = 5, \epsilon = 0.3` and 2 users.
+To verify it, save the following script as ``mean_packets.bash``. As you will
+notice, it is a modification of the script used in the first example. ::
+
+  #!/bin/bash
+
+  #Check the number of extra transmission per generation
+
+  SUM=0
+  N=$1  # Number of runs
+
+  #  For-loop with range for bash
+  #  Basically run the experiment several times and collect the total
+  #  transmissions to get the average
+
+  for (( c=1; c<=${N}; c++ ))
+  do
+      COMB=`./build/linux/wired_broadcast/wired_broadcast | \
+            grep "Total transmissions:" | cut -f5 -d\ `
+      SUM=$(( ${SUM} + ${COMB} ))
+  done
+
+  BROADCAST_MEAN=`echo "scale= 4; (${SUM} / ${N})" | bc`
+
+  echo "Wired broadcast example mean: ${BROADCAST_MEAN}"
+
+To change its settings do a ``chmod 755 extra_packet_per_generation.bash``. Run
+it in a similar way as first script. You will get an output similar to this: ::
+
+  ./mean_packets.bash 1
+  Wired broadcast example mean: 9.0000
+  ./mean_packets.bash 10
+  Wired broadcast example mean: 12.0000
+  ./mean_packets.bash 100
+  Wired broadcast example mean: 10.2500
+  ./mean_packets.bash 1000
+  Wired broadcast example mean: 10.0200
+  ./mean_packets.bash 10000
+  Wired broadcast example mean: 9.5914
+
+As we check, by increasing the numbers of runs we see that the mean number of
+transmissions to decode in a pure broadcast RLNC for two receivers, converges
+to 9.4847 transmissions for the previous setting. We will also set some
+parameters to observe the difference in the total number of transmissions.
+
+Changing the field size
+^^^^^^^^^^^^^^^^^^^^^^^
+
+Set ``fifi::binary8`` as the field size in the encoder and decoder templates,
+rebuild your project and rerun the previous script. You will get an output
+similar to this: ::
+
+   ./mean_packets.bash 1
+   Wired broadcast example mean: 8.0000
+   ./mean_packets.bash 10
+   Wired broadcast example mean: 6.0000
+   ./mean_packets.bash 100
+   Wired broadcast example mean: 8.5600
+   ./mean_packets.bash 1000
+   Wired broadcast example mean: 8.2630
+   ./mean_packets.bash 10000
+   Wired broadcast example mean: 8.2335
+
+Now we observe that the amount of transmissions reduces to less than 9
+transmissions on average. Similarly as with the WiFi example, in this case the
+decoding probability increases with a higher field size for both decoders. This
+ensures that both expected completion times are less.

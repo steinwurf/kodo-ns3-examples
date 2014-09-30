@@ -196,14 +196,18 @@ int main (int argc, char *argv[])
   Config::SetDefault ("ns3::RateErrorModel::ErrorUnit",
                       StringValue ("ERROR_UNIT_PACKET"));
 
-  Ptr<RateErrorModel> error_model = CreateObject<RateErrorModel> ();
-  error_model->SetAttribute ("ErrorRate", DoubleValue (errorRate));
+  Ptr<RateErrorModel> errorModel1 = CreateObject<RateErrorModel> ();
+  errorModel1->SetAttribute ("ErrorRate", DoubleValue (errorRate));
+
+  Ptr<RateErrorModel> errorModel2 = CreateObject<RateErrorModel> ();
+  errorModel2->SetAttribute ("ErrorRate", DoubleValue (errorRate));
 
   star.GetSpokeNode (0)->GetDevice (0)->
-    SetAttribute ("ReceiveErrorModel", PointerValue (error_model));
+    SetAttribute ("ReceiveErrorModel", PointerValue (errorModel1));
   star.GetSpokeNode (1)->GetDevice (0)->
-    SetAttribute ("ReceiveErrorModel", PointerValue (error_model));
-  error_model->Enable ();
+    SetAttribute ("ReceiveErrorModel", PointerValue (errorModel2));
+  errorModel1->Enable ();
+  errorModel2->Enable ();
 
   // Setting IP protocol stack
   InternetStackHelper internet;
