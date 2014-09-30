@@ -314,5 +314,6 @@ similar to this: ::
 
 Now we observe that the amount of transmissions reduces to less than 9
 transmissions on average. Similarly as with the WiFi example, in this case the
-decoding probability increases with a higher field size for both decoders. This
-ensures that both expected completion times are less.
+decoding probability increases with a higher field size for each decoder. This
+ensures that, on average, each decoder requires less transmissions to complete
+decoding.
