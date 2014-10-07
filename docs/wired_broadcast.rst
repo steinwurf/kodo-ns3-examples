@@ -7,7 +7,7 @@ This example is similar to the first example, but now the channel will
 be modeled with an erasure rate and packets are broadcasted to 2 users
 instead of one. In this way, the topology considered describes a transmitter
 sending coded packets with RLNC from a generation size :math:`g` and field size
-:math:`q` in a broadcast erasure channel to 2 receivers. As with previous the
+:math:`q` in a broadcast erasure channel to 2 receivers. As with the previous
 example, we will start with :math:`g = 5` and :math:`q = 2` and we will again
 observe completion time in terms of transmissions. Although, now we include
 the erasure rate (in percentage), :math:`0 \leq \epsilon < 1`, to indicate
@@ -23,11 +23,11 @@ What to simulate?
 * Inputs: Main parameters will be generation size, field size and packet loss
   rate.
 * Outputs: A counter to indicate how much transmissions did the process
-  required and some prints to indicate when decoding is completed.
+  required and some prints to indicate when decoding is completed. The
+  number of transmissions should change as we vary the input parameters.
 * Scenarios: We will variate the generation and field size to verify
   theoretical expected values regarding the amount of transmissions to
-  decode. Also, the number of transmissions should somehow change as we
-  vary the channel.
+  decode.
 
 Program description
 -------------------
@@ -40,8 +40,8 @@ one, so now we will focus on the main differences.
 Main simulation class
 ^^^^^^^^^^^^^^^^^^^^^
 
-As expected, the main simulation class must be modified in order to now include
-the functionalities of each receiver. The modifications in its body are shown
+The main simulation class must be modified in order to now include the
+functionalities of each receiver. The modifications in its body are shown
 as follows:
 
 .. code-block:: c++
@@ -177,7 +177,7 @@ Socket connections, callback settings and pcap tracing
 
 The socket connections does not differ too much from the first example. The only
 difference is that each callback now points to the respective ``ReceivePacket``
-member class function. Also, we have enable the population of the routing
+member class function. Also, we have enabled the population of the routing
 tables through ``Ipv4GlobalRoutingHelper::PopulateRoutingTables()`` and again
 configured the pcap tracing by doing ``pointToPoint.EnablePcapAll ("star")``.
 
@@ -251,7 +251,9 @@ packet being sent to both decoders.
 Again, we can verify for a broadcast with coding scenario that on average we
 need 9.4847 transmissions for :math:`q = 2, g = 5, \epsilon = 0.3` and 2 users.
 To verify it, save the following script as ``mean_packets.bash``. As you will
-notice, it is a modification of the script used in the first example. ::
+notice, it is a modification of the script used in the first example.
+
+.. code-block:: bash
 
   #!/bin/bash
 
@@ -317,3 +319,105 @@ transmissions on average. Similarly as with the WiFi example, in this case the
 decoding probability increases with a higher field size for each decoder. This
 ensures that, on average, each decoder requires less transmissions to complete
 decoding.
+
+Changing the packet erasure rate
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+One interesting feature that we have added is a ``RateErrorModel`` which
+basically includes a packet error rate at each receiver. Currently we have set
+the error rates to be both the same and a 30% loss rate is set by default. Keep
+``fifi::binary8`` as a field size in order to exclude retransmissions due to
+linear dependency and account them only for losses. As we saw, with 30% losses
+we see an average of 8.2335 transmissions (for 10000 example runs). Now, we will
+check that by adjusting the loss rate (with the same amount of runs). So, we
+just need to make some small modifications of our bash script.
+
+We will add a new input parameter to set the loss rate and call it in the script
+as follows:
+
+.. code-block:: bash
+
+  #!/bin/bash
+
+  #Check the number of extra transmission per generation
+
+  SUM=0
+  N=$1  # Number of runs
+  LOSS_RATE=$2  # Loss rate for both links
+
+  #  For-loop with range for bash
+  #  Basically run the experiment several times and collect the total
+  #  transmissions to get the average
+
+  for (( c=1; c<=${N}; c++ ))
+  do
+      COMB=`./build/linux/wired_broadcast/wired_broadcast \
+            --errorRate=${LOSS_RATE} | grep "Total transmissions:" | \
+            cut -f5 -d\ `
+      SUM=$(( ${SUM} + ${COMB} ))
+  done
+
+  BROADCAST_MEAN=`echo "scale= 4; (${SUM} / ${N})" | bc`
+
+  echo "Wired broadcast example mean: ${BROADCAST_MEAN}"
+
+Save the changes in the script. Then, let us observe the output with 10% and
+50% losses in both links: ::
+
+  ./mean_packets.bash 100000 0.1
+  Wired broadcast example mean: 6.0049
+  ./mean_packets.bash 100000 0.5
+  Wired broadcast example mean: 9.0138
+
+For the required erasures rate, we observe that if we modify the erasure rate
+in the links, the expected number of transmissions changes in the respective
+manner.
+
+Review pcap traces
+^^^^^^^^^^^^^^^^^^
+
+We have added this time also a trace file per each net device in order to
+observe packet routing. ::
+
+  > tcpdump -r star-0-0.pcap -nn -tt
+  reading from file star-0-0.pcap, link-type PPP (PPP)
+  1.000000 IP 10.1.1.1.49153 > 10.1.1.255.80: UDP, length 1006
+  2.000000 IP 10.1.1.1.49153 > 10.1.1.255.80: UDP, length 1006
+  3.000000 IP 10.1.1.1.49153 > 10.1.1.255.80: UDP, length 1006
+  4.000000 IP 10.1.1.1.49153 > 10.1.1.255.80: UDP, length 1006
+  5.000000 IP 10.1.1.1.49153 > 10.1.1.255.80: UDP, length 1006
+  6.000000 IP 10.1.1.1.49153 > 10.1.1.255.80: UDP, length 1006
+  7.000000 IP 10.1.1.1.49153 > 10.1.1.255.80: UDP, length 1006
+  8.000000 IP 10.1.1.1.49153 > 10.1.1.255.80: UDP, length 1006
+  9.000000 IP 10.1.1.1.49153 > 10.1.1.255.80: UDP, length 1006
+  > tcpdump -r star-0-1.pcap -nn -tt
+  reading from file star-0-1.pcap, link-type PPP (PPP)
+  1.000000 IP 10.1.2.1.49153 > 10.1.2.255.80: UDP, length 1006
+  2.000000 IP 10.1.2.1.49153 > 10.1.2.255.80: UDP, length 1006
+  3.000000 IP 10.1.2.1.49153 > 10.1.2.255.80: UDP, length 1006
+  4.000000 IP 10.1.2.1.49153 > 10.1.2.255.80: UDP, length 1006
+  5.000000 IP 10.1.2.1.49153 > 10.1.2.255.80: UDP, length 1006
+  6.000000 IP 10.1.2.1.49153 > 10.1.2.255.80: UDP, length 1006
+  7.000000 IP 10.1.2.1.49153 > 10.1.2.255.80: UDP, length 1006
+  8.000000 IP 10.1.2.1.49153 > 10.1.2.255.80: UDP, length 1006
+  9.000000 IP 10.1.2.1.49153 > 10.1.2.255.80: UDP, length 1006
+  > tcpdump -r star-1-0.pcap -nn -tt
+  reading from file star-1-0.pcap, link-type PPP (PPP)
+  1.252929 IP 10.1.1.1.49153 > 10.1.1.255.80: UDP, length 1006
+  2.252929 IP 10.1.1.1.49153 > 10.1.1.255.80: UDP, length 1006
+  6.252929 IP 10.1.1.1.49153 > 10.1.1.255.80: UDP, length 1006
+  8.252929 IP 10.1.1.1.49153 > 10.1.1.255.80: UDP, length 1006
+  9.252929 IP 10.1.1.1.49153 > 10.1.1.255.80: UDP, length 1006
+  > tcpdump -r star-2-0.pcap -nn -tt
+  reading from file star-2-0.pcap, link-type PPP (PPP)
+  1.252929 IP 10.1.2.1.49153 > 10.1.2.255.80: UDP, length 1006
+  2.252929 IP 10.1.2.1.49153 > 10.1.2.255.80: UDP, length 1006
+  6.252929 IP 10.1.2.1.49153 > 10.1.2.255.80: UDP, length 1006
+  7.252929 IP 10.1.2.1.49153 > 10.1.2.255.80: UDP, length 1006
+  8.252929 IP 10.1.2.1.49153 > 10.1.2.255.80: UDP, length 1006
+
+From the trace files we see the broadcast nature set before. We have two net
+devices in the transmitter given that the ``PointToPointStarHelper`` creates
+a point-to-point link at each receiver. By setting ``SetAllowBroadcast (true)``
+in the transmitter socket, we ensure to be using the broadcast channel on the
+source node.
