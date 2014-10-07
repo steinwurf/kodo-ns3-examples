@@ -152,8 +152,8 @@ Tutorial
 --------
 To follow a more comprehensive description of the examples, please follow
 the tutorial in the `Kodo-ns3 tutorial <http://kodo-ns3-examples.readthedocs.org/en/latest/>`_.
-Currently we only describe the first example, but we will be adding more
-description regarding the others.
+Currently we only describe the first and second example, but we will be adding
+more description regarding the last one soon.
 
 Comments, Feedback & Bugs
 -------------------------
