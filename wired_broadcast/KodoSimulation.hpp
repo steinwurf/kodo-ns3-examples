@@ -1,15 +1,16 @@
+// We implement the Kodo traces (available since V.17.0.0). Here, we have
+// enabled the decoder trace and disabled the encoder trace.
+typedef fifi::binary8 Field;
+typedef kodo::disable_trace Trace;
+
+typedef kodo::full_rlnc_encoder<Field,Trace> rlnc_encoder;
+typedef kodo::full_rlnc_decoder<Field,Trace> rlnc_decoder;
+
 // Just for illustration purposes, this simple objects implements both
-// the sender (encoder) and receiver (decoder).
+// the sender (encoder) and receivers (decoders).
 class KodoSimulation
 {
 public:
-
-  // We implement the Kodo traces (available since V.17.0.0). Here, we have
-  // enabled the decoder trace and disabled the encoder trace.
-  typedef kodo::full_rlnc_encoder<fifi::binary8,
-                                  kodo::disable_trace> rlnc_encoder;
-  typedef kodo::full_rlnc_decoder<fifi::binary8,
-                                  kodo::disable_trace> rlnc_decoder;
 
   KodoSimulation(const rlnc_encoder::pointer& encoder,
                  const std::vector<rlnc_decoder::pointer> decoders,
@@ -37,7 +38,7 @@ public:
                   m_sockets.begin();
     packet->CopyData(&m_payload_buffer[0], m_decoders[id]->payload_size());
     m_decoders[id]->decode(&m_payload_buffer[0]);
-    std::cout << "Received one packet at decoder " << id << std::endl;
+    std::cout << "Received one packet at decoder " << id + 1 << std::endl;
 
     if (kodo::has_trace<rlnc_decoder>::value)
       {
@@ -48,35 +49,21 @@ public:
           return filters.count(zone);
         };
 
-        std::cout << "Trace decoder 1:" << std::endl;
+        std::cout << "Trace decoder " << id << ": " << std::endl;
         kodo::trace(m_decoders[id], std::cout, filter);
       }
   }
-/*
-  void ReceivePacket2 (ns3::Ptr<ns3::Socket> socket)
-  {
-    auto packet = socket->Recv();
-    packet->CopyData(&m_payload_buffer[0], m_decoder_2->payload_size());
-    m_decoder_2->decode(&m_payload_buffer[0]);
-    std::cout << "Received one packet at decoder 2" << std::endl;
 
-    if (kodo::has_trace<rlnc_decoder>::value)
-      {
-        auto filter = [](const std::string& zone)
-        {
-          std::set<std::string> filters =
-            {"decoder_state","input_symbol_coefficients"};
-          return filters.count(zone);
-        };
-
-        std::cout << "Trace decoder 2:" << std::endl;
-        kodo::trace(m_decoder_2, std::cout, filter);
-      }
-  }
-*/
   void GenerateTraffic (ns3::Ptr<ns3::Socket> socket, ns3::Time pktInterval)
   {
-    if ( true )//!m_decoder_1->is_complete() || !m_decoder_2->is_complete())
+    bool all_decoded = true;
+
+    for (const auto decoder : m_decoders)
+      {
+        all_decoded &= decoder->is_complete();
+      }
+
+    if (!all_decoded)
       {
         std::cout << "Sending a combination" << std::endl;
         uint32_t bytes_used = m_encoder->encode(&m_payload_buffer[0]);

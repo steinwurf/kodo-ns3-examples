@@ -111,10 +111,11 @@ int main (int argc, char *argv[])
 
   // The encoder / decoder type we will use. Here we consider GF(2). For GF(2^8)
   // just change "binary" for "binary8"
-  typedef kodo::full_rlnc_encoder<fifi::binary8,
-                                  kodo::disable_trace> rlnc_encoder;
-  typedef kodo::full_rlnc_decoder<fifi::binary8,
-                                  kodo::disable_trace> rlnc_decoder;
+  typedef fifi::binary8 Field;
+  typedef kodo::disable_trace Trace;
+
+  typedef kodo::full_rlnc_encoder<Field,Trace> rlnc_encoder;
+  typedef kodo::full_rlnc_decoder<Field,Trace> rlnc_decoder;
 
   // Creation of RLNC encoder and decoder objects
   rlnc_encoder::factory encoder_factory(generationSize, packetSize);
@@ -142,10 +143,11 @@ int main (int argc, char *argv[])
   // The member build function creates differents instances of each object
   KodoSimulation kodoSimulator(encoder_factory.build(), decoders, receiverSink);
 
-  receiverSink[0]->SetRecvCallback (MakeCallback (
-    &KodoSimulation::ReceivePacket,&kodoSimulator));
-  receiverSink[1]->SetRecvCallback (MakeCallback (
-    &KodoSimulation::ReceivePacket,&kodoSimulator));
+  for(const auto receiver : receiverSink)
+    {
+      receiver->SetRecvCallback (MakeCallback (&KodoSimulation::ReceivePacket,
+                                               &kodoSimulator));
+    }
 
   // Sender
   Ptr<Socket> source = Socket::CreateSocket (star.GetHub (), tid);
