@@ -120,10 +120,9 @@ int main (int argc, char *argv[])
   rlnc_encoder::factory encoder_factory(generationSize, packetSize);
   rlnc_decoder::factory decoder_factory(generationSize, packetSize);
 
-  // The member build function creates differents instances of each object
-  KodoSimulation kodoSimulator(encoder_factory.build(),
-                               decoder_factory.build(),
-                               decoder_factory.build());
+  // Create an array of N decoder instantiation pointers to be handled
+  // by the simulation
+  std::vector<rlnc_decoder::pointer> decoders (users, decoder_factory.build());
 
   // Setting up application sockets for receivers and senders
   uint16_t port = 80;
@@ -140,11 +139,13 @@ int main (int argc, char *argv[])
     std::cout << "Socket for sink " << n << " created" << std::endl;
   }
 
+  // The member build function creates differents instances of each object
+  KodoSimulation kodoSimulator(encoder_factory.build(), decoders, receiverSink);
 
-  receiverSink[0]->SetRecvCallback (MakeCallback (&KodoSimulation::ReceivePacket1,
-                                            &kodoSimulator));
-  receiverSink[1]->SetRecvCallback (MakeCallback (&KodoSimulation::ReceivePacket2,
-                                            &kodoSimulator));
+  receiverSink[0]->SetRecvCallback (MakeCallback (
+    &KodoSimulation::ReceivePacket,&kodoSimulator));
+  receiverSink[1]->SetRecvCallback (MakeCallback (
+    &KodoSimulation::ReceivePacket,&kodoSimulator));
 
   // Sender
   Ptr<Socket> source = Socket::CreateSocket (star.GetHub (), tid);

@@ -12,11 +12,11 @@ public:
                                   kodo::disable_trace> rlnc_decoder;
 
   KodoSimulation(const rlnc_encoder::pointer& encoder,
-                 const rlnc_decoder::pointer& decoder1,
-                 const rlnc_decoder::pointer& decoder2)
+                 const std::vector<rlnc_decoder::pointer> decoders,
+                 const std::vector<ns3::Ptr<ns3::Socket>> receiverSinks)
     : m_encoder(encoder),
-      m_decoder_1(decoder1),
-      m_decoder_2(decoder2)
+      m_decoders(decoders),
+      m_sockets(receiverSinks)
   {
     m_encoder->set_systematic_off();
     m_encoder->seed(time(0));
@@ -29,12 +29,15 @@ public:
     m_transmission_count = 0;
   }
 
-  void ReceivePacket1 (ns3::Ptr<ns3::Socket> socket)
+  void ReceivePacket (ns3::Ptr<ns3::Socket> socket)
   {
     auto packet = socket->Recv();
-    packet->CopyData(&m_payload_buffer[0], m_decoder_1->payload_size());
-    m_decoder_1->decode(&m_payload_buffer[0]);
-    std::cout << "Received one packet at decoder 1" << std::endl;
+    // Find the associated decoder with the incoming socket
+    uint32_t id = std::find(m_sockets.begin(),m_sockets.end(),socket) -
+                  m_sockets.begin();
+    packet->CopyData(&m_payload_buffer[0], m_decoders[id]->payload_size());
+    m_decoders[id]->decode(&m_payload_buffer[0]);
+    std::cout << "Received one packet at decoder " << id << std::endl;
 
     if (kodo::has_trace<rlnc_decoder>::value)
       {
@@ -46,10 +49,10 @@ public:
         };
 
         std::cout << "Trace decoder 1:" << std::endl;
-        kodo::trace(m_decoder_1, std::cout, filter);
+        kodo::trace(m_decoders[id], std::cout, filter);
       }
   }
-
+/*
   void ReceivePacket2 (ns3::Ptr<ns3::Socket> socket)
   {
     auto packet = socket->Recv();
@@ -70,10 +73,10 @@ public:
         kodo::trace(m_decoder_2, std::cout, filter);
       }
   }
-
+*/
   void GenerateTraffic (ns3::Ptr<ns3::Socket> socket, ns3::Time pktInterval)
   {
-    if (!m_decoder_1->is_complete() || !m_decoder_2->is_complete())
+    if ( true )//!m_decoder_1->is_complete() || !m_decoder_2->is_complete())
       {
         std::cout << "Sending a combination" << std::endl;
         uint32_t bytes_used = m_encoder->encode(&m_payload_buffer[0]);
@@ -102,8 +105,8 @@ public:
 private:
 
   rlnc_encoder::pointer m_encoder;
-  rlnc_decoder::pointer m_decoder_1;
-  rlnc_decoder::pointer m_decoder_2;
+  std::vector<rlnc_decoder::pointer> m_decoders;
+  std::vector<ns3::Ptr<ns3::Socket>> m_sockets;
 
   std::vector<uint8_t> m_payload_buffer;
   uint32_t m_transmission_count;
