@@ -62,6 +62,7 @@ int main (int argc, char *argv[])
   double interval = 1.0; // Time between events
   uint32_t generationSize = 5; // RLNC generation size
   double errorRate = 0.3; // Error rate for all the links
+  uint32_t users = 2; // Number of users
 
   Time interPacketInterval = Seconds (interval);
 
@@ -72,6 +73,7 @@ int main (int argc, char *argv[])
   cmd.AddValue ("generationSize", "Set the generation size to use",
                 generationSize);
   cmd.AddValue ("errorRate", "Packet erasure rate for the links", errorRate);
+  cmd.AddValue ("users", "Number of receivers", users);
 
   cmd.Parse (argc, argv);
 
@@ -80,25 +82,25 @@ int main (int argc, char *argv[])
   // Set the basic helper for a single link
   PointToPointHelper pointToPoint;
 
-  // Two receivers against a centralized hub. Note: DO NOT CHANGE THIS LINE
-  PointToPointStarHelper star (2, pointToPoint);
+  // N receivers against a centralized hub.
+  PointToPointStarHelper star (users, pointToPoint);
 
   // Set error model for the net devices
   Config::SetDefault ("ns3::RateErrorModel::ErrorUnit",
                       StringValue ("ERROR_UNIT_PACKET"));
 
-  Ptr<RateErrorModel> errorModel1 = CreateObject<RateErrorModel> ();
-  errorModel1->SetAttribute ("ErrorRate", DoubleValue (errorRate));
+  std::vector<Ptr<RateErrorModel>> errorModel (users,
+                                               CreateObject<RateErrorModel> ());
 
-  Ptr<RateErrorModel> errorModel2 = CreateObject<RateErrorModel> ();
-  errorModel2->SetAttribute ("ErrorRate", DoubleValue (errorRate));
-
-  star.GetSpokeNode (0)->GetDevice (0)->
-    SetAttribute ("ReceiveErrorModel", PointerValue (errorModel1));
-  star.GetSpokeNode (1)->GetDevice (0)->
-    SetAttribute ("ReceiveErrorModel", PointerValue (errorModel2));
-  errorModel1->Enable ();
-  errorModel2->Enable ();
+  for (uint32_t n = 0; n < users; n++)
+  {
+    errorModel[n]->SetAttribute ("ErrorRate", DoubleValue (errorRate));
+    star.GetSpokeNode (n)->GetDevice (0)->
+    SetAttribute ("ReceiveErrorModel", PointerValue (errorModel[n]));
+    errorModel[n]->Enable ();
+    std::cout << "Error model " << n << " created and set with rate: " << errorRate << std::endl;
+    std::cout << "Error model " << n << " enabled" << std::endl;
+  }
 
   // Setting IP protocol stack
   InternetStackHelper internet;
@@ -129,14 +131,19 @@ int main (int argc, char *argv[])
   InetSocketAddress local = InetSocketAddress (Ipv4Address::GetAny (), port);
 
   // Receivers
-  Ptr<Socket> recvSink1 = Socket::CreateSocket (star.GetSpokeNode (0), tid);
-  recvSink1->Bind (local);
-  recvSink1->SetRecvCallback (MakeCallback (&KodoSimulation::ReceivePacket1,
-                                            &kodoSimulator));
+  std::vector<Ptr<Socket>> receiverSink (users);
 
-  Ptr<Socket> recvSink2 = Socket::CreateSocket (star.GetSpokeNode (1), tid);
-  recvSink2->Bind (local);
-  recvSink2->SetRecvCallback (MakeCallback (&KodoSimulation::ReceivePacket2,
+  for (uint32_t n = 0; n < users; n++)
+  {
+    receiverSink[n] = Socket::CreateSocket (star.GetSpokeNode (n), tid);
+    receiverSink[n]->Bind (local);
+    std::cout << "Socket for sink " << n << " created" << std::endl;
+  }
+
+
+  receiverSink[0]->SetRecvCallback (MakeCallback (&KodoSimulation::ReceivePacket1,
+                                            &kodoSimulator));
+  receiverSink[1]->SetRecvCallback (MakeCallback (&KodoSimulation::ReceivePacket2,
                                             &kodoSimulator));
 
   // Sender
