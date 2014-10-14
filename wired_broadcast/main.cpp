@@ -111,8 +111,8 @@ int main (int argc, char *argv[])
 
   // The encoder / decoder type we will use. Here we consider GF(2). For GF(2^8)
   // just change "binary" for "binary8"
-  typedef fifi::binary8 Field;
-  typedef kodo::disable_trace Trace;
+  typedef fifi::binary Field;
+  typedef kodo::enable_trace Trace;
 
   typedef kodo::full_rlnc_encoder<Field,Trace> rlnc_encoder;
   typedef kodo::full_rlnc_decoder<Field,Trace> rlnc_decoder;

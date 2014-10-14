@@ -1,7 +1,7 @@
 // We implement the Kodo traces (available since V.17.0.0). Here, we have
 // enabled the decoder trace and disabled the encoder trace.
-typedef fifi::binary8 Field;
-typedef kodo::disable_trace Trace;
+typedef fifi::binary Field;
+typedef kodo::enable_trace Trace;
 
 typedef kodo::full_rlnc_encoder<Field,Trace> rlnc_encoder;
 typedef kodo::full_rlnc_decoder<Field,Trace> rlnc_decoder;
@@ -60,7 +60,7 @@ public:
 
     for (const auto decoder : m_decoders)
       {
-        all_decoded &= decoder->is_complete();
+        all_decoded = all_decoded && decoder->is_complete();
       }
 
     if (!all_decoded)
@@ -72,12 +72,12 @@ public:
         socket->Send (packet);
         m_transmission_count++;
 
-        if (kodo::has_trace<rlnc_encoder>::value)
+        /*if (kodo::has_trace<rlnc_encoder>::value)
           {
             std::cout << "Trace encoder:" << std::endl;
             kodo::trace(m_encoder, std::cout);
           }
-
+        */
         ns3::Simulator::Schedule (pktInterval, &KodoSimulation::GenerateTraffic,
                                   this, socket, pktInterval);
       }
@@ -86,6 +86,12 @@ public:
         std::cout << "Decoding completed! Total transmissions: "
                   << m_transmission_count << std::endl;
         socket->Close ();
+        for (uint32_t n = 0; n < m_decoders.size(); n++)
+          {
+            std::cout << "Decoding completed for n = " << n << "? "
+                      << m_decoders[n]->is_complete() << std::endl;
+          }
+
       }
   }
 
