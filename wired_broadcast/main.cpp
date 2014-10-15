@@ -123,14 +123,14 @@ int main (int argc, char *argv[])
 
   // Create an array of N decoder instantiation pointers to be handled
   // by the simulation
-  std::vector<rlnc_decoder::pointer> decoders (users, decoder_factory.build());
+  std::vector<rlnc_decoder::factory::pointer> decoders (users, decoder_factory.build());
 
   // Setting up application sockets for receivers and senders
   uint16_t port = 80;
   TypeId tid = TypeId::LookupByName ("ns3::UdpSocketFactory");
   InetSocketAddress local = InetSocketAddress (Ipv4Address::GetAny (), port);
 
-  // Receivers
+  // Receiver sockets
   std::vector<Ptr<Socket>> receiverSink (users);
 
   for (uint32_t n = 0; n < users; n++)

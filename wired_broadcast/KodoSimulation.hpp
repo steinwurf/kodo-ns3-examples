@@ -12,8 +12,8 @@ class KodoSimulation
 {
 public:
 
-  KodoSimulation(const rlnc_encoder::pointer& encoder,
-                 const std::vector<rlnc_decoder::pointer> decoders,
+  KodoSimulation(const rlnc_encoder::factory::pointer& encoder,
+                 const std::vector<rlnc_decoder::factory::pointer> decoders,
                  const std::vector<ns3::Ptr<ns3::Socket>> receiverSinks)
     : m_encoder(encoder),
       m_decoders(decoders),
@@ -40,8 +40,8 @@ public:
     m_decoders[id]->decode(&m_payload_buffer[0]);
     std::cout << "Received one packet at decoder " << id + 1 << std::endl;
 
-    if (kodo::has_trace<rlnc_decoder>::value)
-      {
+    //if (kodo::has_trace<rlnc_decoder>::value)
+    //  {
         auto filter = [](const std::string& zone)
         {
           std::set<std::string> filters =
@@ -49,9 +49,9 @@ public:
           return filters.count(zone);
         };
 
-        std::cout << "Trace decoder " << id << ": " << std::endl;
+        std::cout << "Trace decoder " << id + 1 << ": " << std::endl;
         kodo::trace(m_decoders[id], std::cout, filter);
-      }
+    //  }
   }
 
   void GenerateTraffic (ns3::Ptr<ns3::Socket> socket, ns3::Time pktInterval)
@@ -97,8 +97,8 @@ public:
 
 private:
 
-  rlnc_encoder::pointer m_encoder;
-  std::vector<rlnc_decoder::pointer> m_decoders;
+  rlnc_encoder::factory::pointer m_encoder;
+  std::vector<rlnc_decoder::factory::pointer> m_decoders;
   std::vector<ns3::Ptr<ns3::Socket>> m_sockets;
 
   std::vector<uint8_t> m_payload_buffer;

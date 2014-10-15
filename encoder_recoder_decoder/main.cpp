@@ -85,9 +85,9 @@ class KodoSimulation
 {
 public:
 
-  KodoSimulation(const rlnc_encoder::pointer& encoder,
-                 const rlnc_decoder::pointer& recoder,
-                 const rlnc_decoder::pointer& decoder,
+  KodoSimulation(const rlnc_encoder::factory::pointer& encoder,
+                 const rlnc_decoder::factory::pointer& recoder,
+                 const rlnc_decoder::factory::pointer& decoder,
                  const bool recoding_flag)
     : m_encoder(encoder),
       m_recoder(recoder),
@@ -255,9 +255,9 @@ public:
 
 private:
 
-  rlnc_encoder::pointer m_encoder;
-  rlnc_decoder::pointer m_recoder;
-  rlnc_decoder::pointer m_decoder;
+  rlnc_encoder::factory::pointer m_encoder;
+  rlnc_decoder::factory::pointer m_recoder;
+  rlnc_decoder::factory::pointer m_decoder;
 
   std::vector<uint8_t> m_payload_buffer;
   uint32_t m_encoder_transmission_count;
