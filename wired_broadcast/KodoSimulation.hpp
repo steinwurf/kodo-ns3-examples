@@ -1,29 +1,39 @@
-// We implement the Kodo traces (available since V.17.0.0). Here, we have
-// enabled the decoder trace and disabled the encoder trace.
-typedef fifi::binary Field;
-typedef kodo::enable_trace Trace;
-
-typedef kodo::full_rlnc_encoder<Field,Trace> rlnc_encoder;
-typedef kodo::full_rlnc_decoder<Field,Trace> rlnc_decoder;
 
 // Just for illustration purposes, this simple objects implements both
 // the sender (encoder) and receivers (decoders).
+template<class Field, class Trace>
 class KodoSimulation
 {
 public:
 
-  KodoSimulation(const rlnc_encoder::factory::pointer& encoder,
-                 const std::vector<rlnc_decoder::factory::pointer> decoders,
-                 const std::vector<ns3::Ptr<ns3::Socket>> receiverSinks)
-    : m_encoder(encoder),
-      m_decoders(decoders),
-      m_sockets(receiverSinks)
+  typedef typename kodo::full_rlnc_encoder<Field,Trace>::factory rlnc_encoder;
+  typedef typename kodo::full_rlnc_decoder<Field,Trace>::factory rlnc_decoder;
+
+  typedef typename rlnc_encoder::pointer encoder_pointer;
+  typedef typename rlnc_decoder::pointer decoder_pointer;
+
+  KodoSimulation(const uint32_t users,
+                 const uint32_t generationSize,
+                 const uint32_t packetSize)
+    : m_users (users),
+      m_generationSize (generationSize),
+      m_packetSize (packetSize)
   {
-    m_encoder->set_systematic_off();
-    m_encoder->seed(time(0));
+
+    // Call factories from basic parameters
+    rlnc_encoder encoder_factory (generationSize, packetSize);
+    rlnc_decoder decoder_factory (generationSize, packetSize);
+
+    // Encoder creation and settings
+    m_encoder = encoder_factory.build ();
+    m_encoder->set_systematic_off ();
+    m_encoder->seed (time (0));
+
+    // Decoders creation and settings
+    m_decoders = std::vector<decoder_pointer> (users, decoder_factory.build());
 
     // Initialize the input data
-    std::vector<uint8_t> data(encoder->block_size(), 'x');
+    std::vector<uint8_t> data(m_encoder->block_size(), 'x');
     m_encoder->set_symbols(sak::storage(data));
 
     m_payload_buffer.resize(m_encoder->payload_size());
@@ -97,8 +107,12 @@ public:
 
 private:
 
-  rlnc_encoder::factory::pointer m_encoder;
-  std::vector<rlnc_decoder::factory::pointer> m_decoders;
+  uint32_t m_users;
+  uint32_t m_generationSize;
+  uint32_t m_packetSize;
+
+  encoder_pointer m_encoder;
+  std::vector<decoder_pointer> m_decoders;
   std::vector<ns3::Ptr<ns3::Socket>> m_sockets;
 
   std::vector<uint8_t> m_payload_buffer;

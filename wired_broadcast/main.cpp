@@ -114,17 +114,6 @@ int main (int argc, char *argv[])
   typedef fifi::binary Field;
   typedef kodo::enable_trace Trace;
 
-  typedef kodo::full_rlnc_encoder<Field,Trace> rlnc_encoder;
-  typedef kodo::full_rlnc_decoder<Field,Trace> rlnc_decoder;
-
-  // Creation of RLNC encoder and decoder objects
-  rlnc_encoder::factory encoder_factory(generationSize, packetSize);
-  rlnc_decoder::factory decoder_factory(generationSize, packetSize);
-
-  // Create an array of N decoder instantiation pointers to be handled
-  // by the simulation
-  std::vector<rlnc_decoder::factory::pointer> decoders (users, decoder_factory.build());
-
   // Setting up application sockets for receivers and senders
   uint16_t port = 80;
   TypeId tid = TypeId::LookupByName ("ns3::UdpSocketFactory");
@@ -141,12 +130,13 @@ int main (int argc, char *argv[])
   }
 
   // The member build function creates differents instances of each object
-  KodoSimulation kodoSimulator(encoder_factory.build(), decoders, receiverSink);
+  KodoSimulation<Field,Trace> kodoSimulator (users, generationSize, packetSize);
 
   for(const auto receiver : receiverSink)
     {
-      receiver->SetRecvCallback (MakeCallback (&KodoSimulation::ReceivePacket,
-                                               &kodoSimulator));
+      receiver->SetRecvCallback (
+        MakeCallback (&KodoSimulation <Field, Trace>::ReceivePacket,
+                      &kodoSimulator));
     }
 
   // Sender
@@ -162,9 +152,13 @@ int main (int argc, char *argv[])
   // Do pcap tracing on all point-to-point devices on all nodes
   pointToPoint.EnablePcapAll ("star");
 
-  Simulator::ScheduleWithContext (source->GetNode ()->GetId (), Seconds (1.0),
-                                  &KodoSimulation::GenerateTraffic,
-                                  &kodoSimulator, source, interPacketInterval);
+  Simulator::ScheduleWithContext (
+    source->GetNode ()->GetId (), Seconds (1.0),
+    &KodoSimulation <Field, Trace>::GenerateTraffic,
+    &kodoSimulator,
+    source,
+    interPacketInterval);
+
   Simulator::Run ();
   Simulator::Destroy ();
 
