@@ -109,42 +109,47 @@ int main (int argc, char *argv[])
   // Set IP addresses
   star.AssignIpv4Addresses (Ipv4AddressHelper ("10.1.1.0", "255.255.255.0"));
 
+  // Setting up application socket parameters for transmitter and
+  // receiver sockets
+  uint16_t port = 80;
+  TypeId tid = TypeId::LookupByName ("ns3::UdpSocketFactory");
+  InetSocketAddress local = InetSocketAddress (Ipv4Address::GetAny (), port);
+
+  // Transmitter socket
+  Ptr<Socket> source = Socket::CreateSocket (star.GetHub (), tid);
+
+  // Transmitter socket connections
+  InetSocketAddress remote = InetSocketAddress (Ipv4Address ("255.255.255.255"),
+                                                port);
+  source->SetAllowBroadcast (true);
+  source->Connect (remote);
+
+  // Receiver sockets
+  std::vector<Ptr<Socket>> sinks (users);
+
   // The encoder / decoder type we will use. Here we consider GF(2). For GF(2^8)
   // just change "binary" for "binary8"
   typedef fifi::binary Field;
   typedef kodo::enable_trace Trace;
 
-  // Setting up application sockets for receivers and senders
-  uint16_t port = 80;
-  TypeId tid = TypeId::LookupByName ("ns3::UdpSocketFactory");
-  InetSocketAddress local = InetSocketAddress (Ipv4Address::GetAny (), port);
+  // The member build function creates differents instances of each object
+  KodoSimulation<Field,Trace> kodoSimulator (
+    users,
+    generationSize,
+    packetSize,
+    sinks);
 
-  // Receiver sockets
-  std::vector<Ptr<Socket>> receiverSink (users);
-
+  std::cout << "Class created" << std::endl;
+  // Receiver socket connections
   for (uint32_t n = 0; n < users; n++)
   {
-    receiverSink[n] = Socket::CreateSocket (star.GetSpokeNode (n), tid);
-    receiverSink[n]->Bind (local);
+    sinks[n] = Socket::CreateSocket (star.GetSpokeNode (n), tid);
+    sinks[n]->Bind (local);
+    sinks[n]->SetRecvCallback (
+      MakeCallback (&KodoSimulation <Field, Trace>::ReceivePacket,
+                    &kodoSimulator));
     std::cout << "Socket for sink " << n << " created" << std::endl;
   }
-
-  // The member build function creates differents instances of each object
-  KodoSimulation<Field,Trace> kodoSimulator (users, generationSize, packetSize);
-
-  for(const auto receiver : receiverSink)
-    {
-      receiver->SetRecvCallback (
-        MakeCallback (&KodoSimulation <Field, Trace>::ReceivePacket,
-                      &kodoSimulator));
-    }
-
-  // Sender
-  Ptr<Socket> source = Socket::CreateSocket (star.GetHub (), tid);
-  InetSocketAddress remote = InetSocketAddress (Ipv4Address ("255.255.255.255"),
-                                                port);
-  source->SetAllowBroadcast (true);
-  source->Connect (remote);
 
   // Turn on global static routing so we can actually be routed across the star
   Ipv4GlobalRoutingHelper::PopulateRoutingTables ();

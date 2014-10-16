@@ -14,15 +14,17 @@ public:
 
   KodoSimulation(const uint32_t users,
                  const uint32_t generationSize,
-                 const uint32_t packetSize)
+                 const uint32_t packetSize,
+                 const std::vector<ns3::Ptr<ns3::Socket>> sinks)
     : m_users (users),
       m_generationSize (generationSize),
-      m_packetSize (packetSize)
+      m_packetSize (packetSize),
+      m_sinks (sinks)
   {
 
     // Call factories from basic parameters
-    rlnc_encoder encoder_factory (generationSize, packetSize);
-    rlnc_decoder decoder_factory (generationSize, packetSize);
+    rlnc_encoder encoder_factory (m_generationSize, m_packetSize);
+    rlnc_decoder decoder_factory (m_generationSize, m_packetSize);
 
     // Encoder creation and settings
     m_encoder = encoder_factory.build ();
@@ -30,28 +32,34 @@ public:
     m_encoder->seed (time (0));
 
     // Decoders creation and settings
-    m_decoders = std::vector<decoder_pointer> (users, decoder_factory.build());
+    m_decoders = std::vector<decoder_pointer> (m_users,
+                                               decoder_factory.build());
 
     // Initialize the input data
-    std::vector<uint8_t> data(m_encoder->block_size(), 'x');
-    m_encoder->set_symbols(sak::storage(data));
+    std::vector<uint8_t> data (m_encoder->block_size (), 'x');
+    m_encoder->set_symbols (sak::storage(data));
+    m_payload_buffer.resize (m_encoder->payload_size ());
 
-    m_payload_buffer.resize(m_encoder->payload_size());
+    // Initialize transmission count
     m_transmission_count = 0;
+
+   // Initialize socket map
+   for (uint32_t n = 0; n < users; n++)
+     {
+       m_socketMap[m_sinks[n]] = m_decoders[n];
+     }
   }
 
   void ReceivePacket (ns3::Ptr<ns3::Socket> socket)
   {
-    auto packet = socket->Recv();
-    // Find the associated decoder with the incoming socket
-    uint32_t id = std::find(m_sockets.begin(),m_sockets.end(),socket) -
-                  m_sockets.begin();
-    packet->CopyData(&m_payload_buffer[0], m_decoders[id]->payload_size());
-    m_decoders[id]->decode(&m_payload_buffer[0]);
-    std::cout << "Received one packet at decoder " << id + 1 << std::endl;
+    auto packet = socket->Recv ();
+    std::cout << "Working 1" << std::endl;
+    packet->CopyData(&m_payload_buffer[0], m_socketMap[socket]->payload_size());
+    std::cout << "Working 2" << std::endl;
+    m_socketMap[socket]->decode(&m_payload_buffer[0]);
 
-    //if (kodo::has_trace<rlnc_decoder>::value)
-    //  {
+    if (kodo::has_trace<rlnc_decoder>::value)
+      {
         auto filter = [](const std::string& zone)
         {
           std::set<std::string> filters =
@@ -59,9 +67,9 @@ public:
           return filters.count(zone);
         };
 
-        std::cout << "Trace decoder " << id + 1 << ": " << std::endl;
-        kodo::trace(m_decoders[id], std::cout, filter);
-    //  }
+        std::cout << "Trace decoder:" << std::endl;
+        kodo::trace(m_socketMap, std::cout, filter);
+      }
   }
 
   void GenerateTraffic (ns3::Ptr<ns3::Socket> socket, ns3::Time pktInterval)
@@ -82,14 +90,16 @@ public:
         socket->Send (packet);
         m_transmission_count++;
 
-        /*if (kodo::has_trace<rlnc_encoder>::value)
+        if (kodo::has_trace<rlnc_encoder>::value)
           {
             std::cout << "Trace encoder:" << std::endl;
             kodo::trace(m_encoder, std::cout);
           }
-        */
-        ns3::Simulator::Schedule (pktInterval, &KodoSimulation::GenerateTraffic,
-                                  this, socket, pktInterval);
+
+        ns3::Simulator::Schedule (
+          pktInterval,
+          &KodoSimulation <Field, Trace>::GenerateTraffic,
+          this, socket, pktInterval);
       }
     else
       {
@@ -107,13 +117,14 @@ public:
 
 private:
 
-  uint32_t m_users;
-  uint32_t m_generationSize;
-  uint32_t m_packetSize;
+  const uint32_t m_users;
+  const uint32_t m_generationSize;
+  const uint32_t m_packetSize;
 
   encoder_pointer m_encoder;
   std::vector<decoder_pointer> m_decoders;
-  std::vector<ns3::Ptr<ns3::Socket>> m_sockets;
+  std::vector<ns3::Ptr<ns3::Socket>> m_sinks;
+  std::map<ns3::Ptr<ns3::Socket>,decoder_pointer> m_socketMap;
 
   std::vector<uint8_t> m_payload_buffer;
   uint32_t m_transmission_count;
