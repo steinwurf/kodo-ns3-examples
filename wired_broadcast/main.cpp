@@ -51,6 +51,7 @@
 
 #include <kodo/rlnc/full_rlnc_codes.hpp>
 #include <kodo/trace.hpp>
+#include <kodo/wrap_copy_payload_decoder.hpp>
 
 #include "KodoSimulation.hpp"
 

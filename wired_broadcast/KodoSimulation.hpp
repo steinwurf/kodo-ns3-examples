@@ -6,11 +6,15 @@ class KodoSimulation
 {
 public:
 
-  typedef typename kodo::full_rlnc_encoder<Field, encoderTrace> rlnc_encoder;
-  typedef typename kodo::full_rlnc_decoder<Field, decoderTrace> rlnc_decoder;
+  using rlnc_encoder = typename kodo::full_rlnc_encoder<Field, encoderTrace>;
+  using non_copy_rlnc_decoder = typename kodo::full_rlnc_decoder<Field,
+                                                                 decoderTrace>;
 
-  typedef typename rlnc_encoder::factory::pointer encoder_pointer;
-  typedef typename rlnc_decoder::factory::pointer decoder_pointer;
+  using rlnc_decoder = typename kodo::wrap_copy_payload_decoder<
+                                    non_copy_rlnc_decoder>;
+
+  using encoder_pointer = typename rlnc_encoder::factory::pointer;
+  using decoder_pointer = typename rlnc_decoder::factory::pointer;
 
   KodoSimulation(const uint32_t users,
                  const uint32_t generationSize,
@@ -71,6 +75,7 @@ public:
         auto id = std::distance(std::begin(m_socketMap),
                                 m_socketMap.find(socket)) + 1;
 
+        std::cout << "Received a packet at decoder " << id << std::endl;
         std::cout << "Trace decoder " << id << ": " << std::endl;
         kodo::trace(decoder, std::cout, filter);
       }
