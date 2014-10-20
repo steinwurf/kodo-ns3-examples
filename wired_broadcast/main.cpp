@@ -98,8 +98,6 @@ int main (int argc, char *argv[])
     star.GetSpokeNode (n)->GetDevice (0)->
     SetAttribute ("ReceiveErrorModel", PointerValue (errorModel[n]));
     errorModel[n]->Enable ();
-    std::cout << "Error model " << n << " created and set with rate: " << errorRate << std::endl;
-    std::cout << "Error model " << n << " enabled" << std::endl;
   }
 
   // Setting IP protocol stack
@@ -127,29 +125,34 @@ int main (int argc, char *argv[])
   // Receiver sockets
   std::vector<Ptr<Socket>> sinks (users);
 
+  for (uint32_t n = 0; n < users; n++)
+    {
+      sinks[n] = Socket::CreateSocket (star.GetSpokeNode (n), tid);
+    }
+
   // The encoder / decoder type we will use. Here we consider GF(2). For GF(2^8)
   // just change "binary" for "binary8"
   typedef fifi::binary Field;
-  typedef kodo::enable_trace Trace;
+  typedef kodo::disable_trace encoderTrace;
+  typedef kodo::enable_trace decoderTrace;
 
-  // The member build function creates differents instances of each object
-  KodoSimulation<Field,Trace> kodoSimulator (
+  // Create the simulation
+  KodoSimulation<Field, encoderTrace, decoderTrace> kodoSimulator (
     users,
     generationSize,
     packetSize,
     sinks);
 
-  std::cout << "Class created" << std::endl;
   // Receiver socket connections
-  for (uint32_t n = 0; n < users; n++)
-  {
-    sinks[n] = Socket::CreateSocket (star.GetSpokeNode (n), tid);
-    sinks[n]->Bind (local);
-    sinks[n]->SetRecvCallback (
-      MakeCallback (&KodoSimulation <Field, Trace>::ReceivePacket,
-                    &kodoSimulator));
-    std::cout << "Socket for sink " << n << " created" << std::endl;
-  }
+  for (const auto sink : sinks)
+    {
+      sink->Bind (local);
+      sink->SetRecvCallback (
+        MakeCallback (&KodoSimulation <Field,
+                                       encoderTrace,
+                                       decoderTrace>::ReceivePacket,
+                      &kodoSimulator));
+    }
 
   // Turn on global static routing so we can actually be routed across the star
   Ipv4GlobalRoutingHelper::PopulateRoutingTables ();
@@ -159,7 +162,7 @@ int main (int argc, char *argv[])
 
   Simulator::ScheduleWithContext (
     source->GetNode ()->GetId (), Seconds (1.0),
-    &KodoSimulation <Field, Trace>::GenerateTraffic,
+    &KodoSimulation <Field, encoderTrace, decoderTrace>::GenerateTraffic,
     &kodoSimulator,
     source,
     interPacketInterval);

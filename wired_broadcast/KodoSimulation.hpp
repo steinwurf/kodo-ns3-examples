@@ -1,16 +1,16 @@
+// This object implements both the sender (encoder)
+// and receivers (decoders)
 
-// Just for illustration purposes, this simple objects implements both
-// the sender (encoder) and receivers (decoders).
-template<class Field, class Trace>
+template<class Field, class encoderTrace, class decoderTrace>
 class KodoSimulation
 {
 public:
 
-  typedef typename kodo::full_rlnc_encoder<Field,Trace>::factory rlnc_encoder;
-  typedef typename kodo::full_rlnc_decoder<Field,Trace>::factory rlnc_decoder;
+  typedef typename kodo::full_rlnc_encoder<Field, encoderTrace> rlnc_encoder;
+  typedef typename kodo::full_rlnc_decoder<Field, decoderTrace> rlnc_decoder;
 
-  typedef typename rlnc_encoder::pointer encoder_pointer;
-  typedef typename rlnc_decoder::pointer decoder_pointer;
+  typedef typename rlnc_encoder::factory::pointer encoder_pointer;
+  typedef typename rlnc_decoder::factory::pointer decoder_pointer;
 
   KodoSimulation(const uint32_t users,
                  const uint32_t generationSize,
@@ -23,8 +23,10 @@ public:
   {
 
     // Call factories from basic parameters
-    rlnc_encoder encoder_factory (m_generationSize, m_packetSize);
-    rlnc_decoder decoder_factory (m_generationSize, m_packetSize);
+    typename rlnc_encoder::factory encoder_factory (m_generationSize,
+                                                    m_packetSize);
+    typename rlnc_decoder::factory decoder_factory (m_generationSize,
+                                                    m_packetSize);
 
     // Encoder creation and settings
     m_encoder = encoder_factory.build ();
@@ -52,8 +54,8 @@ public:
 
   void ReceivePacket (ns3::Ptr<ns3::Socket> socket)
   {
-    auto packet = socket->Recv ();
     decoder_pointer decoder = m_socketMap[socket];
+    auto packet = socket->Recv ();
     packet->CopyData(&m_payload_buffer[0], decoder->payload_size());
     decoder->decode(&m_payload_buffer[0]);
 
@@ -66,7 +68,10 @@ public:
           return filters.count(zone);
         };
 
-        std::cout << "Trace decoder:" << std::endl;
+        auto id = std::distance(std::begin(m_socketMap),
+                                m_socketMap.find(socket)) + 1;
+
+        std::cout << "Trace decoder " << id << ": " << std::endl;
         kodo::trace(decoder, std::cout, filter);
       }
   }
@@ -97,7 +102,7 @@ public:
 
         ns3::Simulator::Schedule (
           pktInterval,
-          &KodoSimulation <Field, Trace>::GenerateTraffic,
+          &KodoSimulation <Field, encoderTrace, decoderTrace>::GenerateTraffic,
           this, socket, pktInterval);
       }
     else
