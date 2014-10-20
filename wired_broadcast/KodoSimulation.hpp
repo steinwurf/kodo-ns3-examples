@@ -15,7 +15,7 @@ public:
   KodoSimulation(const uint32_t users,
                  const uint32_t generationSize,
                  const uint32_t packetSize,
-                 const std::vector<ns3::Ptr<ns3::Socket>> sinks)
+                 const std::vector<ns3::Ptr<ns3::Socket>>& sinks)
     : m_users (users),
       m_generationSize (generationSize),
       m_packetSize (packetSize),
@@ -53,10 +53,9 @@ public:
   void ReceivePacket (ns3::Ptr<ns3::Socket> socket)
   {
     auto packet = socket->Recv ();
-    std::cout << "Working 1" << std::endl;
-    packet->CopyData(&m_payload_buffer[0], m_socketMap[socket]->payload_size());
-    std::cout << "Working 2" << std::endl;
-    m_socketMap[socket]->decode(&m_payload_buffer[0]);
+    decoder_pointer decoder = m_socketMap[socket];
+    packet->CopyData(&m_payload_buffer[0], decoder->payload_size());
+    decoder->decode(&m_payload_buffer[0]);
 
     if (kodo::has_trace<rlnc_decoder>::value)
       {
@@ -68,7 +67,7 @@ public:
         };
 
         std::cout << "Trace decoder:" << std::endl;
-        kodo::trace(m_socketMap, std::cout, filter);
+        kodo::trace(decoder, std::cout, filter);
       }
   }
 
