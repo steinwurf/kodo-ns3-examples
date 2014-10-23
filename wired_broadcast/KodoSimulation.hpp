@@ -37,23 +37,23 @@ public:
     m_encoder->set_systematic_off ();
     m_encoder->seed (time (0));
 
-    // Decoders creation and settings
-    m_decoders = std::vector<decoder_pointer> (m_users,
-                                               decoder_factory.build());
-
     // Initialize the input data
     std::vector<uint8_t> data (m_encoder->block_size (), 'x');
     m_encoder->set_symbols (sak::storage(data));
     m_payload_buffer.resize (m_encoder->payload_size ());
 
+    // Decoders creation and settings
+    m_decoders = std::vector<decoder_pointer> (m_users);
+
+    for (uint32_t n = 0; n < m_users; n++)
+     {
+       m_decoders[n] = decoder_factory.build();
+       m_socketMap[m_sinks[n]] = m_decoders[n];
+     }
+
     // Initialize transmission count
     m_transmission_count = 0;
 
-   // Initialize socket map
-   for (uint32_t n = 0; n < users; n++)
-     {
-       m_socketMap[m_sinks[n]] = m_decoders[n];
-     }
   }
 
   void ReceivePacket (ns3::Ptr<ns3::Socket> socket)
@@ -76,8 +76,17 @@ public:
                                 m_socketMap.find(socket)) + 1;
 
         std::cout << "Received a packet at decoder " << id << std::endl;
-        std::cout << "Trace decoder " << id << ": " << std::endl;
+        std::cout << "Trace on decoder " << id << " is: " << std::endl;
+        std::cout << "Decoder is: " << decoder << std::endl;
         kodo::trace(decoder, std::cout, filter);
+
+        /*for(uint32_t n = 0; n < m_decoders.size(); n++)
+        {
+            std::cout << "Trace on decoder " << n + 1 << " is: " << std::endl;
+            std::cout << "Decoder " << n + 1 << " is: " << m_decoders[n] << std::endl;
+            kodo::trace(m_decoders[n], std::cout, filter);
+        }*/
+
       }
   }
 
@@ -85,13 +94,14 @@ public:
   {
     bool all_decoded = true;
 
-    for (const auto decoder : m_decoders)
+    for (auto decoder : m_decoders)
       {
         all_decoded = all_decoded && decoder->is_complete();
       }
 
     if (!all_decoded)
       {
+        std::cout << "---------------------" << std::endl;
         std::cout << "Sending a combination" << std::endl;
         uint32_t bytes_used = m_encoder->encode(&m_payload_buffer[0]);
         auto packet = ns3::Create<ns3::Packet> (&m_payload_buffer[0],
@@ -117,7 +127,7 @@ public:
         socket->Close ();
         for (uint32_t n = 0; n < m_decoders.size(); n++)
           {
-            std::cout << "Decoding completed for n = " << n << "? "
+            std::cout << "Decoding completed for decoder " << n + 1 << "? "
                       << m_decoders[n]->is_complete() << std::endl;
           }
 

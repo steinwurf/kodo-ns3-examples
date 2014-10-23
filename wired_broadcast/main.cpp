@@ -133,7 +133,7 @@ int main (int argc, char *argv[])
 
   // The encoder / decoder type we will use. Here we consider GF(2). For GF(2^8)
   // just change "binary" for "binary8"
-  typedef fifi::binary Field;
+  typedef fifi::binary8 Field;
   typedef kodo::disable_trace encoderTrace;
   typedef kodo::enable_trace decoderTrace;
 
