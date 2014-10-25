@@ -1,5 +1,9 @@
-// This object implements both the sender (encoder)
-// and receivers (decoders)
+// This object implements both the sender (encoder),
+// receivers (decoders) and properties of the simulation
+#include <kodo/rlnc/full_rlnc_codes.hpp>
+#include <kodo/trace.hpp>
+#include <kodo/wrap_copy_payload_decoder.hpp>
+
 
 template<class Field, class encoderTrace, class decoderTrace>
 class KodoSimulation
@@ -77,15 +81,7 @@ public:
 
         std::cout << "Received a packet at decoder " << id << std::endl;
         std::cout << "Trace on decoder " << id << " is: " << std::endl;
-        std::cout << "Decoder is: " << decoder << std::endl;
         kodo::trace(decoder, std::cout, filter);
-
-        /*for(uint32_t n = 0; n < m_decoders.size(); n++)
-        {
-            std::cout << "Trace on decoder " << n + 1 << " is: " << std::endl;
-            std::cout << "Decoder " << n + 1 << " is: " << m_decoders[n] << std::endl;
-            kodo::trace(m_decoders[n], std::cout, filter);
-        }*/
 
       }
   }
@@ -101,8 +97,9 @@ public:
 
     if (!all_decoded)
       {
-        std::cout << "---------------------" << std::endl;
-        std::cout << "Sending a combination" << std::endl;
+        std::cout << "+---------------------+" << std::endl;
+        std::cout << "|Sending a combination|" << std::endl;
+        std::cout << "+---------------------+" << std::endl;
         uint32_t bytes_used = m_encoder->encode(&m_payload_buffer[0]);
         auto packet = ns3::Create<ns3::Packet> (&m_payload_buffer[0],
                                                 bytes_used);
@@ -125,12 +122,6 @@ public:
         std::cout << "Decoding completed! Total transmissions: "
                   << m_transmission_count << std::endl;
         socket->Close ();
-        for (uint32_t n = 0; n < m_decoders.size(); n++)
-          {
-            std::cout << "Decoding completed for decoder " << n + 1 << "? "
-                      << m_decoders[n]->is_complete() << std::endl;
-          }
-
       }
   }
 

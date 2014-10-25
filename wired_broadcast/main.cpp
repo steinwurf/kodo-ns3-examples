@@ -19,13 +19,13 @@
 
 // This example shows how to use the Kodo library in a broadcast scenario
 // within a ns-3 simulation. The code below is based on the wifi_broadcast
-// example, which can be found in this repository.
+// example, which can be found in the ns-3-dev repository.
 
 // In the script below the sender transmits encoded packets from a block of
-// data to two receivers with the same packet erasure rate. The sender
-// continues until all receivers have received all packets. Here the packets
+// data to N receivers with the same packet erasure rate. The sender
+// continues until all receivers have decoded all packets. Here the packets
 // are sent using the binary field, GF(2) with a generation of 5 packets and
-// 1000 (application) bytes to the other node.
+// 1000 (application) bytes and an erasure rate of 30% for all the nodes.
 
 // You can change any parameter, by running (for example with a different
 // generation size):
@@ -35,7 +35,7 @@
 // You can review the files with Wireshark or tcpdump. If you have tcpdump
 // installed, you can try (for example) this:
 //
-// tcpdump -r star-0-0.pcap -nn -tt
+// tcpdump -r wired_broadcast-rlnc-0-0.pcap -nn -tt
 
 #include <ns3/point-to-point-star.h>
 #include <ns3/internet-module.h>
@@ -49,16 +49,13 @@
 #include <string>
 #include <ctime>
 
-#include <kodo/rlnc/full_rlnc_codes.hpp>
-#include <kodo/trace.hpp>
-#include <kodo/wrap_copy_payload_decoder.hpp>
-
-#include "KodoSimulation.hpp"
+#include "KodoSimulation.hpp" // Contains the simulation class
 
 using namespace ns3;
 
 int main (int argc, char *argv[])
 {
+  // Default values
   uint32_t packetSize = 1000; // Application bytes per packet
   double interval = 1.0; // Time between events
   uint32_t generationSize = 5; // RLNC generation size
@@ -117,7 +114,7 @@ int main (int argc, char *argv[])
   // Transmitter socket
   Ptr<Socket> source = Socket::CreateSocket (star.GetHub (), tid);
 
-  // Transmitter socket connections
+  // Transmitter socket connections. Set transmitter for broadcasting
   InetSocketAddress remote = InetSocketAddress (Ipv4Address ("255.255.255.255"),
                                                 port);
   source->SetAllowBroadcast (true);
@@ -133,7 +130,7 @@ int main (int argc, char *argv[])
 
   // The encoder / decoder type we will use. Here we consider GF(2). For GF(2^8)
   // just change "binary" for "binary8"
-  typedef fifi::binary8 Field;
+  typedef fifi::binary Field;
   typedef kodo::disable_trace encoderTrace;
   typedef kodo::enable_trace decoderTrace;
 
@@ -148,18 +145,16 @@ int main (int argc, char *argv[])
   for (const auto sink : sinks)
     {
       sink->Bind (local);
-      sink->SetRecvCallback (
-        MakeCallback (&KodoSimulation <Field,
-                                       encoderTrace,
-                                       decoderTrace>::ReceivePacket,
-                      &kodoSimulator));
+      sink->SetRecvCallback (MakeCallback (
+        &KodoSimulation <Field, encoderTrace, decoderTrace>::ReceivePacket,
+        &kodoSimulator));
     }
 
   // Turn on global static routing so we can actually be routed across the star
   Ipv4GlobalRoutingHelper::PopulateRoutingTables ();
 
   // Do pcap tracing on all point-to-point devices on all nodes
-  pointToPoint.EnablePcapAll ("star");
+  pointToPoint.EnablePcapAll ("wired-broadcast-rlnc");
 
   Simulator::ScheduleWithContext (
     source->GetNode ()->GetId (), Seconds (1.0),
