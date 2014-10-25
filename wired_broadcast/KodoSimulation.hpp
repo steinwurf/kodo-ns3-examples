@@ -5,13 +5,13 @@
 #include <kodo/wrap_copy_payload_decoder.hpp>
 
 
-template<class Field, class encoderTrace, class decoderTrace>
+template<class field, class encoderTrace, class decoderTrace>
 class KodoSimulation
 {
 public:
 
-  using rlnc_encoder = typename kodo::full_rlnc_encoder<Field, encoderTrace>;
-  using non_copy_rlnc_decoder = typename kodo::full_rlnc_decoder<Field,
+  using rlnc_encoder = typename kodo::full_rlnc_encoder<field, encoderTrace>;
+  using non_copy_rlnc_decoder = typename kodo::full_rlnc_decoder<field,
                                                                  decoderTrace>;
 
   using rlnc_decoder = typename kodo::wrap_copy_payload_decoder<
@@ -114,7 +114,7 @@ public:
 
         ns3::Simulator::Schedule (
           pktInterval,
-          &KodoSimulation <Field, encoderTrace, decoderTrace>::GenerateTraffic,
+          &KodoSimulation <field, encoderTrace, decoderTrace>::GenerateTraffic,
           this, socket, pktInterval);
       }
     else

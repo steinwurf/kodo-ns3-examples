@@ -130,12 +130,12 @@ int main (int argc, char *argv[])
 
   // The encoder / decoder type we will use. Here we consider GF(2). For GF(2^8)
   // just change "binary" for "binary8"
-  typedef fifi::binary Field;
+  typedef fifi::binary field;
   typedef kodo::disable_trace encoderTrace;
   typedef kodo::enable_trace decoderTrace;
 
   // Create the simulation
-  KodoSimulation<Field, encoderTrace, decoderTrace> kodoSimulator (
+  KodoSimulation<field, encoderTrace, decoderTrace> kodoSimulator (
     users,
     generationSize,
     packetSize,
@@ -146,7 +146,7 @@ int main (int argc, char *argv[])
     {
       sink->Bind (local);
       sink->SetRecvCallback (MakeCallback (
-        &KodoSimulation <Field, encoderTrace, decoderTrace>::ReceivePacket,
+        &KodoSimulation <field, encoderTrace, decoderTrace>::ReceivePacket,
         &kodoSimulator));
     }
 
@@ -158,7 +158,7 @@ int main (int argc, char *argv[])
 
   Simulator::ScheduleWithContext (
     source->GetNode ()->GetId (), Seconds (1.0),
-    &KodoSimulation <Field, encoderTrace, decoderTrace>::GenerateTraffic,
+    &KodoSimulation <field, encoderTrace, decoderTrace>::GenerateTraffic,
     &kodoSimulator,
     source,
     interPacketInterval);
