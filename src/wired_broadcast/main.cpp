@@ -26,6 +26,7 @@
 // continues until all receivers have decoded all packets. Here the packets
 // are sent using the binary field, GF(2) with a generation of 5 packets and
 // 1000 (application) bytes and an erasure rate of 30% for all the nodes.
+// Here we have set the number of receivers to 2 by default but it can changed
 
 // You can change any parameter, by running (for example with a different
 // generation size):
