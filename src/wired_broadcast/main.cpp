@@ -49,7 +49,7 @@
 #include <string>
 #include <ctime>
 
-#include "../KodoSimulation.hpp" // Contains the simulation class
+#include "../BroadcastRlnc.hpp" // Contains the broadcast topology class
 
 using namespace ns3;
 
@@ -134,8 +134,8 @@ int main (int argc, char *argv[])
   typedef kodo::disable_trace encoderTrace;
   typedef kodo::enable_trace decoderTrace;
 
-  // Create the simulation
-  KodoSimulation<field, encoderTrace, decoderTrace> kodoSimulator (
+  // Creates the broadcast topology class for the current example
+  BroadcastRlnc<field, encoderTrace, decoderTrace> wiredBroadcast (
     users,
     generationSize,
     packetSize,
@@ -146,8 +146,8 @@ int main (int argc, char *argv[])
     {
       sink->Bind (local);
       sink->SetRecvCallback (MakeCallback (
-        &KodoSimulation <field, encoderTrace, decoderTrace>::ReceivePacket,
-        &kodoSimulator));
+        &BroadcastRlnc <field, encoderTrace, decoderTrace>::ReceivePacket,
+        &wiredBroadcast));
     }
 
   // Turn on global static routing so we can actually be routed across the star
@@ -158,8 +158,8 @@ int main (int argc, char *argv[])
 
   Simulator::ScheduleWithContext (
     source->GetNode ()->GetId (), Seconds (1.0),
-    &KodoSimulation <field, encoderTrace, decoderTrace>::GenerateTraffic,
-    &kodoSimulator,
+    &BroadcastRlnc <field, encoderTrace, decoderTrace>::GenerateTraffic,
+    &wiredBroadcast,
     source,
     interPacketInterval);
 

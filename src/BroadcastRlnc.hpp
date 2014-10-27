@@ -7,7 +7,7 @@
 
 
 template<class field, class encoderTrace, class decoderTrace>
-class KodoSimulation
+class BroadcastRlnc
 {
 public:
 
@@ -21,7 +21,7 @@ public:
   using encoder_pointer = typename rlnc_encoder::factory::pointer;
   using decoder_pointer = typename rlnc_decoder::factory::pointer;
 
-  KodoSimulation(const uint32_t users,
+  BroadcastRlnc(const uint32_t users,
                  const uint32_t generationSize,
                  const uint32_t packetSize,
                  const std::vector<ns3::Ptr<ns3::Socket>>& sinks)
@@ -115,7 +115,7 @@ public:
 
         ns3::Simulator::Schedule (
           pktInterval,
-          &KodoSimulation <field, encoderTrace, decoderTrace>::GenerateTraffic,
+          &BroadcastRlnc <field, encoderTrace, decoderTrace>::GenerateTraffic,
           this, socket, pktInterval);
       }
     else
