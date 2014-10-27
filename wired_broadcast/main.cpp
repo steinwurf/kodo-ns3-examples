@@ -17,7 +17,7 @@
  *
  */
 
-// This example shows how to use the Kodo library in a broadcast scenario
+// This example shows how to use the Kodo library in a broadcast rlnc scenario
 // within a ns-3 simulation. The code below is based on the wifi_broadcast
 // example, which can be found in the ns-3-dev repository.
 
@@ -31,11 +31,11 @@
 // generation size):
 // ./build/linux/wired_broadcast/wired_broadcast --generationSize=GENERATION_SIZE
 
-// When you are done, you will notice four pcap trace files in your directory.
+// When you are done, you will notice several pcap trace files in your directory.
 // You can review the files with Wireshark or tcpdump. If you have tcpdump
 // installed, you can try (for example) this:
 //
-// tcpdump -r wired_broadcast-rlnc-0-0.pcap -nn -tt
+// tcpdump -r wired-broadcast-rlnc-0-0.pcap -nn -tt
 
 #include <ns3/point-to-point-star.h>
 #include <ns3/internet-module.h>
@@ -94,7 +94,7 @@ int main (int argc, char *argv[])
   {
     errorModel[n]->SetAttribute ("ErrorRate", DoubleValue (errorRate));
     star.GetSpokeNode (n)->GetDevice (0)->
-    SetAttribute ("ReceiveErrorModel", PointerValue (errorModel[n]));
+      SetAttribute ("ReceiveErrorModel", PointerValue (errorModel[n]));
     errorModel[n]->Enable ();
   }
 
@@ -128,7 +128,7 @@ int main (int argc, char *argv[])
       sinks[n] = Socket::CreateSocket (star.GetSpokeNode (n), tid);
     }
 
-  // The encoder / decoder type we will use. Here we consider GF(2). For GF(2^8)
+  // The field and traces types we will use. Here we consider GF(2). For GF(2^8)
   // just change "binary" for "binary8"
   typedef fifi::binary field;
   typedef kodo::disable_trace encoderTrace;

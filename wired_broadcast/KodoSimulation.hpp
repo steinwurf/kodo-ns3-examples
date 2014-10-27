@@ -1,5 +1,6 @@
 // This object implements both the sender (encoder),
-// receivers (decoders) and properties of the simulation
+// receivers (decoders) and other properties of the simulation
+
 #include <kodo/rlnc/full_rlnc_codes.hpp>
 #include <kodo/trace.hpp>
 #include <kodo/wrap_copy_payload_decoder.hpp>
