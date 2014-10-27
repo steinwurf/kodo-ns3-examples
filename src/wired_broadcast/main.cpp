@@ -49,7 +49,7 @@
 #include <string>
 #include <ctime>
 
-#include "KodoSimulation.hpp" // Contains the simulation class
+#include "../KodoSimulation.hpp" // Contains the simulation class
 
 using namespace ns3;
 

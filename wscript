@@ -152,6 +152,6 @@ def build(bld):
         recurse_helper(bld, 'platform')
         recurse_helper(bld, 'sak')
 
-    bld.recurse('wired_broadcast')
-    bld.recurse('wifi_broadcast')
-    bld.recurse('encoder_recoder_decoder')
+    bld.recurse('src/wired_broadcast')
+    bld.recurse('src/wifi_broadcast')
+    bld.recurse('src/encoder_recoder_decoder')
