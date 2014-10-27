@@ -71,202 +71,6 @@
 
 using namespace ns3;
 
-// The encoder / decoder type we will use. Here we consider GF(2). For GF(2^8)
-// just change "binary" for "binary8"
-
-// Also we implement the Kodo traces (available since V.17.0.0). Here, we have
-// enabled the decoder trace and disabled the encoder trace.
-typedef kodo::full_rlnc_encoder<fifi::binary,kodo::disable_trace> rlnc_encoder;
-typedef kodo::full_rlnc_decoder<fifi::binary,kodo::disable_trace> rlnc_decoder;
-
-// Just for illustration purposes, this object implements both
-// the encoder, recoder and decoder.
-class KodoSimulation
-{
-public:
-
-  KodoSimulation(const rlnc_encoder::factory::pointer& encoder,
-                 const rlnc_decoder::factory::pointer& recoder,
-                 const rlnc_decoder::factory::pointer& decoder,
-                 const bool recoding_flag)
-    : m_encoder(encoder),
-      m_recoder(recoder),
-      m_decoder(decoder),
-      m_recoding_flag(recoding_flag)
-  {
-    m_encoder->set_systematic_off();
-    m_encoder->seed(time(0));
-
-    // Initialize the input data
-    std::vector<uint8_t> data(encoder->block_size(), 'x');
-    m_encoder->set_symbols(sak::storage(data));
-
-    m_payload_buffer.resize(m_encoder->payload_size());
-    m_encoder_transmission_count = 0;
-    m_recoder_transmission_count = 0;
-    m_decoder_rank = 0;
-  }
-
-  void SendPacketEncoder (Ptr<Socket> socket, Time pktInterval)
-  {
-    if (!m_recoder->is_complete() ||
-       (!m_recoding_flag && !m_decoder->is_complete()))
-      {
-        uint32_t bytes_used = m_encoder->encode(&m_payload_buffer[0]);
-        auto packet = Create<Packet> (&m_payload_buffer[0], bytes_used);
-        std::cout << "+----------------------------------+"   << std::endl;
-        std::cout << "|Sending a combination from ENCODER|"   << std::endl;
-        std::cout << "+----------------------------------+\n" << std::endl;
-        socket->Send (packet);
-        m_encoder_transmission_count++;
-
-        if (kodo::has_trace<rlnc_encoder>::value)
-          {
-            std::cout << "Trace encoder:" << std::endl;
-            kodo::trace(m_encoder, std::cout);
-          }
-
-        Simulator::Schedule (pktInterval, &KodoSimulation::SendPacketEncoder,
-                             this, socket, pktInterval);
-      }
-    else
-      {
-        socket->Close ();
-      }
-  }
-
-  void ReceivePacketRecoder (Ptr<Socket> socket)
-  {
-    auto packet = socket->Recv();
-    packet->CopyData(&m_payload_buffer[0], m_recoder->payload_size());
-
-    if (!m_recoding_flag)
-      {
-        m_previous_packet = packet;
-      }
-
-    m_recoder->decode(&m_payload_buffer[0]);
-    std::cout << "Received a coded packet at RECODER!\n" << std::endl;
-
-    if (kodo::has_trace<rlnc_decoder>::value)
-      {
-        auto filter = [](const std::string& zone)
-        {
-          std::set<std::string> filters =
-            {/*"decoder_state",*/"input_symbol_coefficients"};
-          return filters.count(zone);
-        };
-
-        std::cout << "Trace recoder:" << std::endl;
-        kodo::trace(m_recoder, std::cout, filter);
-      }
-    if (m_recoder->is_complete())
-      {
-        std::cout << "*** Recoder is full rank! ***\n" << std::endl;
-      }
-  }
-
-  void SendPacketRecoder (Ptr<Socket> socket, Time pktInterval)
-  {
-    if (!m_decoder->is_complete())
-      {
-        if (m_recoding_flag)
-          {
-            // Recode a new packet and send
-            uint32_t bytes_used = m_recoder->recode(&m_payload_buffer[0]);
-            auto packet = Create<Packet> (&m_payload_buffer[0], bytes_used);
-            std::cout << "+----------------------------------+"   << std::endl;
-            std::cout << "|Sending a combination from RECODER|"   << std::endl;
-            std::cout << "+----------------------------------+\n" << std::endl;
-            socket->Send (packet);
-            m_recoder_transmission_count++;
-          }
-        else
-          {
-            if(!m_recoder->rank ())
-              {
-                std::cout << "No packet from ENCODER to forward!" << std::endl;
-              }
-            else
-              {
-                auto packet = m_previous_packet;
-
-                // Remove all packet tags in order to the callback retag them to avoid
-                // ~/ns-3-dev/src/common/packet-tag-list.cc, line=139 assert failure.
-                // Tag removal is shown in ~/ns-3-dev/src/applications/udp-echo/
-                // udp-echo-server.cc for packet forwarding
-
-                packet->RemoveAllPacketTags ();
-                socket->Send (packet);
-                m_recoder_transmission_count++;
-                std::cout << "Forwarding a previous packet from RECODER...\n"
-                          << std::endl;
-              }
-         }
-
-        Simulator::Schedule (pktInterval, &KodoSimulation::SendPacketRecoder,
-                             this, socket, pktInterval);
-      }
-    else
-      {
-        socket->Close ();
-        std::cout << "*** Decoding completed! ***" << std::endl;
-        std::cout << "Encoder transmissions: " << m_encoder_transmission_count
-                  << std::endl;
-        std::cout << "Recoder transmissions: " << m_recoder_transmission_count
-                  << std::endl;
-        std::cout << "Total transmissions: "
-                  << m_encoder_transmission_count + m_recoder_transmission_count
-                  << std::endl;
-      }
-  }
-
-  void ReceivePacketDecoder (Ptr<Socket> socket)
-  {
-    auto packet = socket->Recv();
-    packet->CopyData(&m_payload_buffer[0], m_decoder->payload_size());
-    m_decoder->decode(&m_payload_buffer[0]);
-
-    if (m_decoder_rank != m_decoder->rank ())
-      {
-        std::cout << "Received a l.i. packet at DECODER!! (I)\n" << std::endl;
-        std::cout << "Decoder rank is: " << m_decoder->rank() << "\n"
-                  << std::endl;
-        m_decoder_rank++;
-      }
-    else
-      {
-        std::cout << "Received a l.d. packet at DECODER!! (D)\n" << std::endl;
-      }
-
-    if (kodo::has_trace<rlnc_decoder>::value)
-      {
-        auto filter = [](const std::string& zone)
-        {
-          std::set<std::string> filters =
-            {/*"decoder_state",*/"input_symbol_coefficients"};
-          return filters.count(zone);
-        };
-
-        std::cout << "Trace decoder:" << std::endl;
-        kodo::trace(m_decoder, std::cout, filter);
-      }
-  }
-
-private:
-
-  rlnc_encoder::factory::pointer m_encoder;
-  rlnc_decoder::factory::pointer m_recoder;
-  rlnc_decoder::factory::pointer m_decoder;
-
-  std::vector<uint8_t> m_payload_buffer;
-  uint32_t m_encoder_transmission_count;
-  uint32_t m_recoder_transmission_count;
-  uint32_t m_decoder_rank;
-  const bool m_recoding_flag;
-  Ptr<Packet> m_previous_packet;
-};
-
 int main (int argc, char *argv[])
 {
   uint32_t packetSize = 1000; // Application bytes per packet
@@ -275,6 +79,7 @@ int main (int argc, char *argv[])
   double errorRateEncoderRecoder = 0.4; // Error rate for encoder-recoder link
   double errorRateRecoderDecoder = 0.2; // Error rate for recoder-decoder link
   bool recodingFlag = true; // Flag to control recoding
+  uint32_t recoders = 1; // Number of recoders
 
   Time interPacketInterval = Seconds (interval);
 
@@ -300,9 +105,17 @@ int main (int argc, char *argv[])
 
   // Create node containers
   NodeContainer nodes;
-  nodes.Create (3);
-  NodeContainer encoderRecoder = NodeContainer (nodes.Get (0), nodes.Get (1));
-  NodeContainer recoderDecoder = NodeContainer (nodes.Get (1), nodes.Get (2));
+  nodes.Create (2 + recoders);
+
+  std::vector<NodeContainer> encoderRecoders(recoders);
+  std::vector<NodeContainer> recodersDecoder(recoders);
+
+
+  for(uint32_t n = 0; n < recoders; n++)
+  {
+    encoderRecoders[n] = NodeContainer (nodes.Get (0), nodes.Get (n+1));
+    recodersDecoder[n] = NodeContainer (nodes.Get (n+1), nodes.Get (recoders+1));
+  }
 
   // Internet stack for the nodes
   InternetStackHelper internet;
@@ -314,6 +127,8 @@ int main (int argc, char *argv[])
 
   NetDeviceContainer devices = NetDeviceContainer (encoderRecoderDevs,
                                                    recoderDecoderDevs);
+
+  /*
   // Set IP addresses
   Ipv4AddressHelper ipv4("10.1.1.0", "255.255.255.0");
   ipv4.Assign (devices);
@@ -348,10 +163,12 @@ int main (int argc, char *argv[])
   rlnc_decoder::factory decoder_factory(generationSize, packetSize);
 
   // The member build function creates differents instances of each object
-  KodoSimulation kodoSimulator(encoder_factory.build(),
-                               decoder_factory.build(),
-                               decoder_factory.build(),
-                               recodingFlag);
+
+  EncoderNRecoderDecoderRlnc<field, encoderTrace, decoderTrace> multihop (
+    users,
+    generationSize,
+    packetSize,
+    forwarders);
 
   // Setting up application sockets for recoder and decoder
   uint16_t port = 80;
@@ -402,7 +219,7 @@ int main (int argc, char *argv[])
                                   &KodoSimulation::SendPacketRecoder,
                                   &kodoSimulator, recoderSocket,
                                   interPacketInterval);
-
+*/
   Simulator::Run ();
   Simulator::Destroy ();
 
