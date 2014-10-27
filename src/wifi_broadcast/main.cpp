@@ -64,100 +64,9 @@
 #include <string>
 #include <ctime>
 
+#include "../BroadcastRlnc.hpp" // Contains the broadcast topology class
+
 using namespace ns3;
-
-// The encoder / decoder type we will use. Here we consider GF(2). For GF(2^8)
-// just change "binary" for "binary8"
-
-// Also we implement the Kodo traces (available since V.17.0.0). Here, we have
-// enabled the decoder trace and disabled the encoder trace.
-typedef kodo::full_rlnc_encoder<fifi::binary,kodo::disable_trace> rlnc_encoder;
-typedef kodo::full_rlnc_decoder<fifi::binary,kodo::enable_trace> rlnc_decoder;
-
-// Just for illustration purposes, this simple objects implements both
-// the sender (encoder) and receiver (decoder).
-class KodoSimulation
-{
-public:
-
-  KodoSimulation(const rlnc_encoder::factory::pointer& encoder,
-                 const rlnc_decoder::factory::pointer& decoder)
-    : m_encoder(encoder),
-      m_decoder(decoder)
-  {
-
-    // Initialize the encoder with some random data
-    std::vector<uint8_t> data(encoder->block_size(), 'x');
-    m_encoder->set_symbols(sak::storage(data));
-
-    m_encoder->set_systematic_off();
-    m_encoder->seed(time(0));
-
-    m_payload_buffer.resize(m_encoder->payload_size());
-    m_transmission_count = 0;
-  }
-
-  void ReceivePacket (Ptr<Socket> socket)
-  {
-    auto packet = socket->Recv();
-    packet->CopyData(&m_payload_buffer[0], m_decoder->payload_size());
-    m_decoder->decode(&m_payload_buffer[0]);
-    std::cout << "Received one packet at decoder" << std::endl;
-
-    if (kodo::has_trace<rlnc_decoder>::value)
-      {
-        auto filter = [](const std::string& zone)
-          {
-            std::set<std::string> filters =
-              {"input_symbol_coefficients","decoder_state"};
-            return filters.count(zone);
-          };
-
-        std::cout << "Trace decoder:" << std::endl;
-        kodo::trace(m_decoder, std::cout, filter);
-      }
-
-  }
-
-  void GenerateTraffic (Ptr<Socket> socket, Time pktInterval)
-  {
-    if(!m_decoder->is_complete())
-      {
-        uint32_t bytes_used = m_encoder->encode(&m_payload_buffer[0]);
-        auto packet = Create<Packet> (&m_payload_buffer[0],
-                                      bytes_used);
-        socket->Send (packet);
-        m_transmission_count++;
-
-        if (kodo::has_trace<rlnc_encoder>::value)
-          {
-              std::cout << "Trace encoder:" << std::endl;
-              kodo::trace(m_encoder, std::cout);
-          }
-
-        Simulator::Schedule (pktInterval, &KodoSimulation::GenerateTraffic, this,
-                             socket, pktInterval);
-
-      }
-    else
-      {
-        std::cout << "Decoding completed! Total transmissions: "
-                  << m_transmission_count << std::endl;
-        socket->Close ();
-      }
-  }
-
-private:
-
-  rlnc_encoder::factory::pointer m_encoder;
-  rlnc_decoder::factory::pointer m_decoder;
-
-  std::vector<uint8_t> m_payload_buffer;
-
-  uint32_t m_transmission_count;
-
-};
-
 
 int main (int argc, char *argv[])
 {
@@ -166,6 +75,7 @@ int main (int argc, char *argv[])
   uint32_t packetSize = 1000; // bytes
   double interval = 1.0; // seconds
   uint32_t generationSize = 5;
+  uint32_t users = 1; // Number of users
 
   CommandLine cmd;
 
@@ -175,6 +85,7 @@ int main (int argc, char *argv[])
   cmd.AddValue ("interval", "interval (seconds) between packets", interval);
   cmd.AddValue ("generationSize", "Set the generation size to use",
                 generationSize);
+  cmd.AddValue ("users", "Number of receivers", users);
 
   cmd.Parse (argc, argv);
 
@@ -195,7 +106,7 @@ int main (int argc, char *argv[])
 
   // Source and destination
   NodeContainer c;
-  c.Create (2);
+  c.Create (1 + users); // Sender + receivers
 
   // The below set of helpers will help us to put together the wifi NICs we want
   WifiHelper wifi;
@@ -246,37 +157,67 @@ int main (int argc, char *argv[])
   ipv4.SetBase ("10.1.1.0", "255.255.255.0");
   Ipv4InterfaceContainer i = ipv4.Assign (devices);
 
-  rlnc_encoder::factory encoder_factory(generationSize, packetSize);
-  rlnc_decoder::factory decoder_factory(generationSize, packetSize);
-
-  KodoSimulation kodoSimulator(encoder_factory.build(),
-                               decoder_factory.build());
-
   TypeId tid = TypeId::LookupByName ("ns3::UdpSocketFactory");
-  Ptr<Socket> recvSink = Socket::CreateSocket (c.Get (1), tid);
-  InetSocketAddress local = InetSocketAddress (Ipv4Address::GetAny (), 80);
-  recvSink->Bind (local);
-  recvSink->SetRecvCallback (MakeCallback (&KodoSimulation::ReceivePacket,
-                                           &kodoSimulator));
 
-  Ptr<Socket> source = Socket::CreateSocket (c.Get (0), tid);
+  // Transmitter socket
+  Ptr<Socket> source = Socket::CreateSocket (c.Get(0), tid);
+  uint16_t port = 80;
+  InetSocketAddress local = InetSocketAddress (Ipv4Address::GetAny (), port);
+
+  // Transmitter socket connections. Set transmitter for broadcasting
   InetSocketAddress remote = InetSocketAddress (Ipv4Address ("255.255.255.255"),
-                                                80);
+                                                port);
   source->SetAllowBroadcast (true);
   source->Connect (remote);
 
-  // Pcap tracing
-  wifiPhy.EnablePcap ("wifi-simple-adhoc", devices);
+  // Receiver sockets
+  Ptr<Socket> recvSink = Socket::CreateSocket (c.Get (1), tid);
+  /*InetSocketAddress local = InetSocketAddress (Ipv4Address::GetAny (), 80);
+  recvSink->Bind (local);
+  recvSink->SetRecvCallback (MakeCallback (&BroadcastRlnc::ReceivePacket,
+                                           &wifiBroadcast));*/
 
-  Simulator::ScheduleWithContext (source->GetNode ()->GetId (),
-                                  Seconds (1.0),
-                                  &KodoSimulation::GenerateTraffic,
-                                  &kodoSimulator,
-                                  source, interPacketInterval);
+  std::vector<Ptr<Socket>> sinks (users);
+
+  for (uint32_t n = 0; n < users; n++)
+    {
+      sinks[n] = recvSink;
+    }
+
+  // The field and traces types we will use. Here we consider GF(2). For GF(2^8)
+  // just change "binary" for "binary8"
+  typedef fifi::binary field;
+  typedef kodo::disable_trace encoderTrace;
+  typedef kodo::enable_trace decoderTrace;
+
+  // Creates the broadcast topology class for the current example
+  BroadcastRlnc<field, encoderTrace, decoderTrace> wifiBroadcast (
+    users,
+    generationSize,
+    packetSize,
+    sinks);
+
+  // Receiver socket connections
+  for (const auto sink : sinks)
+    {
+      sink->Bind (local);
+      sink->SetRecvCallback (MakeCallback (
+        &BroadcastRlnc <field, encoderTrace, decoderTrace>::ReceivePacket,
+        &wifiBroadcast));
+    }
+
+  // Pcap tracing
+  wifiPhy.EnablePcap ("wifi-broadcast-rlnc", devices);
+
+  Simulator::ScheduleWithContext (
+    source->GetNode ()->GetId (), Seconds (1.0),
+    &BroadcastRlnc <field, encoderTrace, decoderTrace>::GenerateTraffic,
+    &wifiBroadcast,
+    source,
+    interPacketInterval);
 
   Simulator::Run ();
   Simulator::Destroy ();
 
   return 0;
 }
-
