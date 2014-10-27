@@ -18,8 +18,8 @@
  */
 
 // This example shows how to use the Kodo library in a ns-3 simulation.
-// The code below is based on the wifi-simple-adhoc example, which can
-// be found here ns-3-dev/examples/wireless/wifi-simple-adhoc.cc in the
+// The code below is based on the wifi-broadcast-rlnc example, which can
+// be found here ns-3-dev/examples/wireless/wifi-broadcast-rlnc.cc in the
 // ns-3 source code.
 
 // In the script below the sender transmits encoded packets in a non-systematic
@@ -47,7 +47,7 @@
 // You can review the files with Wireshark or tcpdump. If you have tcpdump
 // installed, you can try this:
 //
-// tcpdump -r wifi-simple-adhoc-0-0.pcap -nn -tt
+// tcpdump -r wifi-broadcast-rlnc-0-0.pcap -nn -tt
 
 #include <ns3/core-module.h>
 #include <ns3/network-module.h>
@@ -75,7 +75,7 @@ int main (int argc, char *argv[])
   uint32_t packetSize = 1000; // bytes
   double interval = 1.0; // seconds
   uint32_t generationSize = 5;
-  uint32_t users = 1; // Number of users
+  uint32_t users = 2; // Number of users
 
   CommandLine cmd;
 
@@ -110,15 +110,16 @@ int main (int argc, char *argv[])
 
   // The below set of helpers will help us to put together the wifi NICs we want
   WifiHelper wifi;
-  wifi.SetStandard (WIFI_PHY_STANDARD_80211b);
+  wifi.SetStandard (WIFI_PHY_STANDARD_80211b); // OFDM at 2.4 GHz
 
   YansWifiPhyHelper wifiPhy =  YansWifiPhyHelper::Default ();
+  // The default error rate model is ns3::NistErrorRateModel
 
   // This is one parameter that matters when using FixedRssLossModel
   // set it to zero; otherwise, gain will be added
-  wifiPhy.Set ("RxGain", DoubleValue (0) );
+  wifiPhy.Set ("RxGain", DoubleValue (0));
 
-  // ns-3 supports RadioTap and Prism tracing extensions for 802.11b
+  // ns-3 supports RadioTap and Prism tracing extensions for 802.11g
   wifiPhy.SetPcapDataLinkType (YansWifiPhyHelper::DLT_IEEE802_11_RADIO);
 
   YansWifiChannelHelper wifiChannel;
@@ -134,8 +135,12 @@ int main (int argc, char *argv[])
   wifi.SetRemoteStationManager ("ns3::ConstantRateWifiManager",
                                 "DataMode",StringValue (phyMode),
                                 "ControlMode",StringValue (phyMode));
+
+  // Set WiFi type and configuration parameters for MAC
   // Set it to adhoc mode
   wifiMac.SetType ("ns3::AdhocWifiMac");
+
+  // Create the net devices
   NetDeviceContainer devices = wifi.Install (wifiPhy, wifiMac, c);
 
   // Note that with FixedRssLossModel, the positions below are not
@@ -144,8 +149,13 @@ int main (int argc, char *argv[])
   MobilityHelper mobility;
   Ptr<ListPositionAllocator> positionAlloc =
     CreateObject<ListPositionAllocator> ();
-  positionAlloc->Add (Vector (0.0, 0.0, 0.0));
-  positionAlloc->Add (Vector (5.0, 0.0, 0.0));
+  positionAlloc->Add (Vector (0.0, 0.0, 0.0));  // Source node
+
+  for(uint32_t n = 1; n <= users; n++)
+    {
+      positionAlloc->Add (Vector (5.0, 5.0*n, 0.0));
+    }
+
   mobility.SetPositionAllocator (positionAlloc);
   mobility.SetMobilityModel ("ns3::ConstantPositionMobilityModel");
   mobility.Install (c);
@@ -158,11 +168,10 @@ int main (int argc, char *argv[])
   Ipv4InterfaceContainer i = ipv4.Assign (devices);
 
   TypeId tid = TypeId::LookupByName ("ns3::UdpSocketFactory");
+  uint16_t port = 80;
 
   // Transmitter socket
   Ptr<Socket> source = Socket::CreateSocket (c.Get(0), tid);
-  uint16_t port = 80;
-  InetSocketAddress local = InetSocketAddress (Ipv4Address::GetAny (), port);
 
   // Transmitter socket connections. Set transmitter for broadcasting
   InetSocketAddress remote = InetSocketAddress (Ipv4Address ("255.255.255.255"),
@@ -171,17 +180,11 @@ int main (int argc, char *argv[])
   source->Connect (remote);
 
   // Receiver sockets
-  Ptr<Socket> recvSink = Socket::CreateSocket (c.Get (1), tid);
-  /*InetSocketAddress local = InetSocketAddress (Ipv4Address::GetAny (), 80);
-  recvSink->Bind (local);
-  recvSink->SetRecvCallback (MakeCallback (&BroadcastRlnc::ReceivePacket,
-                                           &wifiBroadcast));*/
-
   std::vector<Ptr<Socket>> sinks (users);
 
   for (uint32_t n = 0; n < users; n++)
     {
-      sinks[n] = recvSink;
+      sinks[n] = Socket::CreateSocket (c.Get (1+n), tid);
     }
 
   // The field and traces types we will use. Here we consider GF(2). For GF(2^8)
@@ -198,6 +201,7 @@ int main (int argc, char *argv[])
     sinks);
 
   // Receiver socket connections
+  InetSocketAddress local = InetSocketAddress (Ipv4Address::GetAny (), port);
   for (const auto sink : sinks)
     {
       sink->Bind (local);
@@ -205,6 +209,9 @@ int main (int argc, char *argv[])
         &BroadcastRlnc <field, encoderTrace, decoderTrace>::ReceivePacket,
         &wifiBroadcast));
     }
+
+  // Turn on global static routing so we can actually be routed across the star
+  Ipv4GlobalRoutingHelper::PopulateRoutingTables ();
 
   // Pcap tracing
   wifiPhy.EnablePcap ("wifi-broadcast-rlnc", devices);

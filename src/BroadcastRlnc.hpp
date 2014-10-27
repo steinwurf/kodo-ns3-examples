@@ -22,9 +22,9 @@ public:
   using decoder_pointer = typename rlnc_decoder::factory::pointer;
 
   BroadcastRlnc(const uint32_t users,
-                 const uint32_t generationSize,
-                 const uint32_t packetSize,
-                 const std::vector<ns3::Ptr<ns3::Socket>>& sinks)
+                const uint32_t generationSize,
+                const uint32_t packetSize,
+                const std::vector<ns3::Ptr<ns3::Socket>>& sinks)
     : m_users (users),
       m_generationSize (generationSize),
       m_packetSize (packetSize),
