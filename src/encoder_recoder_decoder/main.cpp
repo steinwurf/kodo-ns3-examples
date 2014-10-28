@@ -133,9 +133,6 @@ int main (int argc, char *argv[])
   Ipv4AddressHelper ipv4("10.1.1.0", "255.255.255.0");
   ipv4.Assign (devices);
 
-  // Turn on global static routing so we can actually be routed across the hops
-  Ipv4GlobalRoutingHelper::PopulateRoutingTables ();
-
   // Set error model for the net devices
   Config::SetDefault ("ns3::RateErrorModel::ErrorUnit",
                       StringValue ("ERROR_UNIT_PACKET"));
@@ -167,10 +164,6 @@ int main (int argc, char *argv[])
   // Setting up application sockets for recoder and decoder
   uint16_t port = 80;
   TypeId tid = TypeId::LookupByName ("ns3::UdpSocketFactory");
-
-  // Do pcap tracing on all point-to-point devices on all nodes. File naming
-  // convention is: multihop-[NODE_NUMBER]-[DEVICE_NUMBER].pcap
-  ptp.EnablePcapAll ("multihop");
 
   // Save nodes Ipv4 addresses for recoders and decoder to set up connections
   std::vector<Ipv4Address> recodersAddresses (recoders);
@@ -208,7 +201,7 @@ int main (int argc, char *argv[])
       encoderSocket->Connect (recodersSocketAddresses[n]);
     }
 
-  // Recoders' connections to decoder
+  // Recoders connections to decoder
   std::vector<Ptr<Socket>> recodersSockets;
 
   for(uint32_t n = 0; n < recoders; n++)
@@ -231,40 +224,62 @@ int main (int argc, char *argv[])
     recodersSockets,
     recodingFlag);
 
-  std::cout << "Simulation created" << std::endl;
-
-
-
-/*
+  // Recoders callbacks
   for(uint32_t n = 0; n < recoders; n++)
     {
-      recodersSockets[n]-> SetRecvCallback (
-        MakeCallback (&KodoSimulation::ReceivePacketRecoder,
-                                       &kodoSimulator));
+      recodersSockets[n]-> SetRecvCallback (MakeCallback (
+        &EncoderNRecoderDecoderRlnc<field,
+                                    encoderTrace,
+                                    decoderTrace>::ReceivePacketRecoder,
+        &multihop));
     }
 
-
-
   // Decoder
-  Ptr<Socket> decoderSocket = Socket::CreateSocket (nodes.Get (2), tid);
+  Ptr<Socket> decoderSocket = Socket::CreateSocket (nodes.Get (recoders+1),
+                                                    tid);
   decoderSocket->Bind(local);
   decoderSocket->
-    SetRecvCallback (MakeCallback (&KodoSimulation::ReceivePacketDecoder,
-                                   &kodoSimulator));
+    SetRecvCallback (MakeCallback (
+      &EncoderNRecoderDecoderRlnc<field,
+                                    encoderTrace,
+                                    decoderTrace>::ReceivePacketDecoder,
+      &multihop));
 
-  // Schedule encoding process
-  Simulator::ScheduleWithContext (encoderSocket->GetNode ()->GetId (),
-                                  Seconds (1.0),
-                                  &KodoSimulation::SendPacketEncoder,
-                                  &kodoSimulator, encoderSocket,
-                                  interPacketInterval);
+  // Turn on global static routing so we can actually be routed across the hops
+  Ipv4GlobalRoutingHelper::PopulateRoutingTables ();
 
-  Simulator::ScheduleWithContext (recoderSocket->GetNode ()->GetId (),
-                                  Seconds (1.5),
-                                  &KodoSimulation::SendPacketRecoder,
-                                  &kodoSimulator, recoderSocket,
-                                  interPacketInterval);
-*/
+  // Do pcap tracing on all point-to-point devices on all nodes. File naming
+  // convention is: multihop-[NODE_NUMBER]-[DEVICE_NUMBER].pcap
+  ptp.EnablePcapAll ("multihop");
+
+
+
+  // Schedule processes
+  // Encoder
+  Simulator::ScheduleWithContext (
+    encoderSocket->GetNode ()->GetId (),
+    Seconds (1.0),
+    &EncoderNRecoderDecoderRlnc<field,
+                                encoderTrace,
+                                decoderTrace>::SendPacketEncoder,
+    &multihop,
+    encoderSocket,
+    interPacketInterval);
+
+  // Recoders
+  for(auto recoderSocket : recodersSockets)
+    {
+      Simulator::ScheduleWithContext (
+        recoderSocket->GetNode ()->GetId (),
+        Seconds (1.5),
+        &EncoderNRecoderDecoderRlnc<field,
+                                    encoderTrace,
+                                    decoderTrace>::SendPacketRecoder,
+        &multihop,
+        recoderSocket,
+        interPacketInterval);
+    }
+
   Simulator::Run ();
   Simulator::Destroy ();
 
