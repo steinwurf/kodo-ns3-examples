@@ -132,7 +132,7 @@ public:
         auto filter = [](const std::string& zone)
         {
           std::set<std::string> filters =
-            {/*"decoder_state",*/"input_symbol_coefficients"};
+            {"decoder_state","input_symbol_coefficients"};
           return filters.count(zone);
         };
 
@@ -148,13 +148,19 @@ public:
   void SendPacketRecoder (ns3::Ptr<ns3::Socket> socket, ns3::Time pktInterval)
   {
     recoder_pointer recoder = m_socketMap[socket];
+    auto id = std::distance(std::begin(m_socketMap),
+                            m_socketMap.find(socket)) + 1;
+
     if (!m_decoder->is_complete())
       {
         if (m_recodingFlag)
           {
-            std::cout << "+----------------------------------+"   << std::endl;
-            std::cout << "|Sending a combination from RECODER|"   << std::endl;
-            std::cout << "+----------------------------------+\n" << std::endl;
+            std::cout << "+------------------------------------+"
+                      << std::endl;
+            std::cout << "|Sending a combination from RECODER "
+                      << id << "|"   << std::endl;
+            std::cout << "+------------------------------------+\n"
+                      << std::endl;
 
             // Recode a new packet and send
             uint32_t bytes_used = recoder->recode(&m_payload_buffer[0]);
@@ -190,7 +196,7 @@ public:
           pktInterval,
           &EncoderNRecoderDecoderRlnc<field,
                                       encoderTrace,
-                                      decoderTrace>::SendPacketEncoder,
+                                      decoderTrace>::SendPacketRecoder,
           this,
           socket,
           pktInterval);
@@ -232,7 +238,7 @@ public:
         auto filter = [](const std::string& zone)
         {
           std::set<std::string> filters =
-            {/*"decoder_state",*/"input_symbol_coefficients"};
+            {"decoder_state","input_symbol_coefficients"};
           return filters.count(zone);
         };
 

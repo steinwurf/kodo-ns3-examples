@@ -95,6 +95,7 @@ int main (int argc, char *argv[])
                 "Packet erasure rate for the recoder-decoder link",
                 errorRateRecoderDecoder);
   cmd.AddValue ("recodingFlag", "Enable packet recoding", recodingFlag);
+  cmd.AddValue ("recoders", "Amount of recoders", recoders);
   cmd.Parse (argc, argv);
 
   Time::SetResolution (Time::NS);
