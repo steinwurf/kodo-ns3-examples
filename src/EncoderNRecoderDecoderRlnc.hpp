@@ -23,12 +23,12 @@ public:
     const uint32_t users,
     const uint32_t generationSize,
     const uint32_t packetSize,
-    const std::vector<ns3::Ptr<ns3::Socket>>& forwarders,
+    const std::vector<ns3::Ptr<ns3::Socket>>& recodersSockets,
     const bool recodingFlag)
     : m_users(users),
       m_generationSize(generationSize),
       m_packetSize(packetSize),
-      m_forwarders(forwarders),
+      m_recodersSockets(recodersSockets),
       m_recodingFlag(recodingFlag)
   {
 
@@ -56,7 +56,7 @@ public:
     for (uint32_t n = 0; n < m_users; n++)
      {
        m_recoders[n] = recoder_factory.build();
-       m_socketMap[m_forwarders[n]] = m_recoders[n];
+       m_socketMap[m_recodersSockets[n]] = m_recoders[n];
      }
 
     // Encoder creation and settings
@@ -70,10 +70,9 @@ public:
 
   void SendPacketEncoder (ns3::Ptr<ns3::Socket> socket, ns3::Time pktInterval)
   {
-    recoder_pointer recoder = m_socketMap[socket];
     bool all_recoders_decoded = true;
 
-    for(auto decoder : m_recoders)
+    for(auto recoder : m_recoders)
       {
          all_recoders_decoded = all_recoders_decoded && recoder->is_complete();
       }
@@ -254,7 +253,7 @@ private:
   encoder_pointer m_encoder;
   std::vector<recoder_pointer> m_recoders;
   decoder_pointer m_decoder;
-  std::vector<ns3::Ptr<ns3::Socket>> m_forwarders;
+  std::vector<ns3::Ptr<ns3::Socket>> m_recodersSockets;
   std::map<ns3::Ptr<ns3::Socket>,recoder_pointer> m_socketMap;
 
   std::vector<uint8_t> m_payload_buffer;

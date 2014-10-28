@@ -252,8 +252,6 @@ int main (int argc, char *argv[])
   // convention is: multihop-[NODE_NUMBER]-[DEVICE_NUMBER].pcap
   ptp.EnablePcapAll ("multihop");
 
-
-
   // Schedule processes
   // Encoder
   Simulator::ScheduleWithContext (
@@ -280,6 +278,7 @@ int main (int argc, char *argv[])
         interPacketInterval);
     }
 
+  std:: cout << "All created" << std::endl;
   Simulator::Run ();
   Simulator::Destroy ();
 
