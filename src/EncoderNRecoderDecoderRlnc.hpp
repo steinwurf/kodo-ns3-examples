@@ -77,7 +77,7 @@ public:
          all_recoders_decoded = all_recoders_decoded && recoder->is_complete();
       }
 
-    if (!all_recoders_decoded || (!m_recodingFlag && !m_decoder->is_complete()))
+    if (!all_recoders_decoded && (m_recodingFlag && !m_decoder->is_complete()))
       {
         std::cout << "+----------------------------------+"   << std::endl;
         std::cout << "|Sending a combination from ENCODER|"   << std::endl;
