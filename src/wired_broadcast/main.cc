@@ -131,9 +131,9 @@ int main (int argc, char *argv[])
 
   // The field and traces types we will use. Here we consider GF(2). For GF(2^8)
   // just change "binary" for "binary8"
-  typedef fifi::binary field;
-  typedef kodo::disable_trace encoderTrace;
-  typedef kodo::enable_trace decoderTrace;
+  using field = fifi::binary;
+  using encoderTrace = kodo::disable_trace;
+  using decoderTRace = kodo::enable_trace;
 
   // Creates the broadcast topology class for the current example
   BroadcastRlnc<field, encoderTrace, decoderTrace> wiredBroadcast (

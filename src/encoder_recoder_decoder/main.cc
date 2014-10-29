@@ -279,7 +279,6 @@ int main (int argc, char *argv[])
         interPacketInterval);
     }
 
-  std:: cout << "All created" << std::endl;
   Simulator::Run ();
   Simulator::Destroy ();
 
