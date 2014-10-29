@@ -133,7 +133,7 @@ int main (int argc, char *argv[])
   // just change "binary" for "binary8"
   using field = fifi::binary;
   using encoderTrace = kodo::disable_trace;
-  using decoderTRace = kodo::enable_trace;
+  using decoderTrace = kodo::enable_trace;
 
   // Creates the broadcast topology class for the current example
   BroadcastRlnc<field, encoderTrace, decoderTrace> wiredBroadcast (
