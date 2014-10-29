@@ -66,7 +66,7 @@
 #include <string>
 #include <ctime>
 
-#include "../EncoderNRecoderDecoderRlnc.hpp"
+#include "../encoder-recoders-decoder-rlnc.h"
 
 using namespace ns3;
 
@@ -218,7 +218,7 @@ int main (int argc, char *argv[])
   using encoderTrace = kodo::disable_trace;
   using decoderTrace = kodo::enable_trace;
 
-  EncoderNRecoderDecoderRlnc<field, encoderTrace, decoderTrace> multihop (
+  EncoderRecodersDecoderRlnc<field, encoderTrace, decoderTrace> multihop (
     recoders,
     generationSize,
     packetSize,
@@ -229,7 +229,7 @@ int main (int argc, char *argv[])
   for(uint32_t n = 0; n < recoders; n++)
     {
       recodersSockets[n]-> SetRecvCallback (MakeCallback (
-        &EncoderNRecoderDecoderRlnc<field,
+        &EncoderRecodersDecoderRlnc<field,
                                     encoderTrace,
                                     decoderTrace>::ReceivePacketRecoder,
         &multihop));
@@ -241,7 +241,7 @@ int main (int argc, char *argv[])
   decoderSocket->Bind(local);
   decoderSocket->
     SetRecvCallback (MakeCallback (
-      &EncoderNRecoderDecoderRlnc<field,
+      &EncoderRecodersDecoderRlnc<field,
                                     encoderTrace,
                                     decoderTrace>::ReceivePacketDecoder,
       &multihop));
@@ -258,7 +258,7 @@ int main (int argc, char *argv[])
   Simulator::ScheduleWithContext (
     encoderSocket->GetNode ()->GetId (),
     Seconds (1.0),
-    &EncoderNRecoderDecoderRlnc<field,
+    &EncoderRecodersDecoderRlnc<field,
                                 encoderTrace,
                                 decoderTrace>::SendPacketEncoder,
     &multihop,
@@ -271,7 +271,7 @@ int main (int argc, char *argv[])
       Simulator::ScheduleWithContext (
         recoderSocket->GetNode ()->GetId (),
         Seconds (1.5),
-        &EncoderNRecoderDecoderRlnc<field,
+        &EncoderRecodersDecoderRlnc<field,
                                     encoderTrace,
                                     decoderTrace>::SendPacketRecoder,
         &multihop,

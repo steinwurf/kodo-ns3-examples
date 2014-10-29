@@ -50,7 +50,7 @@
 #include <string>
 #include <ctime>
 
-#include "../BroadcastRlnc.hpp" // Contains the broadcast topology class
+#include "../broadcast-rlnc.h" // Contains the broadcast topology class
 
 using namespace ns3;
 

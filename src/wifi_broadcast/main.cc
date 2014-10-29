@@ -58,15 +58,12 @@
 #include <ns3/wifi-module.h>
 #include <ns3/internet-module.h>
 
-#include <kodo/rlnc/full_rlnc_codes.hpp>
-#include <kodo/trace.hpp>
-
 #include <iostream>
 #include <vector>
 #include <string>
 #include <ctime>
 
-#include "../BroadcastRlnc.hpp" // Contains the broadcast topology class
+#include "../broadcast-rlnc.h" // Contains the broadcast topology class
 
 using namespace ns3;
 

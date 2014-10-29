@@ -6,7 +6,7 @@
 #include <kodo/wrap_copy_payload_decoder.hpp>
 
 template<class field, class encoderTrace, class decoderTrace>
-class EncoderNRecoderDecoderRlnc
+class EncoderRecodersDecoderRlnc
 {
 public:
 
@@ -19,7 +19,7 @@ public:
   using recoder_pointer = typename rlnc_recoder::factory::pointer;
   using decoder_pointer = typename rlnc_decoder::factory::pointer;
 
-  EncoderNRecoderDecoderRlnc(
+  EncoderRecodersDecoderRlnc(
     const uint32_t users,
     const uint32_t generationSize,
     const uint32_t packetSize,
@@ -97,7 +97,7 @@ public:
 
         ns3::Simulator::Schedule (
           pktInterval,
-          &EncoderNRecoderDecoderRlnc<field,
+          &EncoderRecodersDecoderRlnc<field,
                                       encoderTrace,
                                       decoderTrace>::SendPacketEncoder,
           this,
@@ -194,7 +194,7 @@ public:
 
         ns3::Simulator::Schedule (
           pktInterval,
-          &EncoderNRecoderDecoderRlnc<field,
+          &EncoderRecodersDecoderRlnc<field,
                                       encoderTrace,
                                       decoderTrace>::SendPacketRecoder,
           this,
