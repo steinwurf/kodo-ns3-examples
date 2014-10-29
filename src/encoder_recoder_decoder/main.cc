@@ -173,6 +173,7 @@ int main (int argc, char *argv[])
     {
       recodersAddresses[n] = nodes.Get (n+1)->GetObject<Ipv4> ()->
                               GetAddress (1,0).GetLocal ();
+      std::cout << "Recoder IP addresses: " << recodersAddresses[n] << std::endl;
     }
 
   Ipv4Address decoderAddress = nodes.Get (recoders+1)->GetObject<Ipv4> ()->
@@ -196,10 +197,13 @@ int main (int argc, char *argv[])
 
   // Encoder connections to recoders
   Ptr<Socket> encoderSocket = Socket::CreateSocket (nodes.Get (0), tid);
+  encoderSocket->SetAllowBroadcast (true);
 
   for (uint32_t n = 0; n < recoders; n++)
     {
-      encoderSocket->Connect (recodersSocketAddresses[n]);
+      auto test = encoderSocket->Connect (recodersSocketAddresses[n]);
+      std::cout << "Recoder IP addresses: " << recodersSocketAddresses[n] << std::endl;
+      std::cout << "Socket " << n << " connected? " << test << std::endl;
     }
 
   // Recoders connections to decoder
