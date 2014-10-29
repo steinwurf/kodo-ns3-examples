@@ -159,7 +159,7 @@ int main (int argc, char *argv[])
 
   Simulator::ScheduleWithContext (
     source->GetNode ()->GetId (), Seconds (1.0),
-    &BroadcastRlnc <field, encoderTrace, decoderTrace>::GenerateTraffic,
+    &BroadcastRlnc <field, encoderTrace, decoderTrace>::SendPacket,
     &wiredBroadcast,
     source,
     interPacketInterval);

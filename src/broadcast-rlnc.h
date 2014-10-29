@@ -87,7 +87,7 @@ public:
       }
   }
 
-  void GenerateTraffic (ns3::Ptr<ns3::Socket> socket, ns3::Time pktInterval)
+  void SendPacket (ns3::Ptr<ns3::Socket> socket, ns3::Time pktInterval)
   {
     bool all_decoded = true;
 
@@ -115,7 +115,7 @@ public:
 
         ns3::Simulator::Schedule (
           pktInterval,
-          &BroadcastRlnc <field, encoderTrace, decoderTrace>::GenerateTraffic,
+          &BroadcastRlnc <field, encoderTrace, decoderTrace>::SendPacket,
           this, socket, pktInterval);
       }
     else
