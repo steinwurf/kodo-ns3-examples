@@ -101,7 +101,7 @@ int main (int argc, char *argv[])
 
   // Setting IP protocol stack
   InternetStackHelper internet;
-  star.InstallStack(internet);
+  star.InstallStack (internet);
 
   // Set IP addresses
   star.AssignIpv4Addresses (Ipv4AddressHelper ("10.1.1.0", "255.255.255.0"));

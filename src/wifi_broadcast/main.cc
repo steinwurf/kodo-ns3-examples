@@ -150,7 +150,7 @@ int main (int argc, char *argv[])
     CreateObject<ListPositionAllocator> ();
   positionAlloc->Add (Vector (0.0, 0.0, 0.0));  // Source node
 
-  for(uint32_t n = 1; n <= users; n++)
+  for (uint32_t n = 1; n <= users; n++)
     {
       positionAlloc->Add (Vector (5.0, 5.0*n, 0.0));
     }
@@ -170,7 +170,7 @@ int main (int argc, char *argv[])
   uint16_t port = 80;
 
   // Transmitter socket
-  Ptr<Socket> source = Socket::CreateSocket (c.Get(0), tid);
+  Ptr<Socket> source = Socket::CreateSocket (c.Get (0), tid);
 
   // Transmitter socket connections. Set transmitter for broadcasting
   InetSocketAddress remote = InetSocketAddress (Ipv4Address ("255.255.255.255"),

@@ -19,17 +19,17 @@ public:
   using recoder_pointer = typename rlnc_recoder::factory::pointer;
   using decoder_pointer = typename rlnc_decoder::factory::pointer;
 
-  EncoderRecodersDecoderRlnc(
+  EncoderRecodersDecoderRlnc (
     const uint32_t users,
     const uint32_t generationSize,
     const uint32_t packetSize,
     const std::vector<ns3::Ptr<ns3::Socket>>& recodersSockets,
     const bool recodingFlag)
-    : m_users(users),
-      m_generationSize(generationSize),
-      m_packetSize(packetSize),
-      m_recodersSockets(recodersSockets),
-      m_recodingFlag(recodingFlag)
+    : m_users (users),
+      m_generationSize (generationSize),
+      m_packetSize (packetSize),
+      m_recodersSockets (recodersSockets),
+      m_recodingFlag (recodingFlag)
   {
 
     // Call factories from basic parameters
@@ -43,11 +43,11 @@ public:
     // Encoder creation and settings
     m_encoder = encoder_factory.build ();
     m_encoder->set_systematic_off ();
-    m_encoder->seed ((uint32_t)time (0));
+    m_encoder->seed ( (uint32_t)time (0));
 
     // Initialize the input data
     std::vector<uint8_t> data (m_encoder->block_size (), 'x');
-    m_encoder->set_symbols (sak::storage(data));
+    m_encoder->set_symbols (sak::storage (data));
     m_payload_buffer.resize (m_encoder->payload_size ());
 
     // Recoders creation and settings
@@ -55,7 +55,7 @@ public:
 
     for (uint32_t n = 0; n < m_users; n++)
      {
-       m_recoders[n] = recoder_factory.build();
+       m_recoders[n] = recoder_factory.build ();
        m_socketMap[m_recodersSockets[n]] = m_recoders[n];
      }
 
@@ -72,19 +72,19 @@ public:
   {
     bool all_recoders_decoded = true;
 
-    for(auto recoder : m_recoders)
+    for (auto recoder : m_recoders)
       {
-         all_recoders_decoded = all_recoders_decoded && recoder->is_complete();
+         all_recoders_decoded = all_recoders_decoded && recoder->is_complete ();
       }
 
-    if (!all_recoders_decoded && (m_recodingFlag && !m_decoder->is_complete()))
+    if (!all_recoders_decoded && (m_recodingFlag && !m_decoder->is_complete ()))
       {
         std::cout << "+----------------------------------+"   << std::endl;
         std::cout << "|Sending a combination from ENCODER|"   << std::endl;
         std::cout << "+----------------------------------+\n" << std::endl;
 
-        uint32_t bytes_used = m_encoder->encode(&m_payload_buffer[0]);
-        auto packet = ns3::Create<ns3::Packet> (&m_payload_buffer[0],
+        uint32_t bytes_used = m_encoder->encode (&m_payload_buffer[0]);
+        auto packet = ns3::Create<ns3::Packet>  (&m_payload_buffer[0],
                                                 bytes_used);
         socket->Send (packet);
         m_encoder_transmission_count++;
@@ -92,7 +92,7 @@ public:
         if (kodo::has_trace<rlnc_encoder>::value)
           {
             std::cout << "Trace encoder:" << std::endl;
-            kodo::trace(m_encoder, std::cout);
+            kodo::trace (m_encoder, std::cout);
           }
 
         ns3::Simulator::Schedule (
@@ -113,33 +113,33 @@ public:
   void ReceivePacketRecoder (ns3::Ptr<ns3::Socket> socket)
   {
     recoder_pointer recoder = m_socketMap[socket];
-    auto packet = socket->Recv();
-    packet->CopyData(&m_payload_buffer[0], recoder->payload_size());
+    auto packet = socket->Recv ();
+    packet->CopyData (&m_payload_buffer[0], recoder->payload_size ());
 
     if (!m_recodingFlag)
       {
         m_previous_packet = packet;
       }
 
-    auto id = std::distance(std::begin(m_socketMap),
-                            m_socketMap.find(socket)) + 1;
+    auto id = std::distance (std::begin (m_socketMap),
+                            m_socketMap.find (socket)) + 1;
 
-    recoder->decode(&m_payload_buffer[0]);
+    recoder->decode (&m_payload_buffer[0]);
     std::cout << "Received a coded packet at RECODER " << id << std::endl;
 
     if (kodo::has_trace<rlnc_recoder>::value)
       {
-        auto filter = [](const std::string& zone)
+        auto filter = [] (const std::string& zone)
         {
           std::set<std::string> filters =
             {"decoder_state","input_symbol_coefficients"};
-          return filters.count(zone);
+          return filters.count (zone);
         };
 
         std::cout << "Trace recoder " << id << ": " << std::endl;
-        kodo::trace(recoder, std::cout, filter);
+        kodo::trace (recoder, std::cout, filter);
       }
-    if (recoder->is_complete())
+    if (recoder->is_complete ())
       {
         std::cout << "** Recoder " << id << " is full rank! **\n" << std::endl;
       }
@@ -148,10 +148,10 @@ public:
   void SendPacketRecoder (ns3::Ptr<ns3::Socket> socket, ns3::Time pktInterval)
   {
     recoder_pointer recoder = m_socketMap[socket];
-    auto id = std::distance(std::begin(m_socketMap),
-                            m_socketMap.find(socket)) + 1;
+    auto id = std::distance (std::begin (m_socketMap),
+                            m_socketMap.find (socket)) + 1;
 
-    if (!m_decoder->is_complete())
+    if (!m_decoder->is_complete ())
       {
         if (m_recodingFlag)
           {
@@ -163,7 +163,7 @@ public:
                       << std::endl;
 
             // Recode a new packet and send
-            uint32_t bytes_used = recoder->recode(&m_payload_buffer[0]);
+            uint32_t bytes_used = recoder->recode (&m_payload_buffer[0]);
             auto packet = ns3::Create<ns3::Packet> (&m_payload_buffer[0],
                                                     bytes_used);
             socket->Send (packet);
@@ -171,7 +171,7 @@ public:
           }
         else
           {
-            if(!recoder->rank ())
+            if (!recoder->rank ())
               {
                 std::cout << "No packet from ENCODER to forward!" << std::endl;
               }
@@ -217,14 +217,14 @@ public:
 
   void ReceivePacketDecoder (ns3::Ptr<ns3::Socket> socket)
   {
-    auto packet = socket->Recv();
-    packet->CopyData(&m_payload_buffer[0], m_decoder->payload_size());
-    m_decoder->decode(&m_payload_buffer[0]);
+    auto packet = socket->Recv ();
+    packet->CopyData (&m_payload_buffer[0], m_decoder->payload_size ());
+    m_decoder->decode (&m_payload_buffer[0]);
 
     if (m_decoder_rank != m_decoder->rank ())
       {
         std::cout << "Received a l.i. packet at DECODER!! (I)\n" << std::endl;
-        std::cout << "Decoder rank is: " << m_decoder->rank() << "\n"
+        std::cout << "Decoder rank is: " << m_decoder->rank () << "\n"
                   << std::endl;
         m_decoder_rank++;
       }
@@ -235,15 +235,15 @@ public:
 
     if (kodo::has_trace<rlnc_decoder>::value)
       {
-        auto filter = [](const std::string& zone)
+        auto filter = [] (const std::string& zone)
         {
           std::set<std::string> filters =
             {"decoder_state","input_symbol_coefficients"};
-          return filters.count(zone);
+          return filters.count (zone);
         };
 
         std::cout << "Trace decoder:" << std::endl;
-        kodo::trace(m_decoder, std::cout, filter);
+        kodo::trace (m_decoder, std::cout, filter);
       }
   }
 

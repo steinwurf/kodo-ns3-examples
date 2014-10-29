@@ -21,10 +21,10 @@ public:
   using encoder_pointer = typename rlnc_encoder::factory::pointer;
   using decoder_pointer = typename rlnc_decoder::factory::pointer;
 
-  BroadcastRlnc(const uint32_t users,
-                const uint32_t generationSize,
-                const uint32_t packetSize,
-                const std::vector<ns3::Ptr<ns3::Socket>>& sinks)
+  BroadcastRlnc (const uint32_t users,
+                 const uint32_t generationSize,
+                 const uint32_t packetSize,
+                 const std::vector<ns3::Ptr<ns3::Socket>>& sinks)
     : m_users (users),
       m_generationSize (generationSize),
       m_packetSize (packetSize),
@@ -40,11 +40,11 @@ public:
     // Encoder creation and settings
     m_encoder = encoder_factory.build ();
     m_encoder->set_systematic_off ();
-    m_encoder->seed ((uint32_t)time (0));
+    m_encoder->seed ( (uint32_t)time (0));
 
     // Initialize the input data
     std::vector<uint8_t> data (m_encoder->block_size (), 'x');
-    m_encoder->set_symbols (sak::storage(data));
+    m_encoder->set_symbols (sak::storage (data));
     m_payload_buffer.resize (m_encoder->payload_size ());
 
     // Decoders creation and settings
@@ -52,7 +52,7 @@ public:
 
     for (uint32_t n = 0; n < m_users; n++)
      {
-       m_decoders[n] = decoder_factory.build();
+       m_decoders[n] = decoder_factory.build ();
        m_socketMap[m_sinks[n]] = m_decoders[n];
      }
 
@@ -65,24 +65,24 @@ public:
   {
     decoder_pointer decoder = m_socketMap[socket];
     auto packet = socket->Recv ();
-    packet->CopyData(&m_payload_buffer[0], decoder->payload_size());
-    decoder->decode(&m_payload_buffer[0]);
+    packet->CopyData (&m_payload_buffer[0], decoder->payload_size ());
+    decoder->decode (&m_payload_buffer[0]);
 
     if (kodo::has_trace<rlnc_decoder>::value)
       {
-        auto filter = [](const std::string& zone)
+        auto filter = [] (const std::string& zone)
         {
           std::set<std::string> filters =
             {"decoder_state","input_symbol_coefficients"};
-          return filters.count(zone);
+          return filters.count (zone);
         };
 
-        auto id = std::distance(std::begin(m_socketMap),
-                                m_socketMap.find(socket)) + 1;
+        auto id = std::distance (std::begin (m_socketMap),
+                                 m_socketMap.find (socket)) + 1;
 
         std::cout << "Received a packet at decoder " << id << std::endl;
         std::cout << "Trace on decoder " << id << " is: " << std::endl;
-        kodo::trace(decoder, std::cout, filter);
+        kodo::trace (decoder, std::cout, filter);
 
       }
   }
@@ -93,7 +93,7 @@ public:
 
     for (auto decoder : m_decoders)
       {
-        all_decoded = all_decoded && decoder->is_complete();
+        all_decoded = all_decoded && decoder->is_complete ();
       }
 
     if (!all_decoded)
@@ -101,7 +101,7 @@ public:
         std::cout << "+---------------------+" << std::endl;
         std::cout << "|Sending a combination|" << std::endl;
         std::cout << "+---------------------+" << std::endl;
-        uint32_t bytes_used = m_encoder->encode(&m_payload_buffer[0]);
+        uint32_t bytes_used = m_encoder->encode (&m_payload_buffer[0]);
         auto packet = ns3::Create<ns3::Packet> (&m_payload_buffer[0],
                                                 bytes_used);
         socket->Send (packet);
@@ -110,7 +110,7 @@ public:
         if (kodo::has_trace<rlnc_encoder>::value)
           {
             std::cout << "Trace encoder:" << std::endl;
-            kodo::trace(m_encoder, std::cout);
+            kodo::trace (m_encoder, std::cout);
           }
 
         ns3::Simulator::Schedule (
