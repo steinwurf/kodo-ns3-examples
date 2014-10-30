@@ -176,8 +176,13 @@ int main (int argc, char *argv[])
       std::cout << "Recoder IP addresses: " << recodersAddresses[n] << std::endl;
     }
 
+  Ipv4Address encoderAddress = nodes.Get (0)->GetObject<Ipv4> ()->
+                                GetAddress (1,0).GetLocal ();
+  std::cout << "Encoder IP address: " << encoderAddress << std::endl;
+
   Ipv4Address decoderAddress = nodes.Get (recoders+1)->GetObject<Ipv4> ()->
                                 GetAddress (1,0).GetLocal ();
+  std::cout << "Decoder IP address: " << decoderAddress << std::endl;
 
   // Socket connection addresses
   // InetSocketAddress does not have a default constructor
@@ -197,13 +202,12 @@ int main (int argc, char *argv[])
 
   // Encoder connections to recoders
   Ptr<Socket> encoderSocket = Socket::CreateSocket (nodes.Get (0), tid);
-  encoderSocket->SetAllowBroadcast (true);
 
   for (uint32_t n = 0; n < recoders; n++)
     {
       auto test = encoderSocket->Connect (recodersSocketAddresses[n]);
-      std::cout << "Recoder IP addresses: " << recodersSocketAddresses[n] << std::endl;
-      std::cout << "Socket " << n << " connected? " << test << std::endl;
+      std::cout << "Recoder socket addresses: " << recodersSocketAddresses[n] << std::endl;
+      std::cout << "Socket " << n + 1 << " connected? " << test << std::endl;
     }
 
   // Recoders connections to decoder
@@ -213,7 +217,9 @@ int main (int argc, char *argv[])
     {
       recodersSockets.push_back (Socket::CreateSocket (nodes.Get (n+1), tid));
       recodersSockets[n]->Bind (local);
-      recodersSockets[n]->Connect (decoderSocketAddress);
+      auto test = recodersSockets[n]->Connect (decoderSocketAddress);
+      std::cout << "Decoder socket addresses: " << decoderSocketAddress << std::endl;
+      std::cout << "Decoder socket connected? " << test << std::endl;
     }
 
   // Simulation setup
