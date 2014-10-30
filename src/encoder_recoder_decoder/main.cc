@@ -257,7 +257,12 @@ int main (int argc, char *argv[])
       &multihop));
 
   // Turn on global static routing so we can actually be routed across the hops
-  Ipv4GlobalRoutingHelper::PopulateRoutingTables ();
+  Ipv4GlobalRoutingHelper routes;
+  routes.PopulateRoutingTables ();
+
+  Ptr<OutputStreamWrapper> stream = Create<OutputStreamWrapper>("routingtable.txt",
+                                                                std::ios::out);
+  routes.PrintRoutingTableAllAt (Seconds(5.0), stream);
 
   // Do pcap tracing on all point-to-point devices on all nodes. File naming
   // convention is: multihop-[NODE_NUMBER]-[DEVICE_NUMBER].pcap
