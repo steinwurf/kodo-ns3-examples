@@ -100,53 +100,45 @@ int main (int argc, char *argv[])
 
   Time::SetResolution (Time::NS);
 
-  // Create node containers
-  //NodeContainer nodes;
-  //nodes.Create (2 + recoders);
-
-  // Create net device containers
-
   // We group the nodes in different sets because
-  // we want many net devices per node. First we set
-  // the basic helper for a single link
+  // we want many net devices per node.For the broadcast
+  // topology we create a subnet and for the recoders to
+  // the decoders, we create a secondary one.
+
+
+  // First we set the basic helper for a single link.
   PointToPointHelper ptp;
 
+  // Encoder to recoders
   PointToPointStarHelper toRecoders (recoders, ptp);
   NodeContainer decoder;
   decoder.Create(1);
-/*
-  NetDeviceContainer encoderRecodersDev;
-*/
+
+  // Recoders to decoder
   NetDeviceContainer recodersDecoderDev;
 
   for (uint32_t n = 0; n < recoders; n++)
    {
-/*
-      encoderRecodersDev.Add (
-        ptp.Install (NodeContainer (nodes.Get (0), nodes.Get (n+1))) );
-*/
       recodersDecoderDev.Add (ptp.Install (
         NodeContainer (toRecoders.GetSpokeNode (n), decoder.Get (0))) );
    }
 
-// Internet stack for the nodes
+  // Internet stack for the broadcast topology and decoder
   InternetStackHelper internet;
   toRecoders.InstallStack (internet);
   internet.Install (decoder);
 
+  // Here, we first create a total of N net devices in the encoder
+  // (N = recoders amount) and a net device per encoder
+  // Second, we mirror this procedure to the recoder side.
+  // Each net device in the encoder is in a **different** subnet.
+
   toRecoders.AssignIpv4Addresses (Ipv4AddressHelper ("10.1.1.0",
                                                      "255.255.255.0"));
 
-/*
-  NetDeviceContainer devices = NetDeviceContainer (encoderRecodersDev,
-                                                   recodersDecoderDev);
-*/
-  // Set IP addresses
-  //Ipv4AddressHelper toRecoders ("10.1.1.0", "255.255.255.0");
-  //toRecoders.Assign (encoderRecodersDev);
-
-
-
+  // The IP set of the recoders to the decoder is calculated
+  // in order to not collide with the one from the encoder
+  // to the recoders.
   Ipv4AddressHelper fromRecoders ("10.2.1.0", "255.255.255.0");
   fromRecoders.Assign (recodersDecoderDev);
 
@@ -178,62 +170,11 @@ int main (int argc, char *argv[])
       errorRecodersDecoder[n]->Enable ();
     }
 
-std::cout << "Error models set" << std::endl;
-
-  for (uint32_t n = 0; n < toRecoders.SpokeCount (); n++)
-    {
-      // Encoder to recoders branches
-      std::cout << "Star Devices: "
-                << toRecoders.GetSpokeNode (n)->GetDevice (0) << std::endl;
-    }
-
-  for (uint32_t n = 0; n < recodersDecoderDev.GetN (); n++)
-    {
-      // Encoder to recoders branches
-      std::cout << "Other devices: "
-                << recodersDecoderDev.Get (n) << std::endl;
-    }
-
   // Setting up application sockets for recoder and decoder
   uint16_t port = 80;
   TypeId tid = TypeId::LookupByName ("ns3::UdpSocketFactory");
 
-/*
-  // Save nodes Ipv4 addresses for recoders and decoder to set up connections
-  std::vector<Ipv4Address> recodersAddresses (recoders);
-
-  for (uint32_t n = 0; n < recoders; n++)
-    {
-      recodersAddresses[n] = nodes.Get (n+1)->GetObject<Ipv4> ()->
-                              GetAddress (1,0).GetLocal ();
-      std::cout << "Recoder IP addresses: " << recodersAddresses[n] << std::endl;
-    }
-
-
-  Ipv4Address encoderAddress = nodes.Get (0)->GetObject<Ipv4> ()->
-                                GetAddress (1,0).GetLocal ();
-*/
-
-  Ipv4Address encoderAddress = toRecoders.GetHub ()->GetObject<Ipv4> ()->
-                                GetAddress (1,0).GetLocal ();
-  std::cout << "Encoder IP address: " << encoderAddress << std::endl;
-
-
-  Ipv4Address decoderAddress = decoder.Get (0)->GetObject<Ipv4> ()->
-                                GetAddress (1,0).GetLocal ();
-  std::cout << "Decoder IP address: " << decoderAddress << std::endl;
-
   // Socket connection addresses
-  // InetSocketAddress does not have a default constructor
-/*
-  std::vector<InetSocketAddress> recodersSocketAddresses;
-
-  for (uint32_t n = 0; n < recoders; n++)
-    {
-      recodersSocketAddresses.push_back (
-        InetSocketAddress (recodersAddresses[n], port));
-    }
-*/
   InetSocketAddress decoderSocketAddress = InetSocketAddress (decoderAddress,
                                                               port);
 
@@ -247,14 +188,6 @@ std::cout << "Error models set" << std::endl;
     Ipv4Address ("255.255.255.255"), port);
   encoderSocket->Connect (recodersSocketAddress);
 
-/*
-  for (uint32_t n = 0; n < recoders; n++)
-    {
-      auto test = encoderSocket->Connect (recodersSocketAddresses[n]);
-      std::cout << "Recoder socket addresses: " << recodersSocketAddresses[n] << std::endl;
-      std::cout << "Socket " << n + 1 << " connected? " << test << std::endl;
-    }
-*/
   // Recoders connections to decoder
   std::vector<Ptr<Socket>> recodersSockets;
 
@@ -262,13 +195,10 @@ std::cout << "Error models set" << std::endl;
     {
       recodersSockets.push_back (Socket::CreateSocket (toRecoders.GetSpokeNode (n), tid));
       recodersSockets[n]->Bind (local);
-      auto test = recodersSockets[n]->Connect (decoderSocketAddress);
-      std::cout << "Decoder socket addresses: " << decoderSocketAddress << std::endl;
-      std::cout << "Decoder socket connected? " << test << std::endl;
+      recodersSockets[n]->Connect (decoderSocketAddress);
     }
 
   // Simulation setup
-
   using field = fifi::binary8;
   using encoderTrace = kodo::disable_trace;
   using decoderTrace = kodo::enable_trace;
@@ -301,12 +231,7 @@ std::cout << "Error models set" << std::endl;
       &multihop));
 
   // Turn on global static routing so we can actually be routed across the hops
-  Ipv4GlobalRoutingHelper routes;
-  routes.PopulateRoutingTables ();
-
-  Ptr<OutputStreamWrapper> stream = Create<OutputStreamWrapper>("routingtable.txt",
-                                                                std::ios::out);
-  routes.PrintRoutingTableAllAt (Seconds(5.0), stream);
+  Ipv4GlobalRoutingHelper::PopulateRoutingTables ();
 
   // Do pcap tracing on all point-to-point devices on all nodes. File naming
   // convention is: multihop-[NODE_NUMBER]-[DEVICE_NUMBER].pcap
