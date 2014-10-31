@@ -174,6 +174,9 @@ int main (int argc, char *argv[])
   uint16_t port = 80;
   TypeId tid = TypeId::LookupByName ("ns3::UdpSocketFactory");
 
+  Ipv4Address decoderAddress = decoder.Get (0)->GetObject<Ipv4> ()->
+                                GetAddress (1,0).GetLocal ();
+
   // Socket connection addresses
   InetSocketAddress decoderSocketAddress = InetSocketAddress (decoderAddress,
                                                               port);
@@ -203,32 +206,27 @@ int main (int argc, char *argv[])
   using encoderTrace = kodo::disable_trace;
   using decoderTrace = kodo::enable_trace;
 
-  EncoderRecodersDecoderRlnc<field, encoderTrace, decoderTrace> multihop (
-    recoders,
-    generationSize,
-    packetSize,
-    recodersSockets,
-    recodingFlag);
+  using simulation = EncoderRecodersDecoderRlnc<
+    field,
+    encoderTrace,
+    decoderTrace>;
+
+  simulation multihop (recoders, generationSize, packetSize, recodersSockets, recodingFlag);
 
   // Recoders callbacks
   for (uint32_t n = 0; n < recoders; n++)
     {
       recodersSockets[n]-> SetRecvCallback (MakeCallback (
-        &EncoderRecodersDecoderRlnc<field,
-                                    encoderTrace,
-                                    decoderTrace>::ReceivePacketRecoder,
+        &simulation::ReceivePacketRecoder,
         &multihop));
     }
 
   // Decoder
   Ptr<Socket> decoderSocket = Socket::CreateSocket (decoder.Get (0), tid);
   decoderSocket->Bind (local);
-  decoderSocket->
-    SetRecvCallback (MakeCallback (
-      &EncoderRecodersDecoderRlnc<field,
-                                    encoderTrace,
-                                    decoderTrace>::ReceivePacketDecoder,
-      &multihop));
+  decoderSocket->SetRecvCallback (MakeCallback (
+    &simulation::ReceivePacketDecoder,
+    &multihop));
 
   // Turn on global static routing so we can actually be routed across the hops
   Ipv4GlobalRoutingHelper::PopulateRoutingTables ();
@@ -242,9 +240,7 @@ int main (int argc, char *argv[])
   Simulator::ScheduleWithContext (
     encoderSocket->GetNode ()->GetId (),
     Seconds (1.0),
-    &EncoderRecodersDecoderRlnc<field,
-                                encoderTrace,
-                                decoderTrace>::SendPacketEncoder,
+    &simulation::SendPacketEncoder,
     &multihop,
     encoderSocket,
     interPacketInterval);
@@ -255,9 +251,7 @@ int main (int argc, char *argv[])
       Simulator::ScheduleWithContext (
         recoderSocket->GetNode ()->GetId (),
         Seconds (1.5),
-        &EncoderRecodersDecoderRlnc<field,
-                                    encoderTrace,
-                                    decoderTrace>::SendPacketRecoder,
+        &simulation::SendPacketRecoder,
         &multihop,
         recoderSocket,
         interPacketInterval);
