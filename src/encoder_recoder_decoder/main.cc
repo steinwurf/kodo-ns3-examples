@@ -101,12 +101,8 @@ int main (int argc, char *argv[])
   Time::SetResolution (Time::NS);
 
   // Create node containers
-  NodeContainer nodes;
-  nodes.Create (2 + recoders);
-
-  // Internet stack for the nodes
-  InternetStackHelper internet;
-  internet.Install (nodes);
+  //NodeContainer nodes;
+  //nodes.Create (2 + recoders);
 
   // Create net device containers
 
@@ -115,24 +111,44 @@ int main (int argc, char *argv[])
   // the basic helper for a single link
   PointToPointHelper ptp;
 
+  PointToPointStarHelper toRecoders (recoders, ptp);
+  NodeContainer decoder;
+  decoder.Create(1);
+/*
   NetDeviceContainer encoderRecodersDev;
+*/
   NetDeviceContainer recodersDecoderDev;
 
   for (uint32_t n = 0; n < recoders; n++)
    {
+/*
       encoderRecodersDev.Add (
         ptp.Install (NodeContainer (nodes.Get (0), nodes.Get (n+1))) );
-
-      recodersDecoderDev.Add (
-        ptp.Install (NodeContainer (nodes.Get (n+1), nodes.Get (recoders+1))) );
+*/
+      recodersDecoderDev.Add (ptp.Install (
+        NodeContainer (toRecoders.GetSpokeNode (n), decoder.Get (0))) );
    }
 
+// Internet stack for the nodes
+  InternetStackHelper internet;
+  toRecoders.InstallStack (internet);
+  internet.Install (decoder);
+
+  toRecoders.AssignIpv4Addresses (Ipv4AddressHelper ("10.1.1.0",
+                                                     "255.255.255.0"));
+
+/*
   NetDeviceContainer devices = NetDeviceContainer (encoderRecodersDev,
                                                    recodersDecoderDev);
-
+*/
   // Set IP addresses
-  Ipv4AddressHelper ipv4 ("10.1.1.0", "255.255.255.0");
-  ipv4.Assign (devices);
+  //Ipv4AddressHelper toRecoders ("10.1.1.0", "255.255.255.0");
+  //toRecoders.Assign (encoderRecodersDev);
+
+
+
+  Ipv4AddressHelper fromRecoders ("10.2.1.0", "255.255.255.0");
+  fromRecoders.Assign (recodersDecoderDev);
 
   // Set error model for the net devices
   Config::SetDefault ("ns3::RateErrorModel::ErrorUnit",
@@ -148,24 +164,41 @@ int main (int argc, char *argv[])
       errorEncoderRecoders[n] = CreateObject<RateErrorModel> ();
       errorEncoderRecoders[n]->SetAttribute (
         "ErrorRate", DoubleValue (errorRateEncoderRecoder));
-      devices.Get (2*n + 1)->SetAttribute (
+      toRecoders.GetSpokeNode (n)->GetDevice (0)->SetAttribute (
         "ReceiveErrorModel", PointerValue (errorEncoderRecoders[n]));
 
       // Recoders to decoder branches
       errorRecodersDecoder[n] = CreateObject<RateErrorModel> ();
       errorRecodersDecoder[n]->SetAttribute (
         "ErrorRate", DoubleValue (errorRateRecoderDecoder));
-      devices.Get (3*recoders + n)->SetAttribute (
+      recodersDecoderDev.Get (2*n)->SetAttribute (
         "ReceiveErrorModel", PointerValue (errorRecodersDecoder[n]));
 
-      errorEncoderRecoders[n]->Enable ();
+      //errorEncoderRecoders[n]->Enable ();
       errorRecodersDecoder[n]->Enable ();
+    }
+
+std::cout << "Error models set" << std::endl;
+
+  for (uint32_t n = 0; n < toRecoders.SpokeCount (); n++)
+    {
+      // Encoder to recoders branches
+      std::cout << "Star Devices: "
+                << toRecoders.GetSpokeNode (n)->GetDevice (0) << std::endl;
+    }
+
+  for (uint32_t n = 0; n < recodersDecoderDev.GetN (); n++)
+    {
+      // Encoder to recoders branches
+      std::cout << "Other devices: "
+                << recodersDecoderDev.Get (n) << std::endl;
     }
 
   // Setting up application sockets for recoder and decoder
   uint16_t port = 80;
   TypeId tid = TypeId::LookupByName ("ns3::UdpSocketFactory");
 
+/*
   // Save nodes Ipv4 addresses for recoders and decoder to set up connections
   std::vector<Ipv4Address> recodersAddresses (recoders);
 
@@ -176,16 +209,23 @@ int main (int argc, char *argv[])
       std::cout << "Recoder IP addresses: " << recodersAddresses[n] << std::endl;
     }
 
+
   Ipv4Address encoderAddress = nodes.Get (0)->GetObject<Ipv4> ()->
+                                GetAddress (1,0).GetLocal ();
+*/
+
+  Ipv4Address encoderAddress = toRecoders.GetHub ()->GetObject<Ipv4> ()->
                                 GetAddress (1,0).GetLocal ();
   std::cout << "Encoder IP address: " << encoderAddress << std::endl;
 
-  Ipv4Address decoderAddress = nodes.Get (recoders+1)->GetObject<Ipv4> ()->
+
+  Ipv4Address decoderAddress = decoder.Get (0)->GetObject<Ipv4> ()->
                                 GetAddress (1,0).GetLocal ();
   std::cout << "Decoder IP address: " << decoderAddress << std::endl;
 
   // Socket connection addresses
   // InetSocketAddress does not have a default constructor
+/*
   std::vector<InetSocketAddress> recodersSocketAddresses;
 
   for (uint32_t n = 0; n < recoders; n++)
@@ -193,7 +233,7 @@ int main (int argc, char *argv[])
       recodersSocketAddresses.push_back (
         InetSocketAddress (recodersAddresses[n], port));
     }
-
+*/
   InetSocketAddress decoderSocketAddress = InetSocketAddress (decoderAddress,
                                                               port);
 
@@ -201,21 +241,26 @@ int main (int argc, char *argv[])
   InetSocketAddress local = InetSocketAddress (Ipv4Address::GetAny (), port);
 
   // Encoder connections to recoders
-  Ptr<Socket> encoderSocket = Socket::CreateSocket (nodes.Get (0), tid);
+  Ptr<Socket> encoderSocket = Socket::CreateSocket (toRecoders.GetHub (), tid);
+  encoderSocket->SetAllowBroadcast (true);
+  InetSocketAddress recodersSocketAddress = InetSocketAddress (
+    Ipv4Address ("255.255.255.255"), port);
+  encoderSocket->Connect (recodersSocketAddress);
 
+/*
   for (uint32_t n = 0; n < recoders; n++)
     {
       auto test = encoderSocket->Connect (recodersSocketAddresses[n]);
       std::cout << "Recoder socket addresses: " << recodersSocketAddresses[n] << std::endl;
       std::cout << "Socket " << n + 1 << " connected? " << test << std::endl;
     }
-
+*/
   // Recoders connections to decoder
   std::vector<Ptr<Socket>> recodersSockets;
 
   for (uint32_t n = 0; n < recoders; n++)
     {
-      recodersSockets.push_back (Socket::CreateSocket (nodes.Get (n+1), tid));
+      recodersSockets.push_back (Socket::CreateSocket (toRecoders.GetSpokeNode (n), tid));
       recodersSockets[n]->Bind (local);
       auto test = recodersSockets[n]->Connect (decoderSocketAddress);
       std::cout << "Decoder socket addresses: " << decoderSocketAddress << std::endl;
@@ -246,8 +291,7 @@ int main (int argc, char *argv[])
     }
 
   // Decoder
-  Ptr<Socket> decoderSocket = Socket::CreateSocket (nodes.Get (recoders+1),
-                                                    tid);
+  Ptr<Socket> decoderSocket = Socket::CreateSocket (decoder.Get (0), tid);
   decoderSocket->Bind (local);
   decoderSocket->
     SetRecvCallback (MakeCallback (
