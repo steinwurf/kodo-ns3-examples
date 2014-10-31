@@ -93,15 +93,15 @@ int main (int argc, char *argv[])
 
   // disable fragmentation for frames below 2200 bytes
   Config::SetDefault ("ns3::WifiRemoteStationManager::FragmentationThreshold",
-                      StringValue ("2200"));
+    StringValue ("2200"));
 
   // turn off RTS/CTS for frames below 2200 bytes
   Config::SetDefault ("ns3::WifiRemoteStationManager::RtsCtsThreshold",
-                      StringValue ("2200"));
+    StringValue ("2200"));
 
   // Fix non-unicast data rate to be the same as that of unicast
   Config::SetDefault ("ns3::WifiRemoteStationManager::NonUnicastMode",
-                      StringValue (phyMode));
+    StringValue (phyMode));
 
   // Source and destination
   NodeContainer c;
@@ -123,17 +123,17 @@ int main (int argc, char *argv[])
 
   YansWifiChannelHelper wifiChannel;
   wifiChannel.SetPropagationDelay ("ns3::ConstantSpeedPropagationDelayModel");
+
   // The below FixedRssLossModel will cause the rss to be fixed regardless
   // of the distance between the two stations, and the transmit power
   wifiChannel.AddPropagationLoss ("ns3::FixedRssLossModel","Rss",
-                                  DoubleValue (rss));
+    DoubleValue (rss));
   wifiPhy.SetChannel (wifiChannel.Create ());
 
   // Add a non-QoS upper mac, and disable rate control
   NqosWifiMacHelper wifiMac = NqosWifiMacHelper::Default ();
   wifi.SetRemoteStationManager ("ns3::ConstantRateWifiManager",
-                                "DataMode",StringValue (phyMode),
-                                "ControlMode",StringValue (phyMode));
+    "DataMode",StringValue (phyMode), "ControlMode",StringValue (phyMode));
 
   // Set WiFi type and configuration parameters for MAC
   // Set it to adhoc mode
@@ -173,8 +173,8 @@ int main (int argc, char *argv[])
   Ptr<Socket> source = Socket::CreateSocket (c.Get (0), tid);
 
   // Transmitter socket connections. Set transmitter for broadcasting
-  InetSocketAddress remote = InetSocketAddress (Ipv4Address ("255.255.255.255"),
-                                                port);
+  InetSocketAddress remote = InetSocketAddress (
+    Ipv4Address ("255.255.255.255"), port);
   source->SetAllowBroadcast (true);
   source->Connect (remote);
 
@@ -186,26 +186,23 @@ int main (int argc, char *argv[])
       sinks[n] = Socket::CreateSocket (c.Get (1+n), tid);
     }
 
-  // The field and traces types we will use. Here we consider GF(2). For GF(2^8)
-  // just change "binary" for "binary8"
+  // The field and traces types we will use.
+  // Here we consider GF(2). For GF(2^8) just change "binary" for "binary8"
   using field = fifi::binary;
   using encoderTrace = kodo::disable_trace;
   using decoderTrace = kodo::enable_trace;
 
+  using simulation = BroadcastRlnc<field, encoderTrace, decoderTrace>;
+
   // Creates the broadcast topology class for the current example
-  BroadcastRlnc<field, encoderTrace, decoderTrace> wifiBroadcast (
-    users,
-    generationSize,
-    packetSize,
-    sinks);
+  simulation wifiBroadcast (users, generationSize, packetSize, sinks);
 
   // Receiver socket connections
   InetSocketAddress local = InetSocketAddress (Ipv4Address::GetAny (), port);
   for (const auto sink : sinks)
     {
       sink->Bind (local);
-      sink->SetRecvCallback (MakeCallback (
-        &BroadcastRlnc <field, encoderTrace, decoderTrace>::ReceivePacket,
+      sink->SetRecvCallback (MakeCallback (&simulation::ReceivePacket,
         &wifiBroadcast));
     }
 
@@ -215,12 +212,8 @@ int main (int argc, char *argv[])
   // Pcap tracing
   wifiPhy.EnablePcap ("wifi-broadcast-rlnc", devices);
 
-  Simulator::ScheduleWithContext (
-    source->GetNode ()->GetId (), Seconds (1.0),
-    &BroadcastRlnc <field, encoderTrace, decoderTrace>::SendPacket,
-    &wifiBroadcast,
-    source,
-    interPacketInterval);
+  Simulator::ScheduleWithContext (source->GetNode ()->GetId (), Seconds (1.0),
+    &simulation::SendPacket, &wifiBroadcast, source, interPacketInterval);
 
   Simulator::Run ();
   Simulator::Destroy ();

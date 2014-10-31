@@ -70,7 +70,7 @@ int main (int argc, char *argv[])
   cmd.AddValue ("packetSize", "Size of application packet sent", packetSize);
   cmd.AddValue ("interval", "Interval (seconds) between packets", interval);
   cmd.AddValue ("generationSize", "Set the generation size to use",
-                generationSize);
+    generationSize);
   cmd.AddValue ("errorRate", "Packet erasure rate for the links", errorRate);
   cmd.AddValue ("users", "Number of receivers", users);
 
@@ -86,16 +86,16 @@ int main (int argc, char *argv[])
 
   // Set error model for the net devices
   Config::SetDefault ("ns3::RateErrorModel::ErrorUnit",
-                      StringValue ("ERROR_UNIT_PACKET"));
+    StringValue ("ERROR_UNIT_PACKET"));
 
   std::vector<Ptr<RateErrorModel>> errorModel (users,
-                                               CreateObject<RateErrorModel> ());
+    CreateObject<RateErrorModel> ());
 
   for (uint32_t n = 0; n < users; n++)
   {
     errorModel[n]->SetAttribute ("ErrorRate", DoubleValue (errorRate));
-    star.GetSpokeNode (n)->GetDevice (0)->
-      SetAttribute ("ReceiveErrorModel", PointerValue (errorModel[n]));
+    star.GetSpokeNode (n)->GetDevice (0)->SetAttribute ("ReceiveErrorModel",
+      PointerValue (errorModel[n]));
     errorModel[n]->Enable ();
   }
 
@@ -116,8 +116,8 @@ int main (int argc, char *argv[])
   Ptr<Socket> source = Socket::CreateSocket (star.GetHub (), tid);
 
   // Transmitter socket connections. Set transmitter for broadcasting
-  InetSocketAddress remote = InetSocketAddress (Ipv4Address ("255.255.255.255"),
-                                                port);
+  InetSocketAddress remote = InetSocketAddress (
+    Ipv4Address ("255.255.255.255"), port);
   source->SetAllowBroadcast (true);
   source->Connect (remote);
 
@@ -135,20 +135,16 @@ int main (int argc, char *argv[])
   using encoderTrace = kodo::disable_trace;
   using decoderTrace = kodo::enable_trace;
 
+  using simulation = BroadcastRlnc<field, encoderTrace, decoderTrace>;
   // Creates the broadcast topology class for the current example
-  BroadcastRlnc<field, encoderTrace, decoderTrace> wiredBroadcast (
-    users,
-    generationSize,
-    packetSize,
-    sinks);
+  simulation wiredBroadcast (users, generationSize, packetSize, sinks);
 
   // Receiver socket connections
   for (const auto sink : sinks)
     {
       sink->Bind (local);
       sink->SetRecvCallback (MakeCallback (
-        &BroadcastRlnc <field, encoderTrace, decoderTrace>::ReceivePacket,
-        &wiredBroadcast));
+        &simulation::ReceivePacket, &wiredBroadcast));
     }
 
   // Turn on global static routing so we can actually be routed across the star
@@ -157,12 +153,8 @@ int main (int argc, char *argv[])
   // Do pcap tracing on all point-to-point devices on all nodes
   pointToPoint.EnablePcapAll ("wired-broadcast-rlnc");
 
-  Simulator::ScheduleWithContext (
-    source->GetNode ()->GetId (), Seconds (1.0),
-    &BroadcastRlnc <field, encoderTrace, decoderTrace>::SendPacket,
-    &wiredBroadcast,
-    source,
-    interPacketInterval);
+  Simulator::ScheduleWithContext (source->GetNode ()->GetId (), Seconds (1.0),
+    &simulation::SendPacket, &wiredBroadcast, source, interPacketInterval);
 
   Simulator::Run ();
   Simulator::Destroy ();
