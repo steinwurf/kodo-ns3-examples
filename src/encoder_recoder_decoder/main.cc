@@ -134,7 +134,7 @@ int main (int argc, char *argv[])
   // Each net device in the encoder is in a **different** subnet.
 
   toRecoders.AssignIpv4Addresses (Ipv4AddressHelper ("10.1.1.0",
-                                                     "255.255.255.0"));
+    "255.255.255.0"));
 
   // The IP set of the recoders to the decoder is calculated
   // in order to not collide with the one from the encoder
@@ -154,19 +154,20 @@ int main (int argc, char *argv[])
     {
       // Encoder to recoders branches
       errorEncoderRecoders[n] = CreateObject<RateErrorModel> ();
-      errorEncoderRecoders[n]->SetAttribute (
-        "ErrorRate", DoubleValue (errorRateEncoderRecoder));
+      errorEncoderRecoders[n]->SetAttribute ("ErrorRate", DoubleValue (
+        errorRateEncoderRecoder));
       toRecoders.GetSpokeNode (n)->GetDevice (0)->SetAttribute (
         "ReceiveErrorModel", PointerValue (errorEncoderRecoders[n]));
 
       // Recoders to decoder branches
       errorRecodersDecoder[n] = CreateObject<RateErrorModel> ();
-      errorRecodersDecoder[n]->SetAttribute (
-        "ErrorRate", DoubleValue (errorRateRecoderDecoder));
-      recodersDecoderDev.Get (2*n)->SetAttribute (
-        "ReceiveErrorModel", PointerValue (errorRecodersDecoder[n]));
+      errorRecodersDecoder[n]->SetAttribute ("ErrorRate", DoubleValue (
+        errorRateRecoderDecoder));
+      recodersDecoderDev.Get (2*n)->SetAttribute ("ReceiveErrorModel",
+        PointerValue (errorRecodersDecoder[n]));
 
-      //errorEncoderRecoders[n]->Enable ();
+      // Activate models
+      errorEncoderRecoders[n]->Enable ();
       errorRecodersDecoder[n]->Enable ();
     }
 
@@ -175,11 +176,11 @@ int main (int argc, char *argv[])
   TypeId tid = TypeId::LookupByName ("ns3::UdpSocketFactory");
 
   Ipv4Address decoderAddress = decoder.Get (0)->GetObject<Ipv4> ()->
-                                GetAddress (1,0).GetLocal ();
+    GetAddress (1,0).GetLocal ();
 
   // Socket connection addresses
-  InetSocketAddress decoderSocketAddress = InetSocketAddress (decoderAddress,
-                                                              port);
+  InetSocketAddress decoderSocketAddress = InetSocketAddress (
+    decoderAddress, port);
 
   // Socket bind address
   InetSocketAddress local = InetSocketAddress (Ipv4Address::GetAny (), port);
@@ -196,7 +197,8 @@ int main (int argc, char *argv[])
 
   for (uint32_t n = 0; n < recoders; n++)
     {
-      recodersSockets.push_back (Socket::CreateSocket (toRecoders.GetSpokeNode (n), tid));
+      recodersSockets.push_back (Socket::CreateSocket (
+        toRecoders.GetSpokeNode (n), tid));
       recodersSockets[n]->Bind (local);
       recodersSockets[n]->Connect (decoderSocketAddress);
     }
@@ -207,26 +209,23 @@ int main (int argc, char *argv[])
   using decoderTrace = kodo::enable_trace;
 
   using simulation = EncoderRecodersDecoderRlnc<
-    field,
-    encoderTrace,
-    decoderTrace>;
+    field, encoderTrace, decoderTrace>;
 
-  simulation multihop (recoders, generationSize, packetSize, recodersSockets, recodingFlag);
+  simulation multihop (recoders, generationSize, packetSize, recodersSockets,
+    recodingFlag);
 
   // Recoders callbacks
   for (uint32_t n = 0; n < recoders; n++)
     {
       recodersSockets[n]-> SetRecvCallback (MakeCallback (
-        &simulation::ReceivePacketRecoder,
-        &multihop));
+        &simulation::ReceivePacketRecoder, &multihop));
     }
 
   // Decoder
   Ptr<Socket> decoderSocket = Socket::CreateSocket (decoder.Get (0), tid);
   decoderSocket->Bind (local);
   decoderSocket->SetRecvCallback (MakeCallback (
-    &simulation::ReceivePacketDecoder,
-    &multihop));
+    &simulation::ReceivePacketDecoder, &multihop));
 
   // Turn on global static routing so we can actually be routed across the hops
   Ipv4GlobalRoutingHelper::PopulateRoutingTables ();
@@ -237,23 +236,15 @@ int main (int argc, char *argv[])
 
   // Schedule processes
   // Encoder
-  Simulator::ScheduleWithContext (
-    encoderSocket->GetNode ()->GetId (),
-    Seconds (1.0),
-    &simulation::SendPacketEncoder,
-    &multihop,
-    encoderSocket,
+  Simulator::ScheduleWithContext (encoderSocket->GetNode ()->GetId (),
+    Seconds (1.0), &simulation::SendPacketEncoder, &multihop, encoderSocket,
     interPacketInterval);
 
   // Recoders
   for (auto recoderSocket : recodersSockets)
     {
-      Simulator::ScheduleWithContext (
-        recoderSocket->GetNode ()->GetId (),
-        Seconds (1.5),
-        &simulation::SendPacketRecoder,
-        &multihop,
-        recoderSocket,
+      Simulator::ScheduleWithContext (recoderSocket->GetNode ()->GetId (),
+        Seconds (1.5), &simulation::SendPacketRecoder, &multihop, recoderSocket,
         interPacketInterval);
     }
 
