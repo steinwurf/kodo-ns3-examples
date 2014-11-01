@@ -24,7 +24,7 @@
 // example, which can be found in the ns-3-dev repository.
 
 // In the script below the sender transmits encoded packets from a block of
-// data to N receivers with the same packet erasure rate. The sender
+// data to N receivers with the same packet erasure rate (errorRate). The sender
 // continues until all receivers have decoded all packets. Here the packets
 // are sent using the binary field, GF(2) with a generation of 5 packets and
 // 1000 (application) bytes and an erasure rate of 30% for all the nodes.

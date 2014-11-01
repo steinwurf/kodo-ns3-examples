@@ -207,7 +207,7 @@ int main (int argc, char *argv[])
   // Simulation setup
   using field = fifi::binary8;
   using encoderTrace = kodo::disable_trace;
-  using decoderTrace = kodo::enable_trace;
+  using decoderTrace = kodo::disable_trace;
 
   using simulation = EncoderRecodersDecoderRlnc<
     field, encoderTrace, decoderTrace>;

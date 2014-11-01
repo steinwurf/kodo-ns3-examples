@@ -101,9 +101,9 @@ public:
 
     if (!all_recoders_decoded && (m_recodingFlag && !m_decoder->is_complete ()))
       {
-        std::cout << "+----------------------------------+"   << std::endl;
-        std::cout << "|Sending a combination from ENCODER|"   << std::endl;
-        std::cout << "+----------------------------------+\n" << std::endl;
+        std::cout << "+----------------------------------+" << std::endl;
+        std::cout << "|Sending a combination from ENCODER|" << std::endl;
+        std::cout << "+----------------------------------+" << std::endl;
 
         uint32_t bytes_used = m_encoder->encode (&m_payload_buffer[0]);
         auto packet = ns3::Create<ns3::Packet>  (&m_payload_buffer[0],
@@ -147,7 +147,7 @@ public:
       m_socketMap.find (socket)) + 1;
 
     recoder->decode (&m_payload_buffer[0]);
-    std::cout << "Received a coded packet at RECODER " << id << std::endl;
+    std::cout << "Received a coded packet at RECODER " << id << "\n" << std::endl;
 
     if (kodo::has_trace<rlnc_recoder>::value)
       {
@@ -245,9 +245,9 @@ public:
 
     if (m_decoder_rank != m_decoder->rank ())
       {
-        std::cout << "Received a l.i. packet at DECODER!! (I)\n" << std::endl;
+        std::cout << "Received a l.i. packet at DECODER! (I)" << std::endl;
         std::cout << "Decoder rank: " << m_decoder->rank () << "\n"
-                  << std::endl;
+          << std::endl;
         m_decoder_rank++;
       }
 
