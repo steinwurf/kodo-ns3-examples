@@ -56,16 +56,16 @@ public:
 
     // Call factories from basic parameters
     typename rlnc_encoder::factory encoder_factory (m_generationSize,
-                                                    m_packetSize);
+      m_packetSize);
     typename rlnc_recoder::factory recoder_factory (m_generationSize,
-                                                    m_packetSize);
+      m_packetSize);
     typename rlnc_decoder::factory decoder_factory (m_generationSize,
-                                                    m_packetSize);
+      m_packetSize);
 
     // Encoder creation and settings
     m_encoder = encoder_factory.build ();
     m_encoder->set_systematic_off ();
-    m_encoder->seed ( (uint32_t)time (0));
+    m_encoder->seed ((uint32_t)time (0));
 
     // Initialize the input data
     std::vector<uint8_t> data (m_encoder->block_size (), 'x');
@@ -107,7 +107,7 @@ public:
 
         uint32_t bytes_used = m_encoder->encode (&m_payload_buffer[0]);
         auto packet = ns3::Create<ns3::Packet>  (&m_payload_buffer[0],
-                                                bytes_used);
+          bytes_used);
         socket->Send (packet);
         m_encoder_transmission_count++;
 
@@ -144,7 +144,7 @@ public:
       }
 
     auto id = std::distance (std::begin (m_socketMap),
-                            m_socketMap.find (socket)) + 1;
+      m_socketMap.find (socket)) + 1;
 
     recoder->decode (&m_payload_buffer[0]);
     std::cout << "Received a coded packet at RECODER " << id << std::endl;
@@ -178,16 +178,16 @@ public:
         if (m_recodingFlag)
           {
             std::cout << "+------------------------------------+"
-                      << std::endl;
+              << std::endl;
             std::cout << "|Sending a combination from RECODER "
-                      << id << "|"   << std::endl;
+              << id << "|"   << std::endl;
             std::cout << "+------------------------------------+\n"
-                      << std::endl;
+              << std::endl;
 
             // Recode a new packet and send
             uint32_t bytes_used = recoder->recode (&m_payload_buffer[0]);
             auto packet = ns3::Create<ns3::Packet> (&m_payload_buffer[0],
-                                                    bytes_used);
+              bytes_used);
             socket->Send (packet);
             m_recoders_transmission_count++;
           }
@@ -246,13 +246,9 @@ public:
     if (m_decoder_rank != m_decoder->rank ())
       {
         std::cout << "Received a l.i. packet at DECODER!! (I)\n" << std::endl;
-        std::cout << "Decoder rank is: " << m_decoder->rank () << "\n"
+        std::cout << "Decoder rank: " << m_decoder->rank () << "\n"
                   << std::endl;
         m_decoder_rank++;
-      }
-    else
-      {
-        std::cout << "Received a l.d. packet at DECODER!! (D)\n" << std::endl;
       }
 
     if (kodo::has_trace<rlnc_decoder>::value)
@@ -270,8 +266,6 @@ public:
   }
 
 private:
-
-  //rlnc_decoder::factory::pointer m_decoder;
 
   const uint32_t m_users;
   const uint32_t m_generationSize;

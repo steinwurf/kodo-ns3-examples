@@ -55,14 +55,14 @@ public:
 
     // Call factories from basic parameters
     typename rlnc_encoder::factory encoder_factory (m_generationSize,
-                                                    m_packetSize);
+      m_packetSize);
     typename rlnc_decoder::factory decoder_factory (m_generationSize,
-                                                    m_packetSize);
+      m_packetSize);
 
     // Encoder creation and settings
     m_encoder = encoder_factory.build ();
     m_encoder->set_systematic_off ();
-    m_encoder->seed ( (uint32_t)time (0));
+    m_encoder->seed ((uint32_t)time (0));
 
     // Initialize the input data
     std::vector<uint8_t> data (m_encoder->block_size (), 'x');
