@@ -1,6 +1,6 @@
 /* -*-  Mode: C++; c-file-style: "gnu"; indent-tabs-mode:nil; -*- */
 /*
- * Copyright (c) 2009 The Boeing Company
+ * Copyright (c) 2014 Steinwurf ApS
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 as
@@ -15,10 +15,13 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
+ * Main Author: Néstor J. Hernández M. <nestor@steinwurf.com>
+ * Author: Morten V. Pedersen <morten@steinwurf.com>
+ * Author: Péter Vingelmann <peter@steinwurf.com>
  */
 
 // This example shows how to use the Kodo library in a ns-3 simulation.
-// The code below is based on the wifi-simple-adhoc example, which can
+// The code below is inspired from the wifi-simple-adhoc example, which can
 // be found here ns-3-dev/examples/wireless/wifi-simple-adhoc.cc in the
 // ns-3 source code.
 
@@ -45,7 +48,7 @@
 // Note that all ns-3 attributes (not just the ones exposed in the below
 // script) can be changed at command line; see the documentation.
 //
-// When you are done, you will notice N + 1 trace files in your directory, one
+// After running, you will notice N + 1 trace files in your directory, one
 // per device. You can review the files with Wireshark or tcpdump. If you have
 // tcpdump installed, you can try this:
 //
