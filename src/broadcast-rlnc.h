@@ -61,32 +61,6 @@ public:
 
   }
 
-  void ReceivePacket (ns3::Ptr<ns3::Socket> socket)
-  {
-    decoder_pointer decoder = m_socketMap[socket];
-    auto packet = socket->Recv ();
-    packet->CopyData (&m_payload_buffer[0], decoder->payload_size ());
-    decoder->decode (&m_payload_buffer[0]);
-
-    if (kodo::has_trace<rlnc_decoder>::value)
-      {
-        auto filter = [] (const std::string& zone)
-        {
-          std::set<std::string> filters =
-            {"decoder_state","input_symbol_coefficients"};
-          return filters.count (zone);
-        };
-
-        auto id = std::distance (std::begin (m_socketMap),
-                                 m_socketMap.find (socket)) + 1;
-
-        std::cout << "Received a packet at decoder " << id << std::endl;
-        std::cout << "Trace on decoder " << id << " is: " << std::endl;
-        kodo::trace (decoder, std::cout, filter);
-
-      }
-  }
-
   void SendPacket (ns3::Ptr<ns3::Socket> socket, ns3::Time pktInterval)
   {
     bool all_decoded = true;
@@ -123,6 +97,32 @@ public:
         std::cout << "Decoding completed! Total transmissions: "
                   << m_transmission_count << std::endl;
         socket->Close ();
+      }
+  }
+
+  void ReceivePacket (ns3::Ptr<ns3::Socket> socket)
+  {
+    decoder_pointer decoder = m_socketMap[socket];
+    auto packet = socket->Recv ();
+    packet->CopyData (&m_payload_buffer[0], decoder->payload_size ());
+    decoder->decode (&m_payload_buffer[0]);
+
+    if (kodo::has_trace<rlnc_decoder>::value)
+      {
+        auto filter = [] (const std::string& zone)
+        {
+          std::set<std::string> filters =
+            {"decoder_state","input_symbol_coefficients"};
+          return filters.count (zone);
+        };
+
+        auto id = std::distance (std::begin (m_socketMap),
+                                 m_socketMap.find (socket)) + 1;
+
+        std::cout << "Received a packet at decoder " << id << std::endl;
+        std::cout << "Trace on decoder " << id << " is: " << std::endl;
+        kodo::trace (decoder, std::cout, filter);
+
       }
   }
 
