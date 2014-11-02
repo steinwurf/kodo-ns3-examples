@@ -64,7 +64,7 @@ To see the current tagged version of ns-3 run: ::
 
 We will select the currently newest release: ::
 
-  hg checkout ns-3.20
+  hg checkout ns-3.21
 
 Configure the ns-3 project by running: ::
 

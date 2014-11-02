@@ -6,8 +6,8 @@ ns3_libs = bld.env['NS3_LIBS']
 
 bld.program(
     features='cxx test',
-    source=['main.cpp'],
-    target='encoder_recoder_decoder',
+    source=['main.cc'],
+    target='wired_broadcast',
     libpath=ns3_build,
     rpath=ns3_build,
     includes=ns3_build,
