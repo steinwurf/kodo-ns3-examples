@@ -79,7 +79,7 @@ int main (int argc, char *argv[])
   double errorRateEncoderRecoder = 0.4; // Error rate for encoder-recoder link
   double errorRateRecoderDecoder = 0.2; // Error rate for recoder-decoder link
   bool recodingFlag = true; // Flag to control recoding
-  uint32_t recoders = 3; // Number of recoders
+  uint32_t recoders = 2; // Number of recoders
 
   Time interPacketInterval = Seconds (interval);
 
