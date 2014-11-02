@@ -43,16 +43,13 @@ public:
   using encoder_pointer = typename rlnc_encoder::factory::pointer;
   using decoder_pointer = typename rlnc_decoder::factory::pointer;
 
-  BroadcastRlnc (const uint32_t users,
-                 const uint32_t generationSize,
-                 const uint32_t packetSize,
-                 const std::vector<ns3::Ptr<ns3::Socket>>& sinks)
+  BroadcastRlnc (const uint32_t users, const uint32_t generationSize,
+    const uint32_t packetSize, const std::vector<ns3::Ptr<ns3::Socket>>& sinks)
     : m_users (users),
       m_generationSize (generationSize),
       m_packetSize (packetSize),
       m_sinks (sinks)
   {
-
     // Call factories from basic parameters
     typename rlnc_encoder::factory encoder_factory (m_generationSize,
       m_packetSize);
@@ -80,7 +77,6 @@ public:
 
     // Initialize transmission count
     m_transmission_count = 0;
-
   }
 
   void SendPacket (ns3::Ptr<ns3::Socket> socket, ns3::Time pktInterval)
@@ -109,15 +105,14 @@ public:
             kodo::trace (m_encoder, std::cout);
           }
 
-        ns3::Simulator::Schedule (
-          pktInterval,
+        ns3::Simulator::Schedule (pktInterval,
           &BroadcastRlnc <field, encoderTrace, decoderTrace>::SendPacket,
           this, socket, pktInterval);
       }
     else
       {
         std::cout << "Decoding completed! Total transmissions: "
-                  << m_transmission_count << std::endl;
+          << m_transmission_count << std::endl;
         socket->Close ();
       }
   }
@@ -139,12 +134,11 @@ public:
         };
 
         auto id = std::distance (std::begin (m_socketMap),
-                                 m_socketMap.find (socket)) + 1;
+          m_socketMap.find (socket)) + 1;
 
         std::cout << "Received a packet at decoder " << id << std::endl;
         std::cout << "Trace on decoder " << id << " is: " << std::endl;
         kodo::trace (decoder, std::cout, filter);
-
       }
   }
 

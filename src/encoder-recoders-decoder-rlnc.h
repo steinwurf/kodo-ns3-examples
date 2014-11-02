@@ -53,7 +53,6 @@ public:
       m_recodersSockets (recodersSockets),
       m_recodingFlag (recodingFlag)
   {
-
     // Call factories from basic parameters
     typename rlnc_encoder::factory encoder_factory (m_generationSize,
       m_packetSize);
@@ -117,14 +116,10 @@ public:
             kodo::trace (m_encoder, std::cout);
           }
 
-        ns3::Simulator::Schedule (
-          pktInterval,
-          &EncoderRecodersDecoderRlnc<field,
-                                      encoderTrace,
-                                      decoderTrace>::SendPacketEncoder,
-          this,
-          socket,
-          pktInterval);
+        ns3::Simulator::Schedule (pktInterval,
+          &EncoderRecodersDecoderRlnc<
+            field, encoderTrace, decoderTrace>::SendPacketEncoder, this,
+          socket, pktInterval);
       }
     else
       {
@@ -171,7 +166,7 @@ public:
   {
     recoder_pointer recoder = m_socketMap[socket];
     auto id = std::distance (std::begin (m_socketMap),
-                            m_socketMap.find (socket)) + 1;
+      m_socketMap.find (socket)) + 1;
 
     if (!m_decoder->is_complete ())
       {
@@ -210,30 +205,26 @@ public:
                 socket->Send (packet);
                 m_recoders_transmission_count++;
                 std::cout << "Forwarding a previous packet from RECODER...\n"
-                          << std::endl;
+                  << std::endl;
               }
          }
 
         ns3::Simulator::Schedule (
           pktInterval,
-          &EncoderRecodersDecoderRlnc<field,
-                                      encoderTrace,
-                                      decoderTrace>::SendPacketRecoder,
-          this,
-          socket,
-          pktInterval);
+          &EncoderRecodersDecoderRlnc<
+            field, encoderTrace, decoderTrace>::SendPacketRecoder, this,
+          socket, pktInterval);
       }
     else
       {
         socket->Close ();
         std::cout << "*** Decoding completed! ***" << std::endl;
         std::cout << "Encoder transmissions: " << m_encoder_transmission_count
-                  << std::endl;
+          << std::endl;
         std::cout << "Recoders transmissions: " << m_recoders_transmission_count
-                  << std::endl;
-        std::cout << "Total transmissions: "
-                  << m_encoder_transmission_count + \
-                     m_recoders_transmission_count << std::endl;
+          << std::endl;
+        std::cout << "Total transmissions: " << m_encoder_transmission_count +
+          m_recoders_transmission_count << std::endl;
       }
   }
 
@@ -283,5 +274,4 @@ private:
   uint32_t m_recoders_transmission_count;
   uint32_t m_decoder_rank;
   ns3::Ptr<ns3::Packet> m_previous_packet;
-
 };
