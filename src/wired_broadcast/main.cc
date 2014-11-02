@@ -20,15 +20,41 @@
  */
 
 // This example shows how to use the Kodo library in a broadcast rlnc scenario
-// within a ns-3 simulation. The code below is based on the wifi_broadcast
+// within a ns-3 simulation. The code below is inspired in the wifi_broadcast
 // example, which can be found in the ns-3-dev repository.
 
-// In the script below the sender transmits encoded packets from a block of
+// In this example, the sender transmits encoded packets from a block of
 // data to N receivers with the same packet erasure rate (errorRate). The sender
-// continues until all receivers have decoded all packets. Here the packets
+// continues until all receivers have decoded all packets. By default, the packets
 // are sent using the binary field, GF(2) with a generation of 5 packets and
 // 1000 (application) bytes and an erasure rate of 30% for all the nodes.
-// Here we have set the number of receivers to 2 by default but it can changed
+// Here we have set the number of receivers to 2 by default but it can changed.
+
+// The considered topology is the following:
+
+//          +-----------------------------------------------+
+//          |             Encoder (Node 0)                  |  N: Number of
+//          |                                               |     decoders
+//          | Net Device 1   Net Device 2  ..  Net Device N |
+//          | IP: 10.1.1.1   IP: 10.1.2.1  ..  IP: 10.1.N.1 |  e[j]: Erasure
+//          |                                               |  rate on device
+//          |     +---+         +---+             +---+     |  "j", j = 1,.., N
+//          |     |   |         |   |             |   |     |  e[j] = errorRate
+//          +-----+-+-+---------+-+-+-------------+-+-+-----+
+//                  |             |                 |
+//                  |             |                 |
+//         e1  +----+         e2  +--------         +---------------+  eN
+//             |                          |                         |
+//  +--------+-v-+-------+     +--------+-v-+-------+    +--------+-v-+-------+
+//  |        |   |       |     |        |   |       |    |        |   |       |
+//  |        +---+       |     |        +---+       |    |        +---+       |
+//  |                    |     |                    |    |                    |
+//  | Decoder 1 (Node 1) |     | Decoder 2 (Node 2) | .. | Decoder N (Node N) |
+//  |                    |     |                    |    |                    |
+//  |    Net Device 1    |     |    Net Device 1    | .. |    Net Device 1    |
+//  |    IP: 10.1.1.1    |     |    IP: 10.1.1.1    | .. |    IP: 10.1.1.1    |
+//  +--------------------+     +--------------------+    +--------------------+
+
 
 // You can change any parameter, by running (for example with a different
 // generation size):
