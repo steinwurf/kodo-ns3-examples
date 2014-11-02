@@ -57,7 +57,6 @@
 //  +--------------------+     +--------------------+    +--------------------+
 
 //          N: number of decoders              e: errorRate
-//
 
 // By using the previous topology and IP addressing, we ensure that packets
 // are properly broadcasted within the network

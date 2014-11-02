@@ -25,29 +25,69 @@
 // be found here ns-3-dev/examples/wireless/wifi-simple-adhoc.cc in the
 // ns-3 source code.
 
-// In the script below the sender transmits encoded packets in a non-systematic
-// way from a block of data to N receivers (N =  2 by default). The sender
-// continues until the receiver has all the packets. The description below is
-// from the original example, we modified it at bit fit our scenario.
+// In the source code below the sender transmits encoded packets in a
+// non-systematic way from a block of data to N receivers (2 by default).
+// The sender continues until each receiver has all the packets.
 
-// This script configures two nodes on a 802.11b physical layer, with
-// 802.11b NICs in adhoc mode, and by default, sends one generation of
+// We consider N + 1 nodes on a 802.11b physical layer, with 802.11b net
+// devices in adhoc mode, and by default, sends one generation of
 // 5 packets and 1000 (application) bytes to the other nodes. The physical
-// layer is configured to receive at a fixed RSS (regardless of the distance
-// and transmit power); therefore, changing position of the nodes has no effect.
+// layer is configured to receive at a fixed rss (receiver signal strength)
+// regardless of the distance and transmit power); therefore, changing position
+// of the nodes has no effect.
 //
+// The considered topology is the following:
+
+//                             +-------------------+
+//                             |  Encoder (Node 0) |
+//                             |                   |
+//                             |    Net Device 1   |
+//                             |    IP: 10.1.1.1   |
+//                             |                   |
+//                             |        +---+      |
+//                             |        |   |      |
+//                             +--------+-+-+------+
+//                                        |
+//                                        |
+//                  +---------------------v--------------------+
+//                  |                                          |
+//                  |  WiFi Standard: 802.11b                  |
+//                  |  Modulation: DSSS 1Mbps at 2.4 GHz       |
+//                  |  WiFi Channel: YansWiFi                  |
+//                  |  Propagation: Fixed propagation loss     |
+//                  |  Delay: Constant                         |
+//                  |  WiFi MAC: Ad-Hoc                        |
+//                  |  RTS / CTS threshold: 2200 bytes         |
+//                  |  Framentation threshold: 2200 bytes      |
+//                  |  Non-unicast data rate: Same as unicast  |
+//                  |                                          |
+//                  +--------+--------------------------+------+
+//                           |                          |
+//                           |  rss                     |  rss
+//                +--------+-v-+-------+     +--------+-v-+---------+
+//                |        |   |       |     |        |   |         |
+//                |        +---+       |  .. |        +---+         |
+//                |                    |  .. |                      |
+//                | Decoder 1 (Node 1) |     | Decoder N (Node N+1) |
+//                |                    |     |                      |
+//                |    Net Device 1    |     |    Net Device 1      |
+//                |    IP: 10.1.1.2    |     |    IP: 10.1.1.N+1    |
+//                +--------------------+     +----------------------+
+
+//                N: number of decoders    rss: Received Signal Strength
+
 // For instance, for this configuration, the physical layer will
 // stop of successfully receiving packets when rss (receiver signal strength)
-// drops below -96 dBm.
+// drops below -96 dBm. This means that -96 dBm is the thresho
 
 // To see this effect, try by changing the rss parameter on the simulation
-// by typing ./build/linux/wifi_broadcast/wifi_broadcast --rss=-96
-// With this value (or higher), the erasure rate goes to 1 and the packets can
-// not be recovered.
-//
-// Note that all ns-3 attributes (not just the ones exposed in the below
-// script) can be changed at command line; see the documentation.
-//
+// by typing:
+// ./build/linux/src/wifi_broadcast/wifi_broadcast --rss=-96
+
+// With this value (or lower), the erasure rate goes to 1 and the packets can
+// not be recovered. Higher rss power values ensure packet reception and
+// decoding
+
 // After running, you will notice N + 1 trace files in your directory, one
 // per device. You can review the files with Wireshark or tcpdump. If you have
 // tcpdump installed, you can try this:
