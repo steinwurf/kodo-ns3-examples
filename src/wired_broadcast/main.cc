@@ -59,10 +59,10 @@
 // By using the previous topology and IP addressing, we ensure that packets
 // are properly broadcasted within the network
 
-// You can modify the default parameter, by running (for example with a
+// You can modify any default parameter, by running (for example with a
 // different error rate):
 
-// ./build/linux/wired_broadcast/wired_broadcast --errorRate=MY_ERROR_RATE
+// ./build/linux/src/wired_broadcast/wired_broadcast --errorRate=MY_ERROR_RATE
 
 // The parameters that can be modified are: generationSize, packetSize, ns-3
 // simulation interval (for controlling event ocurrences), errorRate in the

@@ -18,37 +18,79 @@
  * Author: Néstor J. Hernández M. <nestor@steinwurf.com>
  */
 
-// This example shows how to use the Kodo library for recoding at an
-// intermediate node in the network within a ns-3 simulation. Recoding is
+// This example shows how to use the Kodo library for recoding at many
+// intermediate nodes in a network within a ns-3 simulation. Recoding is
 // one of the characteristic features of network coding because it
 // differentiates from end-to-end codes by allowing any intermediate node
 // to recode a coded packet, even if its data set has not been completely
 // decoded yet.
 
-// In the script below an encoder transmits coded packets from a block of
-// data to a node through an erasure channel with a given rate, which may or
-// may not recode the data. This node transmits its packets to a decoder
-// (thorugh another erasure channel) until it has received a complete
-// generation. Here the packets are sent using the binary field, GF(2) with a
-// generation of 3 packets and 1000 (application) bytes to the other node.
-// Topology with IP addresses per net device is as follows:
+// In the source code below an encoder transmits coded packets from a block of
+// data to a set of nodes with the same erasure channel
+// (errorRateEncoderRecoders) The recoders which may or may not recode the data
+// according to a boolean value (recodingFlag). Then, recoders transmit its
+// packets to a decoder through another erasure channel
+// (errorRateRecodersDecoder). Coded packets are sent from the recoders until
+// the decoder has received the complete generation. By default, packets are
+// sent using the binary8 field, GF(2^8) with a generation of 3 packets and
+// 1000 (application) bytes per packet. Default error rates are 40% for the
+// encoder-recoders hop and 20% for the recoders-decoder hop. By default, we
+// set the number of recoders to 2.
 
-//         +-----------+  e1  +-----------+  e2  +------------+
-//         |  encoder  |+---->|  recoder  |+---->|  decoder_2 |
-//         +-----------+      +-----------+      +------------+
-//  IP:       10.1.1.1           10.1.1.2           10.1.1.4
-//                               10.1.1.3
+// In general, topology with IP addresses per net device is as follows:
 
-// In the previous figure: e1 is the packet error rate between encoder and
-// recoder, namely errorRateEncoderRecoder. e2 is the packet error rate
-// between recoder and decoder, namely errorRateRecoderDecoder. Each IP address
-// represents a net device in the node.
+//                +-----------------------------------------------+
+//                |             Encoder (Node 0)                  |
+//                |                                               |
+//                | Net Device 1   Net Device 2  ..  Net Device N |
+//                | IP: 10.1.1.1   IP: 10.1.2.1  ..  IP: 10.1.N.1 |
+//                |                                               |
+//                |     +---+         +---+             +---+     |
+//                |     |   |         |   |             |   |     |
+//                +-----+-+-+---------+-+-+-------------+-+-+-----+
+//                        |             |                 |
+//     eE-R  +------------+        eE-R |           eE-R  +-------+
+//           |                          |                         |
+//+--------+-v-+-------+     +--------+-v-+-------+    +--------+-v-+-------+
+//|        |   |       |     |        |   |       |    |        |   |       |
+//|        +-+-+       |     |        +-+-+       |    |        +-+-+       |
+//|    Net Device 1    |     |    Net Device 1    | .. |    Net Device 1    |
+//|    IP: 10.1.1.2    |     |    IP: 10.1.2.2    | .. |    IP: 10.1.N.N    |
+//|                    |     |                    |    |                    |
+//| Recoder 1 (Node 1) |     | Recoder 2 (Node 2) | .. | Recoder N (Node N) |
+//|                    |     |                    |    |                    |
+//|    Net Device 2    |     |    Net Device 2    | .. |    Net Device 2    |
+//|    IP: 10.2.1.1    |     |    IP: 10.2.1.3    | .. |    IP: 10.2.1.2N+1 |
+//|                    |     |                    |    |                    |
+//|        +---+       |     |        +---+       |    |        +---+       |
+//|        |   |       |     |        |   |       |    |        |   |       |
+//+--------+-+-+-------+     +--------+-+-+-------+    +--------+-+-+-------+
+//           |                          |                         |
+//           +-----------+  eR-D        |  eR-D           +-------+  eR-D
+//                       |              |                 |
+//               +-----+-v-+----------+-v-+-------------+-v-+----+
+//               |     |   |          |   |             |   |    |
+//               |     +---+          +---+             +---+    |
+//               |                                               |
+//               |             Decoder (Node N+1)                |
+//               |                                               |
+//               | Net Device 1   Net Device 2  ..  Net Device N |
+//               | IP: 10.2.1.2   IP: 10.2.1.4  ..  IP: 10.2.1.2N|
+//               +-----------------------------------------------+
 
-// You can change any parameter, by running (for example with a different
-// generation size):
-// ./build/linux/encoder_recoder_decoder/encoder_recoder_decoder --generationSize=GENERATION_SIZE
+//                           N: Number of recoders
+//                           eE-R: errorRateEncoderRecoders
+//                           eR-D: errorRateRecodersDecoder
 
-// When you are done, you will notice four pcap trace files in your directory.
+// By using the previous topology and IP addressing, we ensure that packets
+// are properly broadcasted to the recoders and each combination is sent from
+// the respective recoder to the decoder.
+
+// You can modify any default parameter, by running (for example with a
+// different number of recoders):
+// ./build/linux/src/encoder_recoder_decoder/encoder_recoder_decoder --recoders=MY_RECODERS_AMOUNT
+
+// When you are done, you will notice many pcap trace files in your directory.
 // You can review the files with Wireshark or tcpdump. If you have tcpdump
 // installed, you can try (for example) this:
 //
