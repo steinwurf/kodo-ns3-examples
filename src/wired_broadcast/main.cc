@@ -24,11 +24,12 @@
 // example, which can be found in the ns-3-dev repository.
 
 // In this example, the sender transmits encoded packets from a block of
-// data to N receivers with the same packet erasure rate (errorRate). The sender
-// continues until all receivers have decoded all packets. By default, the packets
-// are sent using the binary field, GF(2) with a generation of 5 packets and
-// 1000 (application) bytes and an erasure rate of 30% for all the nodes.
-// Here we have set the number of receivers to 2 by default but it can changed.
+// data to N receivers with the same packet erasure rate (errorRate).
+// The sender continues until all receivers have decoded all packets. By
+// default, the packets are sent using the binary field, GF(2) with a
+// generation of 5 packets and 1000 (application) bytes and an erasure rate
+// of 30% for all the nodes. Here we have set the number of receivers to 2
+// by default but it can changed.
 
 // The considered topology is the following:
 
@@ -55,15 +56,24 @@
 //  |    IP: 10.1.1.2    |     |    IP: 10.1.2.2    | .. |    IP: 10.1.N.N    |
 //  +--------------------+     +--------------------+    +--------------------+
 
+// By using the previous topology and IP addressing, we ensure that packets
+// are properly broadcasted within the network
 
-// You can change any parameter, by running (for example with a different
-// generation size):
-// ./build/linux/wired_broadcast/wired_broadcast --generationSize=GENERATION_SIZE
+// You can modify the default parameter, by running (for example with a
+// different error rate):
 
-// When you are done, you will notice several pcap trace files in your directory.
-// You can review the files with Wireshark or tcpdump. If you have tcpdump
-// installed, you can try (for example) this:
-//
+// ./build/linux/wired_broadcast/wired_broadcast --errorRate=MY_ERROR_RATE
+
+// The parameters that can be modified are: generationSize, packetSize, ns-3
+// simulation interval (for controlling event ocurrences), errorRate in the
+// devices and total amount of users. For the field size, refer to the source
+// code in the corresponding part below, modify and rebuild the project to
+// make it effective (this is essential).
+
+// When you are done, you will notice several pcap trace files in your
+// directory. You can review the files with Wireshark or tcpdump. If
+// you have tcpdump installed, you can try (for example) this:
+
 // tcpdump -r wired-broadcast-rlnc-0-0.pcap -nn -tt
 
 #include <ns3/point-to-point-star.h>
