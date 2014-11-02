@@ -33,9 +33,9 @@
 // (errorRateRecodersDecoder). Coded packets are sent from the recoders until
 // the decoder has received the complete generation. By default, packets are
 // sent using the binary8 field, GF(2^8) with a generation of 3 packets and
-// 1000 (application) bytes per packet. Default error rates are 40% for the
-// encoder-recoders hop and 20% for the recoders-decoder hop. By default, we
-// set the number of recoders to 2.
+// 1000 (application) bytes per packet. Default error rates are 40% (0.4) for
+// the encoder-recoders hop and 20% (0.2) for the recoders-decoder hop. By
+// default, we set the number of recoders to 2.
 
 // In general, topology with IP addresses per net device is as follows:
 

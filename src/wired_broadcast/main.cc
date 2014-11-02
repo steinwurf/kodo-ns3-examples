@@ -28,23 +28,23 @@
 // The sender continues until all receivers have decoded all packets. By
 // default, the packets are sent using the binary field, GF(2) with a
 // generation of 5 packets and 1000 (application) bytes and an erasure rate
-// of 30% for all the nodes. Here we have set the number of receivers to 2
+// of 30% (0.3) for all the nodes. Here we have set the number of receivers to 2
 // by default but it can changed.
 
 // The considered topology is the following:
 
-//          +-----------------------------------------------+
-//          |             Encoder (Node 0)                  |  N: Number of
-//          |                                               |     decoders
-//          | Net Device 1   Net Device 2  ..  Net Device N |
-//          | IP: 10.1.1.1   IP: 10.1.2.1  ..  IP: 10.1.N.1 |  e[j]: Erasure
-//          |                                               |  rate on device
-//          |     +---+         +---+             +---+     |  "j", j = 1,.., N
-//          |     |   |         |   |             |   |     |  e[j] = errorRate
-//          +-----+-+-+---------+-+-+-------------+-+-+-----+
-//                  |             |                 |
-//                  |             |                 |
-//         e1  +----+         e2  +--------         +---------------+  eN
+//                  +-----------------------------------------------+
+//                  |             Encoder (Node 0)                  |
+//                  |                                               |
+//                  | Net Device 1   Net Device 2  ..  Net Device N |
+//                  | IP: 10.1.1.1   IP: 10.1.2.1  ..  IP: 10.1.N.1 |
+//                  |                                               |
+//                  |     +---+         +---+             +---+     |
+//                  |     |   |         |   |             |   |     |
+//                  +-----+-+-+---------+-+-+-------------+-+-+-----+
+//                          |             |                 |
+//                          |             |                 |
+//          e  +------------+          e  |                 + ------+  e
 //             |                          |                         |
 //  +--------+-v-+-------+     +--------+-v-+-------+    +--------+-v-+-------+
 //  |        |   |       |     |        |   |       |    |        |   |       |
@@ -55,6 +55,9 @@
 //  |    Net Device 1    |     |    Net Device 1    | .. |    Net Device 1    |
 //  |    IP: 10.1.1.2    |     |    IP: 10.1.2.2    | .. |    IP: 10.1.N.N    |
 //  +--------------------+     +--------------------+    +--------------------+
+
+//          N: number of decoders              e: errorRate
+//
 
 // By using the previous topology and IP addressing, we ensure that packets
 // are properly broadcasted within the network
