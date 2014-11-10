@@ -28,10 +28,11 @@ Examples builds
 ---------------
 
 You can check the build status of the repository master branch in our
-`buildbot <http://buildbot.steinwurf.dk/stats?projects=kodo-ns3-examples>`_ page.
-There you can check statistics and builds for different platforms and compilers
-for this in the respecive waterfall link, but also other projects like Kodo
-itself.
+`buildbot <http://buildbot.steinwurf.dk/stats?projects=kodo-ns3-examples>`_
+page. Our buildbot project displays for which platforms, operating systems and
+compilers combinations the project is supported. At the link, you can check
+build status and build statistics for them in the respective waterfall link.
+This information is provided also for other Steinwurf projects as Kodo itself.
 
 What do we assume you know before the tutorial?
 -----------------------------------------------
