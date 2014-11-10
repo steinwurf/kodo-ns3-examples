@@ -15,14 +15,14 @@ Currently the repository ``kodo-ns3-examples`` contains 3 basic examples
 in its main path regarding how to use the library with ns-3, namely:
 
 * ``wifi_broadcast``: This example consists on broadcasting packets
-  with RLNC on a single transmitter receiver pair with an IEEE 802.11b WiFi
+  with RLNC from a transmitter to N receivers with an IEEE 802.11b WiFi
   channel.
 * ``wired_broadcast``: This example consists on broadcasting packets
-  with RLNC from a transmitter to 2 receivers with the same erasure channel.
+  with RLNC from a transmitter to N receivers with the same erasure channel.
 * ``encoder_recoder_decoder``: This example shows the gain of RLNC
-  with recoding in a 2-hop line network consisting of an encoder, recoder and
-  decoder with different erasure rates. Recoding can be set on or off and
-  erasures rate modified by command line parsing.
+  with recoding in a 2-hop line network consisting of an encoder, N recoders and
+  a decoder with different erasure rates. Recoding can be set on or off and
+  erasure rates modified by command line parsing.
 
 Examples builds
 ---------------
@@ -30,16 +30,8 @@ Examples builds
 You can check the build status of the repository master branch in our
 `buildbot <http://buildbot.steinwurf.dk/stats?projects=kodo-ns3-examples>`_ page.
 There you can check statistics and builds for different platforms and compilers
-for this but also other projects like Kodo itself.
-
-Platform and compiler support
------------------------------
-
-Currently we support the examples in 64-bit Linux (Debian Jessie) and Mac
-(OSX Mavericks 10.9) desktop machines with Python 2.7. For the compilers case,
-we run the builds for GCC 4.8 and Clang 3.4. If you want to check a build for a
-particular platform - compiler combination not listed here, please let us know
-through our developers mailing list.
+for this in the respecive waterfall link, but also other projects like Kodo
+itself.
 
 What do we assume you know before the tutorial?
 -----------------------------------------------
