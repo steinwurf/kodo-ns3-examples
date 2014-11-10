@@ -60,7 +60,8 @@ As with any source code, the overview comments provide a reference to the users
 regarding project general aspects. The E-macs descriptor is part of the
 ns-3 coding style to allow E-macs developers' editor to recognize the document
 type. Following, licensing terms and an introduction to what we are simulating
-are displayed. Header includes are ordered from most general to particular functionalities within ns-3 and Kodo. From ns-3, the necessary modules are:
+are displayed. Header includes are ordered from most general to particular
+funtionalities within ns-3 and Kodo. From ns-3, the necessary modules are:
 
 * Core module: For simulation event handling. This module provide a set of
   class-based APIs that control the simulation behaviour. It is essential for
@@ -83,7 +84,8 @@ are displayed. Header includes are ordered from most general to particular funct
 * Internet module: For handling the IPv4 protocol at the network layer.
 
 Other includes are particular to this implementation and they can be found in
-standard C++ code. From Kodo, the header ``broadcast-rlnc.h`` contains the description of the encoder and decoder objects we use.
+standard C++ code. From Kodo, the header ``broadcast-rlnc.h`` contains the
+description of the encoder and decoder objects that we use.
 
 Default Namespace
 ^^^^^^^^^^^^^^^^^
@@ -98,128 +100,158 @@ this library. This is typical across ns-3 code.
 Main simulation class
 ^^^^^^^^^^^^^^^^^^^^^
 
-Before starting, we describe a Kodo object created with the purpose to
-represent the RLNC broadcast topology. In this sense, we represent our Kodo simulation as a class with different functionalities. Of course, this is purely subjective. You may choose how you represent your objects in your simulation. Although, we choose this way because it enabled us to modularize all the
-simulation into a single object which is controlled by the network through the
-tasks of the devices. Also, other ns-3 objects can extract information
-from it in an easy way.
+Before starting, we describe a Kodo object created in ``broadcast-rlnc.h``
+with the purpose to represent the RLNC broadcast topology. In this sense, we represent our Kodo simulation as a class with different functionalities.
+Of course, this is purely subjective. You may choose how you represent your
+objects in your simulation. Although, we choose this way because it enabled
+us to modularize all the simulation into a single object which is controlled
+by the network through the tasks of the net devices. Also, other ns-3 objects
+can extract information from it in an easy way.
 
 The ``BroadcastRlnc`` class can be roughly defined in the following way:
 
 .. code-block:: c++
 
-   class KodoSimulation
-   {
-   public:
+  #pragma once
 
-     KodoSimulation(const rlnc_encoder::pointer& encoder,
-                    const rlnc_decoder::pointer& decoder)
-       : m_encoder(encoder),
-         m_decoder(decoder)
-     {
-       // Constructor
-     }
+  #include <kodo/rlnc/full_rlnc_codes.hpp>
+  #include <kodo/trace.hpp>
+  #include <kodo/wrap_copy_payload_decoder.hpp>
 
-     void ReceivePacket (Ptr<Socket> socket)
-     {
-       // Receiver actions performed when a packet is received on its socket
-     }
 
-     void GenerateTraffic (Ptr<Socket> socket, Time pktInterval)
-     {
-       // Transmitter actions performed every "pktInterval" on its socket
-     }
+  template<class field, class encoderTrace, class decoderTrace>
+  class BroadcastRlnc
+  {
+  public:
 
-   private:
+    using rlnc_encoder = typename kodo::full_rlnc_encoder<field, encoderTrace>;
+    using non_copy_rlnc_decoder = typename kodo::full_rlnc_decoder<field,
+      decoderTrace>;
 
-     rlnc_encoder::pointer m_encoder;  // Pointer to encoder
-     rlnc_decoder::pointer m_decoder;  // Pointer to decoder
+    using rlnc_decoder = typename kodo::wrap_copy_payload_decoder<
+      non_copy_rlnc_decoder>;
 
-     std::vector<uint8_t> m_payload_buffer; // Buffer for handling current
-                                            // coded packet and its coefficients
+    using encoder_pointer = typename rlnc_encoder::factory::pointer;
+    using decoder_pointer = typename rlnc_decoder::factory::pointer;
 
-     uint32_t m_transmission_count;  // Amount of transmissions from the encoder
+    BroadcastRlnc (const uint32_t users, const uint32_t generationSize,
+      const uint32_t packetSize, const std::vector<ns3::Ptr<ns3::Socket>>& sinks)
+      : m_users (users),
+        m_generationSize (generationSize),
+        m_packetSize (packetSize),
+        m_sinks (sinks)
+    {
+      // Constructor
+    }
 
-   };
+    void SendPacket (ns3::Ptr<ns3::Socket> socket, ns3::Time pktInterval)
+    {
+      // Source node logic
+    }
 
-For the simulation, ``void GenerateTraffic(Ptr<Socket> socket, Time
+    void ReceivePacket (ns3::Ptr<ns3::Socket> socket)
+    {
+      // Decoder nodes logic
+    }
+
+  private:
+
+    const uint32_t m_users;
+    const uint32_t m_generationSize;
+    const uint32_t m_packetSize;
+
+    encoder_pointer m_encoder;
+    std::vector<decoder_pointer> m_decoders;
+    std::vector<ns3::Ptr<ns3::Socket>> m_sinks;
+    std::map<ns3::Ptr<ns3::Socket>,decoder_pointer> m_socketMap;
+
+    std::vector<uint8_t> m_payload_buffer;
+    uint32_t m_transmission_count;
+  };
+
+A broadcast topology is a template class. We will describe them to have
+of what they model and control. The first template argument is the finite
+field we will be using, represented through an object from our
+`Fifi  <https://github.com/steinwurf/fifi>`_ library. Fifi is a dependency for
+Kodo where all the finite field arithmetics resides. In the ``main.cc`` file,
+you can see that since we are interested in :math:`q = 2`, we choose
+``fifi:binary``. However, other field types from Fifi might be chosen too
+according to your application. Current available field sizes are:
+:math:`q = {2^4, 2^8, 2^{16}, 2^{32}-5}`.
+
+The second and third template arguments control the use of tracing in the
+simulation encoder and decoder objects. In ``main.cc``, ``kodo::enable_trace``
+and ``kodo::disable_trace`` respectively enables or disables the tracing
+functionality where it is employed. For our implementation, we enable tracing
+for our decoders and disable it for the encoder. Later in the simulation
+runs, we will check what options does tracing has on each device type.
+
+We create a set of ``typedefs`` required to make easy calls. ``rlnc_encoder``
+to name our encoder class. The ``rlnc_decoder`` case is slightly different.
+Normally, in Kodo, everytime a packet is received in a decoder, the payload is
+modified during decoding. To overcome this problem, the API has an extension
+that ensures the payload is not overwritten, namely
+``kodo::wrap_copy_payload_decoder<decoder_type>``, where ``decoder_type`` in
+our case is a common decoder type created from the API. Then, we create two
+types of pointers, one for the encoder (``encoder_pointer``) and another for
+the decoder (``decoder_pointer``). An encoder or decoder pointer, points to an
+instance of the specified type.
+
+For the simulation, ``void SendPacket(ns3::Ptr<ns3::Socket> socket, ns3::Time
 pktInterval)`` generates coded packets from generic data (created in the
-constructor) every ``pktInterval`` units of ``Time`` (which is a ns-3 type) and
-sends them to the decoder through its socket connection, represented by the
-ns-3 template-based smart pointer object ``Ptr<Socket>``. Several ns-3 objects
-are represented in this way. So quite often you will see this kind of pointer
-employed. This type of pointer is made to make a proper memory usage.
+constructor) every ``pktInterval`` units of ``Time`` and sends them to the
+decoders through their socket connections, represented by the
+ns-3 template-based smart pointer object ``ns3::Ptr<ns3::Socket>``. Several
+ns-3 objects are represented in this way. So quite often you will see this
+kind of pointer employed. This ns-3 pointer is intended to make a proper
+memory usage.
 
-As we will check later, ``void ReceivePacket(Ptr<Socket> socket)`` will be
-invoked through a callback whenever a packet is received at the decoder. Both
-sockets make use of ``m_payload_buffer``. The transmitter creates coded
-packets from the data and puts them in the buffer. Conversely, a received coded
-packet is placed in the buffer and then to the decoding matrix.
+As we will check later, ``void ReceivePacket(ns3::Ptr<ns3::Socket> socket)``
+will be invoked through a callback whenever a packet is received at a
+decoder. In this case, the decoder that triggered the callback is obtained
+from an internal map. All nodes make use of ``m_payload_buffer``. The
+transmitter creates coded packets from the data and puts them in the buffer.
+Conversely, a received coded packet is placed in the buffer and then to its
+respective decoding matrix.
 
 You can check the source code to verify that these functionalities are
 performed by the APIs ``m_encoder->encode()`` and ``m_decoder->decode()``. For
 the encoding case, the amount of bytes required from the buffer to store the
-coded packet and its coefficients is returned. This amount is needed for the
-ns-3 ``Create<Packet>`` template-based constructor to create the ns-3 coded
-packet that is actually sent (and received). Finally, ``m_transmission_count``
-indicates how many packets were sent by the encoder during the whole process.
-Please make a review to the implementation of ``GenerateTraffic`` and
-``ReceivePacket`` to verify the expected behaviour of the nodes when packets
-are sent or received respectively.
+coded packet and its coefficients is returned. This amount is needed for
+``ns3::Create<ns3::Packet>`` template-based constructor to create the ns-3
+coded packet that is actually sent (and received). Finally,
+``m_transmission_count`` indicates how many packets were sent by the encoder
+during the whole process. Please make a review to the implementation of
+``SendPacket`` and ``ReceivePacket`` to verify the expected behaviour of the
+nodes when packets are sent or received respectively.
 
 Default parameters and command parsing
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. code-block:: c++
-
- int main (int argc, char *argv[])
- {
-   std::string phyMode ("DsssRate1Mbps");
-   double rss = -93;  // dBm
-   uint32_t packetSize = 1000; // bytes
-   double interval = 1.0; // seconds
-   uint32_t generationSize = 5;
-
-   CommandLine cmd;
-
-   cmd.AddValue ("phyMode", "Wifi Phy mode", phyMode);
-   cmd.AddValue ("rss", "received signal strength", rss);
-   cmd.AddValue ("packetSize", "size of application packet sent", packetSize);
-   cmd.AddValue ("interval", "interval (seconds) between packets", interval);
-   cmd.AddValue ("generationSize", "Set the generation size to use",
-                 generationSize);
-
-   cmd.Parse (argc, argv);
-
-   // Convert to time object
-   Time interPacketInterval = Seconds (interval);
+.. literalinclude:: ../src/wifi_broadcast/main.cc
+   :language: c++
+   :start-after: //! [4]
+   :end-before: //! [5]
+   :linenos:
 
 The first part of the ``main`` function introduces us to the basic simulation
 parameters regarding physical layer mode for WiFi (Direct Sequence Spread
 Spectrum of 1 Mbps rate), receiver signal strength of -93 dBm, 1 KB for packet
-size, 1 second interval duration between ns-3 events (we will use it later) and
-a generation size of 5 packets. After that, the ``CommandLine`` class is ns-3's
-command line parser used to modify those values (if required) with ``AddValue``
-and ``Parse``. Then, the interval duration is converted to the ns-3 ``Time``
-format.
+size, 1 second interval duration between ns-3 events (we will use it later),
+a generation size of 5 packets and 2 users (receivers). After that, the
+``CommandLine`` class is ns-3's command line parser used to modify those
+values (if required) with ``AddValue`` and ``Parse``. Then, the interval
+duration is converted to the ns-3 ``Time`` format.
 
 
 Configuration defaults
 ^^^^^^^^^^^^^^^^^^^^^^
 
-.. code-block:: c++
-
-  // disable fragmentation for frames below 2200 bytes
-  Config::SetDefault ("ns3::WifiRemoteStationManager::FragmentationThreshold",
-                      StringValue ("2200"));
-
-  // turn off RTS/CTS for frames below 2200 bytes
-  Config::SetDefault ("ns3::WifiRemoteStationManager::RtsCtsThreshold",
-                      StringValue ("2200"));
-
-  // Fix non-unicast data rate to be the same as that of unicast
-  Config::SetDefault ("ns3::WifiRemoteStationManager::NonUnicastMode",
-                      StringValue (phyMode));
+.. literalinclude:: ../src/wifi_broadcast/main.cc
+   :language: c++
+   :start-after: //! [5]
+   :end-before: //! [6]
+   :linenos:
 
 Before continuing, you will see many features of ns-3's `WiFi implementation
 <http://www.nsnam.org/docs/release/3.20/models/singlehtml/index.html#document-wifi>`_.
@@ -236,33 +268,11 @@ with the WiFi MAC.
 WiFi PHY and channel helpers for nodes
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. code-block:: c++
-
-  // Source and destination
-  NodeContainer c;
-  c.Create (2);
-
-  // The below set of helpers will help us to put together the WiFi NICs we want
-  WifiHelper wifi;
-  wifi.SetStandard (WIFI_PHY_STANDARD_80211b);
-
-  YansWifiPhyHelper wifiPhy =  YansWifiPhyHelper::Default ();
-
-  // This is one parameter that matters when using FixedRssLossModel
-  // set it to zero; otherwise, gain will be added
-  wifiPhy.Set ("RxGain", DoubleValue (0) );
-
-  // ns-3 supports RadioTap and Prism tracing extensions for 802.11b
-  wifiPhy.SetPcapDataLinkType (YansWifiPhyHelper::DLT_IEEE802_11_RADIO);
-
-  YansWifiChannelHelper wifiChannel;
-  wifiChannel.SetPropagationDelay ("ns3::ConstantSpeedPropagationDelayModel");
-
-  // The below FixedRssLossModel will cause the rss to be fixed regardless
-  // of the distance between the two stations, and the transmit power
-  wifiChannel.AddPropagationLoss ("ns3::FixedRssLossModel","Rss",
-                                  DoubleValue (rss));
-  wifiPhy.SetChannel (wifiChannel.Create ());
+.. literalinclude:: ../src/wifi_broadcast/main.cc
+   :language: c++
+   :start-after: //! [6]
+   :end-before: //! [7]
+   :linenos:
 
 In this part we start to build the topology for our simulation following
 a typical ns-3 workflow. By typical we mean that this can be done in different
@@ -289,22 +299,18 @@ a fixed value regardless of the position the nodes have. This fixed value is
 set to -93 dBm, but we can modify it through argument parsing. With these
 settings, we create our WiFi PHY layer channel by doing ``wifiPhy.SetChannel
 (wifiChannel.Create ());``. If you want to read more about how the helpers are
-implemented, you can check the `Yans description <http://cutebugs.net/files/wns2-yans.pdf>`_
-for further details.
+implemented, you can check the
+`Yans description <http://cutebugs.net/files/wns2-yans.pdf>`_ for further
+details.
 
 WiFi MAC and net device helpers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. code-block:: c++
-
-  // Add a non-QoS upper mac, and disable rate control
-  NqosWifiMacHelper wifiMac = NqosWifiMacHelper::Default ();
-  wifi.SetRemoteStationManager ("ns3::ConstantRateWifiManager",
-                                "DataMode",StringValue (phyMode),
-                                "ControlMode",StringValue (phyMode));
-  // Set it to adhoc mode
-  wifiMac.SetType ("ns3::AdhocWifiMac");
-  NetDeviceContainer devices = wifi.Install (wifiPhy, wifiMac, c);
+.. literalinclude:: ../src/wifi_broadcast/main.cc
+   :language: c++
+   :start-after: //! [7]
+   :end-before: //! [8]
+   :linenos:
 
 Now that we have created the physical objects (the nodes, remember our previous
 definition), we proceed to create the network interface cards (NICs, i.e. net
@@ -325,16 +331,11 @@ cards and put them in a container by doing
 Mobility model and helper
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. code-block:: c++
-
-  MobilityHelper mobility;
-  Ptr<ListPositionAllocator> positionAlloc =
-    CreateObject<ListPositionAllocator> ();
-  positionAlloc->Add (Vector (0.0, 0.0, 0.0));
-  positionAlloc->Add (Vector (5.0, 0.0, 0.0));
-  mobility.SetPositionAllocator (positionAlloc);
-  mobility.SetMobilityModel ("ns3::ConstantPositionMobilityModel");
-  mobility.Install (c);
+.. literalinclude:: ../src/wifi_broadcast/main.cc
+   :language: c++
+   :start-after: //! [8]
+   :end-before: //! [9]
+   :linenos:
 
 The ns-3 ``MobilityHelper`` class assigns a model for the velocities of
 the receivers within ns-3. Even though we had fixed the received power of the
@@ -346,59 +347,30 @@ transmitter and receiver in a 3D grid. Then, we put them in the helper with a
 Internet and application protocol helpers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. code-block:: c++
-
-  InternetStackHelper internet;
-  internet.Install (c);
-
-  Ipv4AddressHelper ipv4;
-  ipv4.SetBase ("10.1.1.0", "255.255.255.0");
-  Ipv4InterfaceContainer i = ipv4.Assign (devices);
+.. literalinclude:: ../src/wifi_broadcast/main.cc
+   :language: c++
+   :start-after: //! [9]
+   :end-before: //! [10]
+   :linenos:
 
 After we have set up the devices and the two lowest layers, we need to set up
 the network and application layer protocols. The ``InternetStackHelper``
 provides functionalities for IPv4, ARP, UDP, TCP, IPv6, Neighbor Discovery, and
 other related protocols. You can find more about the implementation of the
-helper in this `link <http://www.nsnam.org/docs/release/3.20/models/singlehtml/index.html#document-internet-models>`_.
-A similar process is made for the IPv4 address assignment. We use the address
-range ``10.1.1.0`` with the subnet mask ``255.255.255.0``, assign it to the
-``devices`` and put the result in a container.
+helper in this
+`link <http://www.nsnam.org/docs/release/3.20/models/singlehtml/index.html#docu
+ment-internet-models>`_. A similar process is made for the IPv4 address
+assignment. We use the address range ``10.1.1.0`` with the subnet mask
+``255.255.255.0``, assign it to the ``devices``.
 
-Simulation calls
-^^^^^^^^^^^^^^^^
+Sockets construction
+^^^^^^^^^^^^^^^^^^^^
 
-.. code-block:: c++
-
-  rlnc_encoder::factory encoder_factory(generationSize, packetSize);
-  rlnc_decoder::factory decoder_factory(generationSize, packetSize);
-
-  KodoSimulation kodoSimulator(encoder_factory.build(),
-                               decoder_factory.build());
-
-With previous defined typedefs, we call the encoder and decoder factories to
-set and generate objects with the defined inputs. Then, we create the instances
-with ``encoder_factory.build()`` and ``decoder_factory.build()`` to call the
-simulation class constructor. This does not run the simulation as we will see,
-but it creates the objets called by ns-3 to perform the tasks of the transmitter
-and receiver.
-
-Socket creation and connections
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-.. code-block:: c++
-
-  TypeId tid = TypeId::LookupByName ("ns3::UdpSocketFactory");
-  Ptr<Socket> recvSink = Socket::CreateSocket (c.Get (0), tid);
-  InetSocketAddress local = InetSocketAddress (Ipv4Address::GetAny (), 80);
-  recvSink->Bind (local);
-  recvSink->SetRecvCallback (MakeCallback (&KodoSimulation::ReceivePacket,
-                                           &kodoSimulator));
-
-  Ptr<Socket> source = Socket::CreateSocket (c.Get (1), tid);
-  InetSocketAddress remote = InetSocketAddress (Ipv4Address ("255.255.255.255"),
-                                                80);
-  source->SetAllowBroadcast (true);
-  source->Connect (remote);
+.. literalinclude:: ../src/wifi_broadcast/main.cc
+   :language: c++
+   :start-after: //! [10]
+   :end-before: //! [11]
+   :linenos:
 
 For the application protocols to work with a given data, we need a pair between
 an IP address and a logical port to create a socket address for socket
@@ -406,52 +378,71 @@ communication (besides of course, the socket itself). ns-3 supports two sockets
 APIs for user space applications. The first is ns-3 native, while the second
 (which is based on the first) resembles more a real system POSIX-like socket
 API. For further information about the differences, please refer to ns-3's
-`socket implementation <http://www.nsnam.org/docs/release/3.20/models/singlehtml/index.html#document-network>`_.
-We will focus on the ns-3 socket API variant.
+`socket implementation <http://www.nsnam.org/docs/release/3.20/models/singlehtm
+l/index.html#document-network>`_. We will focus on the ns-3 socket API variant.
+The first line is meant to create the socket type from a lookup search given by
+the name ``UdpSocketFactory``. It creates this type of socket on the receivers
+and the transmitter. We have chosen the previous socket type in order to
+represent a UDP connection that sends RLNC coded packets.
 
-The first two lines are meant to create the socket type from a lookup search
-given by the name ``UdpSocketFactory``. They create this type of socket on the
-receiver and the transmitter. We have chosen the previous socket type in order
-to represent a UDP connection that sends RLNC coded packets. Then, we create
-the local socket address for binding purposes. For it, we choose the default
-``0.0.0.0`` address obtained from ``Ipv4Address::GetAny ()`` and port 80 (to
-represent random HTTP traffic). The receiver binds to this address for socket
-hearing. Everytime a packet is received we trigger a callback to the reference
-``&KodoSimulation::ReceivePacket`` which takes the hearing socket as an argument.
-This executes the respective member function of the reference ``&kodoSimulator``.
-For the transmitter (source) we make a similar process but instead we allow
+Simulation calls
+^^^^^^^^^^^^^^^^
+
+.. literalinclude:: ../src/wifi_broadcast/main.cc
+   :language: c++
+   :start-after: //! [11]
+   :end-before: //! [12]
+   :linenos:
+
+As we mentioned earlier, we use the binary field with a disabled trace in the
+encoder and enabled for the recoders. Then, we call the object that handles
+the topology by doing ``simulation wifiBroadcast (users, generationSize,
+packetSize, sinks);`` to call the broadcast RLNC class constructor. This does
+not run the simulation as we will see, but it creates the objets called by
+ns-3 to perform the tasks of the transmitter and receiver.
+
+Sockets connections
+^^^^^^^^^^^^^^^^^^^
+
+.. literalinclude:: ../src/wifi_broadcast/main.cc
+   :language: c++
+   :start-after: //! [12]
+   :end-before: //! [13]
+   :linenos:
+
+Then, we create the remote and local socket addresses for binding purposes. For
+the transmitter (source) we make a similar process but instead we allow
 broadcasting with ``source->SetAllowBroadcast (true)`` and connect to the
-broadcast address. This completes our socket connection process and links the
-pieces for the simulation.
+broadcast address. For the receivers, we choose the default ``0.0.0.0`` address
+obtained from ``Ipv4Address::GetAny ()`` and port 80 (to represent random HTTP
+traffic). The receiver binds to this address for socket listening. Everytime
+a packet is received we trigger a callback to the reference ``&simulation::
+ReceivePacket`` which takes the listening socket as an argument. This executes
+the respective member function of the reference ``&wifiBroadcast``. This
+completes our socket connection process and links the pieces for the simulation.
+Finally, we populate the routing tables to ensure that we are routed inside
+the topology.
 
 Simulation event handler
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. code-block:: c++
+.. literalinclude:: ../src/wifi_broadcast/main.cc
+   :language: c++
+   :start-after: //! [13]
+   :end-before: //! [14]
+   :linenos:
 
-  // Pcap tracing
-  wifiPhy.EnablePcap ("wifi-simple-adhoc", devices);
-
-  Simulator::ScheduleWithContext (source->GetNode ()->GetId (),
-                                  Seconds (1.0),
-                                  &KodoSimulation::GenerateTraffic,
-                                  &kodoSimulator,
-                                  source, interPacketInterval);
-
-  Simulator::Run ();
-  Simulator::Destroy ();
-
-Finally, ``wifiPhy.EnablePcap ("wifi-simple-adhoc", devices);`` allows the net
+Finally, ``wifiPhy.EnablePcap ("wifi-broadcast-rlnc", devices);`` allows the net
 devices to create pcap files from the given devices. One file per net device.
-File naming will be: ``wifi-simple-adhoc-[NODE_ID]-[DEVICE_ID].pcap`` and the
+File naming will be: ``wifi-broadcast-rlnc-[NODE_ID]-[DEVICE_ID].pcap`` and the
 format of these files should be the one of RadioTap and should be located on your
 ``~/kodo-ns3-examples/`` folder. Later, we will review how to read those files.
 
 After the pcap setting, we use one of the ns-3 core features, event scheduling.
-The ``Simulator`` is inherent to ns-3 and defines how events are handled
+The ``Simulator`` class is inherent to ns-3 and defines how events are handled
 discretely. The ``ScheduleWithContext`` member function basically tells ns-3
-to schedule the ``KodoSimulation::GenerateTraffic`` function every second from
-the transmitter instance of ``kodoSimulator`` and provide its arguments, e.g.
+to schedule the ``simulation::SendPacket`` function every second from
+the transmitter instance of ``wiredBroadcast`` and provide its arguments, e.g.
 ns-3 socket pointer ``source`` and ``Time`` packet interval
 ``interPacketInterval``. Among the event schedulers, you will see ``Schedule``
 vs. ``ScheduleWithContext``. The main difference between these two functions

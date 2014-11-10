@@ -33,7 +33,6 @@
 // of the nodes has no effect.
 //
 // The considered topology is the following:
-
 //! [0]
 //                             +-------------------+
 //                             |  Encoder (Node 0) |
@@ -73,7 +72,6 @@
 
 //                N: number of decoders    rss: Received Signal Strength
 //! [1]
-
 // For instance, for this configuration, the physical layer will
 // stop of successfully receiving packets when rss (receiver signal strength)
 // drops below -96 dBm. This means that -96 dBm is the thresho
@@ -91,7 +89,6 @@
 // tcpdump installed, you can try this:
 //
 // tcpdump -r wifi-broadcast-rlnc-0-0.pcap -nn -tt (source node)
-
 //! [2]
 // General comments: E-macs descriptor, ns-3 license and example description
 
@@ -112,11 +109,11 @@
 // Kodo includes
 #include "../broadcast-rlnc.h" // Contains the broadcast topology class
 //! [3]
-
 using namespace ns3;
 
 int main (int argc, char *argv[])
 {
+  //! [4]
   std::string phyMode ("DsssRate1Mbps");
   double rss = -93;  // -dBm
   uint32_t packetSize = 1000; // bytes
@@ -138,7 +135,7 @@ int main (int argc, char *argv[])
 
   // Convert to time object
   Time interPacketInterval = Seconds (interval);
-
+  //! [5]
   // disable fragmentation for frames below 2200 bytes
   Config::SetDefault ("ns3::WifiRemoteStationManager::FragmentationThreshold",
     StringValue ("2200"));
@@ -150,7 +147,7 @@ int main (int argc, char *argv[])
   // Fix non-unicast data rate to be the same as that of unicast
   Config::SetDefault ("ns3::WifiRemoteStationManager::NonUnicastMode",
     StringValue (phyMode));
-
+  //! [6]
   // Source and destination
   NodeContainer c;
   c.Create (1 + users); // Sender + receivers
@@ -177,7 +174,7 @@ int main (int argc, char *argv[])
   wifiChannel.AddPropagationLoss ("ns3::FixedRssLossModel","Rss",
     DoubleValue (rss));
   wifiPhy.SetChannel (wifiChannel.Create ());
-
+  //! [7]
   // Add a non-QoS upper mac, and disable rate control
   NqosWifiMacHelper wifiMac = NqosWifiMacHelper::Default ();
   wifi.SetRemoteStationManager ("ns3::ConstantRateWifiManager",
@@ -189,7 +186,7 @@ int main (int argc, char *argv[])
 
   // Create the net devices
   NetDeviceContainer devices = wifi.Install (wifiPhy, wifiMac, c);
-
+  //! [8]
   // Note that with FixedRssLossModel, the positions below are not
   // used for received signal strength. However, they are required for the
   // YansWiFiChannelHelper
@@ -206,25 +203,18 @@ int main (int argc, char *argv[])
   mobility.SetPositionAllocator (positionAlloc);
   mobility.SetMobilityModel ("ns3::ConstantPositionMobilityModel");
   mobility.Install (c);
-
+  //! [9]
   InternetStackHelper internet;
   internet.Install (c);
 
   Ipv4AddressHelper ipv4;
   ipv4.SetBase ("10.1.1.0", "255.255.255.0");
-  Ipv4InterfaceContainer i = ipv4.Assign (devices);
-
+  ipv4.Assign (devices);
+  //! [10]
   TypeId tid = TypeId::LookupByName ("ns3::UdpSocketFactory");
-  uint16_t port = 80;
 
   // Transmitter socket
   Ptr<Socket> source = Socket::CreateSocket (c.Get (0), tid);
-
-  // Transmitter socket connections. Set transmitter for broadcasting
-  InetSocketAddress remote = InetSocketAddress (
-    Ipv4Address ("255.255.255.255"), port);
-  source->SetAllowBroadcast (true);
-  source->Connect (remote);
 
   // Receiver sockets
   std::vector<Ptr<Socket>> sinks (users);
@@ -233,7 +223,7 @@ int main (int argc, char *argv[])
     {
       sinks[n] = Socket::CreateSocket (c.Get (1+n), tid);
     }
-
+  //! [11]
   // The field and traces types we will use.
   // Here we consider GF(2). For GF(2^8) just change "binary" for "binary8"
   using field = fifi::binary;
@@ -244,6 +234,13 @@ int main (int argc, char *argv[])
 
   // Creates the broadcast topology class for the current example
   simulation wifiBroadcast (users, generationSize, packetSize, sinks);
+  //! [12]
+  // Transmitter socket connections. Set transmitter for broadcasting
+  uint16_t port = 80;
+  InetSocketAddress remote = InetSocketAddress (
+    Ipv4Address ("255.255.255.255"), port);
+  source->SetAllowBroadcast (true);
+  source->Connect (remote);
 
   // Receiver socket connections
   InetSocketAddress local = InetSocketAddress (Ipv4Address::GetAny (), port);
@@ -254,9 +251,9 @@ int main (int argc, char *argv[])
         &wifiBroadcast));
     }
 
-  // Turn on global static routing so we can actually be routed across the star
+  // Turn on global static routing so we can be routed across the network
   Ipv4GlobalRoutingHelper::PopulateRoutingTables ();
-
+  //! [13]
   // Pcap tracing
   wifiPhy.EnablePcap ("wifi-broadcast-rlnc", devices);
 
@@ -267,4 +264,5 @@ int main (int argc, char *argv[])
   Simulator::Destroy ();
 
   return 0;
+  //! [14]
 }

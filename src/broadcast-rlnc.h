@@ -33,10 +33,10 @@ public:
 
   using rlnc_encoder = typename kodo::full_rlnc_encoder<field, encoderTrace>;
   using non_copy_rlnc_decoder = typename kodo::full_rlnc_decoder<field,
-                                                                 decoderTrace>;
+    decoderTrace>;
 
   using rlnc_decoder = typename kodo::wrap_copy_payload_decoder<
-                                    non_copy_rlnc_decoder>;
+    non_copy_rlnc_decoder>;
 
   using encoder_pointer = typename rlnc_encoder::factory::pointer;
   using decoder_pointer = typename rlnc_decoder::factory::pointer;
