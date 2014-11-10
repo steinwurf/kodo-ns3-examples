@@ -451,9 +451,9 @@ context (the node identifier of the currently executed network node) belongs
 to the given node. Meanwhile, ``Schedule`` may receive the context from a
 previous scheduled event, which can have the context from a different node.
 You can find more details about  the simulator functions in the ns-3
-`event scheduling <http://www.nsnam.org/docs/manual/singlehtml/index.html#document-events>`_
-manual. With all previous descriptions, we are able to run the simulation to
-see some basic effects of network coding in ns-3 with Kodo.
+`event scheduling <http://www.nsnam.org/docs/manual/singlehtml/index.html#docum
+ent-events>`_ manual. With all previous descriptions, we are able to run the
+simulation to see some basic effects of network coding in ns-3 with Kodo.
 
 Simulation runs
 ---------------
