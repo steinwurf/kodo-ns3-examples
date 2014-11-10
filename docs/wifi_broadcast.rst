@@ -42,44 +42,26 @@ Program description
 -------------------
 
 After the project has been properly configured and built, you should have
-a folder named ``~/dev/kodo-ns3-examples/wifi_broadcast/`` where ``~/dev/`` is
-the folder where you cloned the project repository. If you check the
-``wifi_broadcast`` folder, you will see the ``main.cpp`` file which contains
+a folder named ``~/dev/kodo-ns3-examples/src/wifi_broadcast/`` where ``~/dev/``
+is the folder where you cloned the project repository. If you check the
+``wifi_broadcast`` folder, you will see the ``main.cc`` file which contains
 the source code of this simulation. You can open it with your preferred editor
 to review the source code. We will briefly review some of its parts.
 
 Overview comments and includes
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-.. code-block:: c++
-
-   // ns-3 document style descriptor for e-macs
-
-   // ns-3 license disclaimer
-
-   // Example description
-
-   // ns-3 header includes
-   #include <ns3/core-module.h>
-   #include <ns3/network-module.h>
-   #include <ns3/mobility-module.h>
-   #include <ns3/config-store-module.h>
-   #include <ns3/wifi-module.h>
-   #include <ns3/internet-module.h>
-
-   // Kodo includes
-   #include <kodo/rlnc/full_rlnc_codes.hpp>
-   #include <kodo/trace.hpp>
-
-   // Simulation includes
-   #include <iostream>
-   #include <vector>
-   #include <string>
-   #include <ctime>
+.. literalinclude:: ../src/wifi_broadcast/main.cc
+   :language: c++
+   :start-after: //! [2]
+   :end-before: //! [3]
+   :linenos:
 
 As with any source code, the overview comments provide a reference to the users
-regarding project licensing and a brief introduction to what we are simulating.
-The includes are ordered from the most general to particular functionalities
-within ns-3 and Kodo. From ns-3, the necessary modules are:
+regarding project licensing and an introduction to what we are simulating. The
+E-macs descriptor is part of the ns-3 coding style to allow E-macs developers'
+editor to recognize the document type. Header includes are ordered from most
+general to particular functionalities within ns-3 and Kodo. From ns-3, the
+necessary modules are:
 
 * Core module: For simulation event handling. This module provide a set of
   class-based APIs that control the simulation behaviour. It is essential for
