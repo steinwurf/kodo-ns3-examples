@@ -3,12 +3,22 @@ Broadcast RLNC with a WiFi channel
 
 .. _wifi_broadcast:
 
+General topology
+----------------
+
 The topology considered describes a transmitter sending coded packets
 with RLNC from a generation size :math:`g` and field size :math:`q` in a
-broadcast fashion through a 802.11b channel to a single receiver. For the
-purpose of our example, we will start with :math:`g = 5` and :math:`q = 2`
-(i.e. the binary field) and we will check the completion time in terms of
-transmissions through the WiFi channel under different situations.
+broadcast fashion through a 802.11b channel to N receivers. For the
+purpose of our example, we will start with :math:`g = 5`, :math:`q = 2`
+(i.e. the binary field), :math:`N = 2` and we will check the completion
+time in terms of transmissions through the WiFi channel under different
+situations. Topology is shown as follows:
+
+.. literalinclude:: ../src/wifi_broadcast/main.cc
+   :language: c++
+   :start-after: //! [0]
+   :end-before: //! [1]
+   :linenos:
 
 What to simulate?
 -----------------

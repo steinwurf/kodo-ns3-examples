@@ -38,6 +38,7 @@
 //
 // The considered topology is the following:
 
+//! [0]
 //                             +-------------------+
 //                             |  Encoder (Node 0) |
 //                             |                   |
@@ -75,6 +76,7 @@
 //                +--------------------+     +----------------------+
 
 //                N: number of decoders    rss: Received Signal Strength
+//! [1]
 
 // For instance, for this configuration, the physical layer will
 // stop of successfully receiving packets when rss (receiver signal strength)
