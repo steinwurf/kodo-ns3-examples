@@ -57,11 +57,10 @@ Overview comments and includes
    :linenos:
 
 As with any source code, the overview comments provide a reference to the users
-regarding project licensing and an introduction to what we are simulating. The
-E-macs descriptor is part of the ns-3 coding style to allow E-macs developers'
-editor to recognize the document type. Header includes are ordered from most
-general to particular functionalities within ns-3 and Kodo. From ns-3, the
-necessary modules are:
+regarding project general aspects. The E-macs descriptor is part of the
+ns-3 coding style to allow E-macs developers' editor to recognize the document
+type. Following, licensing terms and an introduction to what we are simulating
+are displayed. Header includes are ordered from most general to particular functionalities within ns-3 and Kodo. From ns-3, the necessary modules are:
 
 * Core module: For simulation event handling. This module provide a set of
   class-based APIs that control the simulation behaviour. It is essential for
@@ -80,17 +79,14 @@ necessary modules are:
 * Config-store module: A specialized ns-3 database for internal attributes and
   default values for the different APIs.
 * WiFi module: A PHY and MAC layer models for WiFi. Necessary for our medium
-  access control.
+  access control and channel model.
 * Internet module: For handling the IPv4 protocol at the network layer.
 
-From Kodo, the header ``full_rlnc_codes`` contains the description of the
-encoder and decoder objects that we use. ``trace`` is an internal class to
-provide a visual description of internal encoder and decoder processing. Other
-includes are particular to this implementation and they can be found in standard
-C++ code.
+Other includes are particular to this implementation and they can be found in
+standard C++ code. From Kodo, the header ``broadcast-rlnc.h`` contains the description of the encoder and decoder objects we use.
 
-Required identifiers and types
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Default Namespace
+^^^^^^^^^^^^^^^^^
 
 We will be working within the ns-3 scope given that most of our objects are from
 this library. This is typical across ns-3 code.
@@ -99,40 +95,16 @@ this library. This is typical across ns-3 code.
 
    using namespace ns3;
 
-Also, for our enconder and decoder types, we need some ``typedefs`` to make
-easy calls on them.
-
-.. code-block:: c++
-
-   typedef kodo::full_rlnc_encoder<fifi::binary,kodo::disable_trace> rlnc_encoder;
-   typedef kodo::full_rlnc_decoder<fifi::binary,kodo::enable_trace> rlnc_decoder;
-
-The RLNC encoder and decoder are template classes. The first input type is the
-field size represented through an object (``struct`` in this case) from our
-`Fifi  <https://github.com/steinwurf/fifi>`_ library. Fifi is a dependency for
-Kodo where all the finite field arithmetics resides. Since we are interested in
-:math:`q = 2`, we choose ``fifi:binary``. However, other field types from Fifi
-might be chosen too according to your application. Current available filed sizes
-are: :math:`q = {2^4, 2^8, 2^{16}, 2^{32}-5}`.
-
-The second input is a ``struct`` that controls the use of tracing in the given
-object. ``kodo::enable_trace`` or ``kodo::disable_trace`` respectively enables
-or disables the tracing functionality in the objects where they are employed.
-For our implementation, we enable tracing for our decoder and disable it for
-the encoder. Later in the simulation runs, we will check what options does
-tracing has on each device type.
-
 Main simulation class
 ^^^^^^^^^^^^^^^^^^^^^
 
-We represent our Kodo simulation as a class with different functionalities. Of
-course, this is purely subjective. You may choose how you represent your objects
-in your simulation. Although, we choose this way because it enabled us to
-modularize all the simulation into a single object that controls the system
-through the tasks of the devices. Also, other ns-3 objects can extract
-information from it in an easy way.
+Before starting, we describe a Kodo object created with the purpose to
+represent the RLNC broadcast topology. In this sense, we represent our Kodo simulation as a class with different functionalities. Of course, this is purely subjective. You may choose how you represent your objects in your simulation. Although, we choose this way because it enabled us to modularize all the
+simulation into a single object which is controlled by the network through the
+tasks of the devices. Also, other ns-3 objects can extract information
+from it in an easy way.
 
-The ``KodoSimulation`` class can be roughly defined in the following way:
+The ``BroadcastRlnc`` class can be roughly defined in the following way:
 
 .. code-block:: c++
 

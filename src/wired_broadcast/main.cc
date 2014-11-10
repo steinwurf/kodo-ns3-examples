@@ -14,9 +14,6 @@
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
- *
- * Main Author: Néstor J. Hernández M. <nestor@steinwurf.com>
- * Author: Péter Vingelmann <peter@steinwurf.com>
  */
 
 // This example shows how to use the Kodo library in a broadcast rlnc scenario
