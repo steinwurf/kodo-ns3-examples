@@ -122,6 +122,11 @@ public:
     packet->CopyData (&m_payload_buffer[0], decoder->payload_size ());
     decoder->decode (&m_payload_buffer[0]);
 
+    auto id = std::distance (std::begin (m_socketMap),
+      m_socketMap.find (socket)) + 1;
+
+    std::cout << "Received a packet at decoder " << id << std::endl;
+
     if (kodo::has_trace<rlnc_decoder>::value)
       {
         auto filter = [] (const std::string& zone)
@@ -131,10 +136,6 @@ public:
           return filters.count (zone);
         };
 
-        auto id = std::distance (std::begin (m_socketMap),
-          m_socketMap.find (socket)) + 1;
-
-        std::cout << "Received a packet at decoder " << id << std::endl;
         std::cout << "Trace on decoder " << id << " is: " << std::endl;
         kodo::trace (decoder, std::cout, filter);
       }
