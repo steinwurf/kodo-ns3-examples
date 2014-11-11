@@ -140,7 +140,8 @@ public:
       m_socketMap.find (socket)) + 1;
 
     recoder->decode (&m_payload_buffer[0]);
-    std::cout << "Received a coded packet at RECODER " << id << "\n" << std::endl;
+    std::cout << "Received a coded packet at RECODER " << id << "\n"
+      << std::endl;
 
     if (kodo::has_trace<rlnc_recoder>::value)
       {

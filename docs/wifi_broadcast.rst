@@ -97,8 +97,8 @@ this library. This is typical across ns-3 code.
 
    using namespace ns3;
 
-Main simulation class
-^^^^^^^^^^^^^^^^^^^^^
+Simulation class
+^^^^^^^^^^^^^^^^
 
 Before starting, we describe a Kodo object created in ``broadcast-rlnc.h``
 with the purpose to represent the RLNC broadcast topology. In this sense, we represent our Kodo simulation as a class with different functionalities.
@@ -146,12 +146,12 @@ The ``BroadcastRlnc`` class can be roughly defined in the following way:
 
     void SendPacket (ns3::Ptr<ns3::Socket> socket, ns3::Time pktInterval)
     {
-      // Source node logic
+      // Encoder logic
     }
 
     void ReceivePacket (ns3::Ptr<ns3::Socket> socket)
     {
-      // Decoder nodes logic
+      // Decoders logic
     }
 
   private:

@@ -18,3 +18,4 @@ Kodo library together with the ns-3 simulator.
    before_you_start
    wifi_broadcast
    wired_broadcast
+   encoder_recoder_decoder
