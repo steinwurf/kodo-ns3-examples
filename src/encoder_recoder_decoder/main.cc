@@ -172,9 +172,9 @@ int main (int argc, char *argv[])
   internet.Install (decoder);
 
   // Here, we first create a total of N net devices in the encoder
-  // (N = recoders amount) and a net device per encoder
-  // Second, we mirror this procedure to the recoder side.
-  // Each net device in the encoder is in a different subnet.
+  // (N = recoders amount) and a net device per recoder
+  // Second, we mirror this procedure in the second hop.
+  // Each net device in the recoder is in a different subnet.
 
   toRecoders.AssignIpv4Addresses (Ipv4AddressHelper ("10.1.1.0",
     "255.255.255.0"));
@@ -282,7 +282,7 @@ int main (int argc, char *argv[])
   Simulator::ScheduleWithContext (encoderSocket->GetNode ()->GetId (),
     Seconds (1.0), &simulation::SendPacketEncoder, &multihop, encoderSocket,
     interPacketInterval);
-
+  //! [6]
   // Recoders
   for (auto recoderSocket : recodersSockets)
     {
@@ -290,7 +290,7 @@ int main (int argc, char *argv[])
         Seconds (1.5), &simulation::SendPacketRecoder, &multihop, recoderSocket,
         interPacketInterval);
     }
-
+  //! [7]
   Simulator::Run ();
   Simulator::Destroy ();
 
