@@ -10,8 +10,9 @@ you can see the details here_.
 .. _form: http://steinwurf.com/license/
 .. _here: https://github.com/steinwurf/kodo/blob/master/LICENSE.rst
 
-ns-3 (http://nsnam.org) is a discrete-event network simulator, targeted primarily
-for research and educational use. ns-3 is licensed under the GNU GPLv2 license.
+ns-3 (http://nsnam.org) is a discrete-event network simulator, targeted
+primarily for research and educational use. ns-3 is licensed under the GNU
+GPLv2 license.
 
 .. image:: http://buildbot.steinwurf.dk/svgstatus?project=kodo-ns3-examples
     :target: http://buildbot.steinwurf.dk/stats?projects=kodo-ns3-examples
@@ -114,9 +115,10 @@ repository. Currently we have the following examples:
   different erasure rates. Recoding can be set on or off and erasures rate
   modified by command line parsing.
 
-You can see more documentation of each example in the ``main.cpp`` file comments
-regarding what each example does. There you can also check how to control and set
-up the simulation parameters like packet, field and generation sizes among others.
+You can see more documentation of each example in the ``main.cc`` file comments
+regarding what each example does. There you can also check how to control and
+set up the simulation parameters like packet, field and generation sizes
+among others.
 
 Configure the project by running: ::
 
@@ -135,8 +137,8 @@ Now you should be able to build the examples by running: ::
 
   ./waf build
 
-This will produce different binaries in the ``./build/linux/`` folder, one per
-example. Probably the build will throw some warnings, but if it is
+This will produce different binaries in the ``./build/linux/src`` folder, one
+per example. Probably the build will throw some warnings, but if it is
 successful, you will be able to continue the test.
 
 Try running the ``wifi_broadcast`` example by typing: ::
@@ -151,9 +153,11 @@ where required.
 Tutorial
 --------
 To follow a more comprehensive description of the examples, please follow
-the tutorial in the `Kodo-ns3 tutorial <http://kodo-ns3-examples.readthedocs.org/en/latest/>`_.
-Currently we only describe the first and second example, but we will be adding
-more description regarding the last one soon.
+the tutorial in the `Kodo-ns3 tutorial <http://kodo-ns3-examples.readthedocs.or
+g/en/latest/>`_. We provide a guide describing what do we want to simulate and
+how do we proceed to represent it for the three examples. At the end of each
+example we verify known results to validate our model and provide parameters
+to the final user for modifying them.
 
 Comments, Feedback & Bugs
 -------------------------
@@ -169,4 +173,3 @@ Any bugs and patches should be posted to the github issue tracker:
 If you make new examples or use the examples provided here for your
 research please let us know - we would be happy to add links to your
 work or potentially include it as new examples.
-
