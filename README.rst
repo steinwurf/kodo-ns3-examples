@@ -107,7 +107,7 @@ After building ns-3 you can build the example simulations provided by this
 repository. Currently we have the following examples:
 
 * ``wifi_broadcast``: This example consists on broadcasting packets with RLNC
-  on a single transmitter receiver pair with an IEEE 802.11b WiFi channel.
+  to N receivers with an IEEE 802.11b WiFi channel.
 * ``wired_broadcast``: This example consists on broadcasting packets with RLNC
   from a transmitter to N receivers with the same erasure channel.
 * ``encoder_recoder_decoder``: This example shows the gain of RLNC with recoding
@@ -143,7 +143,7 @@ successful, you will be able to continue the test.
 
 Try running the ``wifi_broadcast`` example by typing: ::
 
-  ./build/linux/wifi_broadcast/wifi_broadcast
+  ./build/linux/src/wifi_broadcast/wifi_broadcast
 
 You should see how the decoding matrix changes with each combination sent. Due
 to the channel nature, here you will only see the linear dependence effect. You
