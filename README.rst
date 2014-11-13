@@ -42,7 +42,7 @@ http://www.nsnam.org/wiki/index.php/Installation.
 Below we have recorded the steps needed to get ns-3 up and running
 by cloning the repository.
 
-Clone ns-3 repository (Ubuntu)
+Clone ns-3 Repository (Ubuntu)
 ------------------------------
 First we need to make sure we have the tool required: ::
 

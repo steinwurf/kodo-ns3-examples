@@ -1,9 +1,9 @@
-Broadcast RLNC with a WiFi channel
+Broadcast RLNC with a WiFi Channel
 ==================================
 
 .. _wifi_broadcast:
 
-General topology
+General Topology
 ----------------
 
 The topology considered describes a transmitter sending coded packets
@@ -20,12 +20,12 @@ situations. Topology is shown as follows:
    :end-before: //! [1]
    :linenos:
 
-What to simulate?
------------------
+What to Simulate
+----------------
 
 We will consider the following guidelines for our simulation:
 
-* Behaviour: The sender keeps transmitting the generation until the
+* Behavior: The sender keeps transmitting the generation until the
   receiver has :math:`g` linearly independent (l.i.) coded packets
   (combinations). Packets might or might not be loss due to channel
   impairments.
@@ -38,7 +38,7 @@ We will consider the following guidelines for our simulation:
   decode. Also, the number of transmissions should somehow change as we
   vary the channel.
 
-Program description
+Program Description
 -------------------
 
 After the project has been properly configured and built, you should have
@@ -48,7 +48,7 @@ is the folder where you cloned the project repository. If you check the
 the source code of this simulation. You can open it with your preferred editor
 to review the source code. We will briefly review some of its parts.
 
-Overview comments and includes
+Overview Comments and Includes
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 .. literalinclude:: ../src/wifi_broadcast/main.cc
    :language: c++
@@ -61,10 +61,10 @@ regarding project general aspects. The E-macs descriptor is part of the
 ns-3 coding style to allow E-macs developers' editor to recognize the document
 type. Following, licensing terms and an introduction to what we are simulating
 are displayed. Header includes are ordered from most general to particular
-funtionalities within ns-3 and Kodo. From ns-3, the necessary modules are:
+functionalities within ns-3 and Kodo. From ns-3, the necessary modules are:
 
 * Core module: For simulation event handling. This module provide a set of
-  class-based APIs that control the simulation behaviour. It is essential for
+  class-based APIs that control the simulation behavior. It is essential for
   every ns-3 simulation.
 * Network module: For creation and management of simulated devices. ns-3 has
   mainly two building blocks which represent a transmission/reception
@@ -97,11 +97,12 @@ this library. This is typical across ns-3 code.
 
    using namespace ns3;
 
-Simulation class
+Simulation Class
 ^^^^^^^^^^^^^^^^
 
 Before starting, we describe a Kodo object created in ``broadcast-rlnc.h``
-with the purpose to represent the RLNC broadcast topology. In this sense, we represent our Kodo simulation as a class with different functionalities.
+with the purpose to represent the RLNC broadcast topology. In this sense, we
+represent our Kodo simulation as a class with different functionalities.
 Of course, this is purely subjective. You may choose how you represent your
 objects in your simulation. Although, we choose this way because it enabled
 us to modularize all the simulation into a single object which is controlled
@@ -188,7 +189,7 @@ runs, we will check what options does tracing has on each device type.
 
 We create a set of ``typedefs`` required to make easy calls. ``rlnc_encoder``
 to name our encoder class. The ``rlnc_decoder`` case is slightly different.
-Normally, in Kodo, everytime a packet is received in a decoder, the payload is
+Normally, in Kodo, every time a packet is received in a decoder, the payload is
 modified during decoding. To overcome this problem, the API has an extension
 that ensures the payload is not overwritten, namely
 ``kodo::wrap_copy_payload_decoder<decoder_type>``, where ``decoder_type`` in
@@ -222,11 +223,11 @@ coded packet and its coefficients is returned. This amount is needed for
 coded packet that is actually sent (and received). Finally,
 ``m_transmission_count`` indicates how many packets were sent by the encoder
 during the whole process. Please make a review to the implementation of
-``SendPacket`` and ``ReceivePacket`` to verify the expected behaviour of the
+``SendPacket`` and ``ReceivePacket`` to verify the expected behavior of the
 nodes when packets are sent or received respectively.
 
-Default parameters and command parsing
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Default Parameters and Command-line Parsing
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. literalinclude:: ../src/wifi_broadcast/main.cc
    :language: c++
@@ -254,9 +255,10 @@ Configuration defaults
    :linenos:
 
 Before continuing, you will see many features of ns-3's `WiFi implementation
-<http://www.nsnam.org/docs/release/3.20/models/singlehtml/index.html#document-wifi>`_.
-Besides the WiFi properties, in the previous link you will find a typical
-workflow about setting and configuring WiFi devices in your simulation.
+<http://www.nsnam.org/docs/release/3.20/models/singlehtml/index.html#
+document-wifi>`_. Besides the WiFi properties, in the previous link you will
+find a typical workflow about setting and configuring WiFi devices in your
+simulation.
 
 This part basically sets off some MAC properties that we do not need (at least
 for our purposes), namely frame fragmentation to be applied for frames larger
@@ -265,7 +267,7 @@ than 2200 bytes and setting the broadcast data rate to be the same as unicast
 for the given ``phyMode``. However, they need to be included in order to work
 with the WiFi MAC.
 
-WiFi PHY and channel helpers for nodes
+WiFi PHY and Channel Helpers for Nodes
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. literalinclude:: ../src/wifi_broadcast/main.cc
@@ -303,7 +305,7 @@ implemented, you can check the
 `Yans description <http://cutebugs.net/files/wns2-yans.pdf>`_ for further
 details.
 
-WiFi MAC and net device helpers
+WiFi MAC and Net Device Helpers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. literalinclude:: ../src/wifi_broadcast/main.cc
@@ -328,7 +330,7 @@ packet transmissions. With all the previous settings we create our (2) WiFi
 cards and put them in a container by doing
 ``NetDeviceContainer devices = wifi.Install (wifiPhy, wifiMac, c);``.
 
-Mobility model and helper
+Mobility Model and Helper
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. literalinclude:: ../src/wifi_broadcast/main.cc
@@ -344,7 +346,7 @@ create a ``Vector`` describing the initial (and remaining) coordinates for both
 transmitter and receiver in a 3D grid. Then, we put them in the helper with a
 ``ConstantPositionMobilityModel`` for the nodes.
 
-Internet and application protocol helpers
+Internet and Application Protocol Helpers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. literalinclude:: ../src/wifi_broadcast/main.cc
@@ -363,7 +365,7 @@ ment-internet-models>`_. A similar process is made for the IPv4 address
 assignment. We use the address range ``10.1.1.0`` with the subnet mask
 ``255.255.255.0``, assign it to the ``devices``.
 
-Sockets construction
+Sockets Construction
 ^^^^^^^^^^^^^^^^^^^^
 
 .. literalinclude:: ../src/wifi_broadcast/main.cc
@@ -378,14 +380,14 @@ communication (besides of course, the socket itself). ns-3 supports two sockets
 APIs for user space applications. The first is ns-3 native, while the second
 (which is based on the first) resembles more a real system POSIX-like socket
 API. For further information about the differences, please refer to ns-3's
-`socket implementation <http://www.nsnam.org/docs/release/3.20/models/singlehtm
-l/index.html#document-network>`_. We will focus on the ns-3 socket API variant.
+`socket implementation <http://www.nsnam.org/docs/release/3.20/models/singlehtml
+/index.html#document-network>`_. We will focus on the ns-3 socket API variant.
 The first line is meant to create the socket type from a lookup search given by
 the name ``UdpSocketFactory``. It creates this type of socket on the receivers
 and the transmitter. We have chosen the previous socket type in order to
 represent a UDP connection that sends RLNC coded packets.
 
-Simulation calls
+Simulation Calls
 ^^^^^^^^^^^^^^^^
 
 .. literalinclude:: ../src/wifi_broadcast/main.cc
@@ -401,7 +403,7 @@ packetSize, sinks);`` to call the broadcast RLNC class constructor. This does
 not run the simulation as we will see, but it creates the objets called by
 ns-3 to perform the tasks of the transmitter and receiver.
 
-Sockets connections
+Sockets Connections
 ^^^^^^^^^^^^^^^^^^^
 
 .. literalinclude:: ../src/wifi_broadcast/main.cc
@@ -415,7 +417,7 @@ the transmitter (source) we make a similar process but instead we allow
 broadcasting with ``source->SetAllowBroadcast (true)`` and connect to the
 broadcast address. For the receivers, we choose the default ``0.0.0.0`` address
 obtained from ``Ipv4Address::GetAny ()`` and port 80 (to represent random HTTP
-traffic). The receiver binds to this address for socket listening. Everytime
+traffic). The receiver binds to this address for socket listening. Every time
 a packet is received we trigger a callback to the reference ``&simulation::
 ReceivePacket`` which takes the listening socket as an argument. This executes
 the respective member function of the reference ``&wifiBroadcast``. This
@@ -423,7 +425,7 @@ completes our socket connection process and links the pieces for the simulation.
 Finally, we populate the routing tables to ensure that we are routed inside
 the topology.
 
-Simulation event handler
+Simulation Event Handler
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. literalinclude:: ../src/wifi_broadcast/main.cc
@@ -435,8 +437,9 @@ Simulation event handler
 Finally, ``wifiPhy.EnablePcap ("wifi-broadcast-rlnc", devices);`` allows the net
 devices to create pcap files from the given devices. One file per net device.
 File naming will be: ``wifi-broadcast-rlnc-[NODE_ID]-[DEVICE_ID].pcap`` and the
-format of these files should be the one of RadioTap and should be located on your
-``~/kodo-ns3-examples/`` folder. Later, we will review how to read those files.
+format of these files should be the one of RadioTap and should be located on
+your ``~/kodo-ns3-examples/`` folder. Later, we will review how to read those
+files.
 
 After the pcap setting, we use one of the ns-3 core features, event scheduling.
 The ``Simulator`` class is inherent to ns-3 and defines how events are handled
@@ -451,18 +454,18 @@ context (the node identifier of the currently executed network node) belongs
 to the given node. Meanwhile, ``Schedule`` may receive the context from a
 previous scheduled event, which can have the context from a different node.
 You can find more details about  the simulator functions in the ns-3
-`event scheduling <http://www.nsnam.org/docs/manual/singlehtml/index.html#docum
-ent-events>`_ manual. With all previous descriptions, we are able to run the
-simulation to see some basic effects of network coding in ns-3 with Kodo.
+`event scheduling <http://www.nsnam.org/docs/manual/singlehtml/index.html#
+document-events>`_ manual. With all previous descriptions, we are able to run
+the simulation to see some basic effects of network coding in ns-3 with Kodo.
 
-Simulation runs
+Simulation Runs
 ---------------
 
 Now that we know each part of our setup, we will run some simulations in order
-that you should know what to expect. We will run the default behaviour and
+that you should know what to expect. We will run the default behavior and
 change some parameters to check known results.
 
-Default run
+Default Run
 ^^^^^^^^^^^
 
 First type ``cd ~/dev/kodo-ns3-examples`` in your terminal for you to be in
@@ -614,7 +617,7 @@ You should see an output similar to this: ::
 
   Decoding completed! Total transmissions: 5
 
-Here we observe that everytime a packet is received, the previously
+Here we observe that every time a packet is received, the previously
 mentioned information is printed for each receiver. For the
 ``input_symbols_coefficients`` output, ``C:`` indicates that we have a
 received a *coded* packet with the given coding vector. In this output,
@@ -654,14 +657,14 @@ complete generation is decoded.
 
 At the end, we see that decoding was performed after 5 transmissions. There are
 two reasons for this to occur. First, no linearly dependent (l.d.)
-combinations ocurred during the random process. Second, there were no packet
+combinations occurred during the random process. Second, there were no packet
 erasures neither. We will make some changes to see these effects.
 
-Changing the field and generation size
+Changing the Field and Generation Size
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Try to run the example again several times, you should see that the amount of
-tranmissions vary between 5 and 7, maybe sometimes a little more, due to
+transmissions vary between 5 and 7, maybe sometimes a little more, due to
 randomness. On average, for :math:`q = 2` you should expect that
 :math:`g + 1.6` transmissions are necessary to transmit :math:`g` l.i.
 packets. To verify this, you can save the following bash script as
@@ -806,7 +809,7 @@ can verify the coding coefficients now vary between 0 and 255 given that we
 have changed the field size. Try running the example with these changes a
 couple of times so you can verify the above in general.
 
-Changing the receiver signal strength
+Changing the Receiver Signal Strength
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 As we mentioned earlier, our WiFi PHY layer relies on constant position and
@@ -815,7 +818,7 @@ received power. In general, packet error rate varies with the signal
 reception level, so we will adjust this. The receiver sensitivity for this
 channel is -96 dBm. It means that for ``rss`` values lower than this, we will
 have no packet recovery. This goes a little further from a typical erasure
-channel where we may or may not have packet losses regurlarly, the reason being
+channel where we may or may not have packet losses regularly, the reason being
 that receiver position and received power are fixed.
 
 To change the ``rss`` value , simply type: ::
@@ -824,11 +827,11 @@ To change the ``rss`` value , simply type: ::
 
 You will see no output because the program gets into an infinite loop. To finish
 the program type ``Ctrl+C`` in your terminal. To verify that the running
-program endend, verify that a ``^C`` sign appears in your terminal. The
+program ended, verify that a ``^C`` sign appears in your terminal. The
 program enters a loop because we receive no packets at all and the decoder will
 never be full rank.
 
-Using other tracing features
+Using Other Tracing Features
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 So far we have seen only the decoder state in terms of rank and symbol
@@ -970,11 +973,11 @@ Now, we see the data in rows of 16 bytes. If you look at the constructor in
 since the example is just for showing purposes.
 
 The symbol storage can be mainly in 3 states depending on how the memory is
-assigned in Kodo. In the library we have 2 types of memory assigment for object
+assigned in Kodo. In the library we have 2 types of memory assignment for object
 creation, i.e. we can create a `shallow copy or a deep copy <http://stackover
 flow.com/a/184745>`_. For this implementation, we use a deep copy by default
 and we will only have 2 of them, namely ``A:`` (available) and ``I:``
-(initiliazed) meaning that the memory is ready and initialized to be used,
+(initialized) meaning that the memory is ready and initialized to be used,
 respectively. Notice that whenever we still have coded packets, we only print
 zeros. In the case of a shallow copy, we might see the ``?:`` indicator that
 will tell us that the storage has not been assigned. This trace feature is
@@ -986,7 +989,7 @@ trace only has the symbol storage feature. Simply switch the structs in the
 main function, save, rebuild your project and rerun the example
 with the previous setting, you will only see your data in the encoder.
 
-Review pcap traces
+Review pcap Traces
 ^^^^^^^^^^^^^^^^^^
 
 As we described earlier, the simulation leaves pcap format files
