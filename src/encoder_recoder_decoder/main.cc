@@ -14,8 +14,6 @@
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
- *
- * Author: Néstor J. Hernández M. <nestor@steinwurf.com>
  */
 
 // This example shows how to use the Kodo library for recoding at many
@@ -38,7 +36,7 @@
 // default, we set the number of recoders to 2.
 
 // In general, topology with IP addresses per net device is as follows:
-
+//! [0]
 //                +-----------------------------------------------+
 //                |             Encoder (Node 0)                  |
 //                |                                               |
@@ -81,7 +79,7 @@
 //                           N: Number of recoders
 //                           eE-R: errorRateEncoderRecoders
 //                           eR-D: errorRateRecodersDecoder
-
+//! [1]
 // By using the previous topology and IP addressing, we ensure that packets
 // are properly broadcasted to the recoders and each combination is sent from
 // the respective recoder to the decoder.
@@ -108,9 +106,9 @@
 #include <vector>
 #include <string>
 #include <ctime>
-
+//! [2]
 #include "../encoder-recoders-decoder-rlnc.h"
-
+//! [3]
 using namespace ns3;
 
 int main (int argc, char *argv[])
@@ -143,10 +141,12 @@ int main (int argc, char *argv[])
 
   Time::SetResolution (Time::NS);
 
+  //! [4]
   // We group the nodes in different sets because
-  // we want many net devices per node.For the broadcast
+  // we want many net devices per node. For the broadcast
   // topology we create a subnet and for the recoders to
-  // the decoders, we create a secondary one.
+  // the decoders, we create a secondary one. This in order to
+  // properly set the net devices and socket connections later
 
 
   // First we set the basic helper for a single link.
@@ -172,9 +172,9 @@ int main (int argc, char *argv[])
   internet.Install (decoder);
 
   // Here, we first create a total of N net devices in the encoder
-  // (N = recoders amount) and a net device per encoder
-  // Second, we mirror this procedure to the recoder side.
-  // Each net device in the encoder is in a **different** subnet.
+  // (N = recoders amount) and a net device per recoder
+  // Second, we mirror this procedure in the second hop.
+  // Each net device in the recoder is in a different subnet.
 
   toRecoders.AssignIpv4Addresses (Ipv4AddressHelper ("10.1.1.0",
     "255.255.255.0"));
@@ -184,7 +184,7 @@ int main (int argc, char *argv[])
   // to the recoders.
   Ipv4AddressHelper fromRecoders ("10.2.1.0", "255.255.255.0");
   fromRecoders.Assign (recodersDecoderDev);
-
+  //! [5]
   // Set error model for the net devices
   Config::SetDefault ("ns3::RateErrorModel::ErrorUnit",
                       StringValue ("ERROR_UNIT_PACKET"));
@@ -282,7 +282,7 @@ int main (int argc, char *argv[])
   Simulator::ScheduleWithContext (encoderSocket->GetNode ()->GetId (),
     Seconds (1.0), &simulation::SendPacketEncoder, &multihop, encoderSocket,
     interPacketInterval);
-
+  //! [6]
   // Recoders
   for (auto recoderSocket : recodersSockets)
     {
@@ -290,7 +290,7 @@ int main (int argc, char *argv[])
         Seconds (1.5), &simulation::SendPacketRecoder, &multihop, recoderSocket,
         interPacketInterval);
     }
-
+  //! [7]
   Simulator::Run ();
   Simulator::Destroy ();
 

@@ -14,9 +14,6 @@
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
- *
- * Main Author: Néstor J. Hernández M. <nestor@steinwurf.com>
- * Author: Péter Vingelmann <peter@steinwurf.com>
  */
 
 // This example shows how to use the Kodo library in a broadcast rlnc scenario
@@ -32,7 +29,7 @@
 // by default but it can changed.
 
 // The considered topology is the following:
-
+//! [0]
 //                  +-----------------------------------------------+
 //                  |             Encoder (Node 0)                  |
 //                  |                                               |
@@ -57,7 +54,7 @@
 //  +--------------------+     +--------------------+    +--------------------+
 
 //          N: number of decoders              e: errorRate
-
+//! [1]
 // By using the previous topology and IP addressing, we ensure that packets
 // are properly broadcasted within the network
 
@@ -117,7 +114,7 @@ int main (int argc, char *argv[])
   cmd.Parse (argc, argv);
 
   Time::SetResolution (Time::NS);
-
+  //! [2]
   // Set the basic helper for a single link
   PointToPointHelper pointToPoint;
 
@@ -145,17 +142,16 @@ int main (int argc, char *argv[])
 
   // Set IP addresses
   star.AssignIpv4Addresses (Ipv4AddressHelper ("10.1.1.0", "255.255.255.0"));
-
+  //! [3]
   // Setting up application socket parameters for transmitter and
   // receiver sockets
-  uint16_t port = 80;
   TypeId tid = TypeId::LookupByName ("ns3::UdpSocketFactory");
-  InetSocketAddress local = InetSocketAddress (Ipv4Address::GetAny (), port);
 
   // Transmitter socket
   Ptr<Socket> source = Socket::CreateSocket (star.GetHub (), tid);
 
   // Transmitter socket connections. Set transmitter for broadcasting
+  uint16_t port = 80;
   InetSocketAddress remote = InetSocketAddress (
     Ipv4Address ("255.255.255.255"), port);
   source->SetAllowBroadcast (true);
@@ -173,13 +169,15 @@ int main (int argc, char *argv[])
   // just change "binary" for "binary8"
   using field = fifi::binary;
   using encoderTrace = kodo::disable_trace;
-  using decoderTrace = kodo::enable_trace;
+  using decoderTrace = kodo::disable_trace;
 
   using simulation = BroadcastRlnc<field, encoderTrace, decoderTrace>;
   // Creates the broadcast topology class for the current example
   simulation wiredBroadcast (users, generationSize, packetSize, sinks);
 
   // Receiver socket connections
+  InetSocketAddress local = InetSocketAddress (Ipv4Address::GetAny (), port);
+
   for (const auto sink : sinks)
     {
       sink->Bind (local);
@@ -187,7 +185,7 @@ int main (int argc, char *argv[])
         &simulation::ReceivePacket, &wiredBroadcast));
     }
 
-  // Turn on global static routing so we can actually be routed across the star
+  // Turn on global static routing so we can be routed across the network
   Ipv4GlobalRoutingHelper::PopulateRoutingTables ();
 
   // Do pcap tracing on all point-to-point devices on all nodes

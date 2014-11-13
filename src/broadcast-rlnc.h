@@ -14,12 +14,10 @@
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
- *
- * Author: Néstor J. Hernández M. <nestor@steinwurf.com>
  */
 
 // This object implements RLNC (random linear network coding) in
-// the application layer for a broadcsat topology.
+// the application layer for a broadcast topology.
 
 #pragma once
 
@@ -35,10 +33,10 @@ public:
 
   using rlnc_encoder = typename kodo::full_rlnc_encoder<field, encoderTrace>;
   using non_copy_rlnc_decoder = typename kodo::full_rlnc_decoder<field,
-                                                                 decoderTrace>;
+    decoderTrace>;
 
   using rlnc_decoder = typename kodo::wrap_copy_payload_decoder<
-                                    non_copy_rlnc_decoder>;
+    non_copy_rlnc_decoder>;
 
   using encoder_pointer = typename rlnc_encoder::factory::pointer;
   using decoder_pointer = typename rlnc_decoder::factory::pointer;
@@ -124,6 +122,11 @@ public:
     packet->CopyData (&m_payload_buffer[0], decoder->payload_size ());
     decoder->decode (&m_payload_buffer[0]);
 
+    auto id = std::distance (std::begin (m_socketMap),
+      m_socketMap.find (socket)) + 1;
+
+    std::cout << "Received a packet at decoder " << id << std::endl;
+
     if (kodo::has_trace<rlnc_decoder>::value)
       {
         auto filter = [] (const std::string& zone)
@@ -133,10 +136,6 @@ public:
           return filters.count (zone);
         };
 
-        auto id = std::distance (std::begin (m_socketMap),
-          m_socketMap.find (socket)) + 1;
-
-        std::cout << "Received a packet at decoder " << id << std::endl;
         std::cout << "Trace on decoder " << id << " is: " << std::endl;
         kodo::trace (decoder, std::cout, filter);
       }

@@ -1,21 +1,31 @@
-Broadcast RLNC with a WiFi channel
+Broadcast RLNC with a WiFi Channel
 ==================================
 
 .. _wifi_broadcast:
 
+General Topology
+----------------
+
 The topology considered describes a transmitter sending coded packets
 with RLNC from a generation size :math:`g` and field size :math:`q` in a
-broadcast fashion through a 802.11b channel to a single receiver. For the
-purpose of our example, we will start with :math:`g = 5` and :math:`q = 2`
-(i.e. the binary field) and we will check the completion time in terms of
-transmissions through the WiFi channel under different situations.
+broadcast fashion through a 802.11b channel to N receivers. For the
+purpose of our example, we will start with :math:`g = 5`, :math:`q = 2`
+(i.e. the binary field), :math:`N = 2` and we will check the completion
+time in terms of transmissions through the WiFi channel under different
+situations. Topology is shown as follows:
 
-What to simulate?
------------------
+.. literalinclude:: ../src/wifi_broadcast/main.cc
+   :language: c++
+   :start-after: //! [0]
+   :end-before: //! [1]
+   :linenos:
+
+What to Simulate
+----------------
 
 We will consider the following guidelines for our simulation:
 
-* Behaviour: The sender keeps transmitting the generation until the
+* Behavior: The sender keeps transmitting the generation until the
   receiver has :math:`g` linearly independent (l.i.) coded packets
   (combinations). Packets might or might not be loss due to channel
   impairments.
@@ -28,51 +38,33 @@ We will consider the following guidelines for our simulation:
   decode. Also, the number of transmissions should somehow change as we
   vary the channel.
 
-Program description
+Program Description
 -------------------
 
 After the project has been properly configured and built, you should have
-a folder named ``~/dev/kodo-ns3-examples/wifi_broadcast/`` where ``~/dev/`` is
-the folder where you cloned the project repository. If you check the
-``wifi_broadcast`` folder, you will see the ``main.cpp`` file which contains
+a folder named ``~/dev/kodo-ns3-examples/src/wifi_broadcast/`` where ``~/dev/``
+is the folder where you cloned the project repository. If you check the
+``wifi_broadcast`` folder, you will see the ``main.cc`` file which contains
 the source code of this simulation. You can open it with your preferred editor
 to review the source code. We will briefly review some of its parts.
 
-Overview comments and includes
+Overview Comments and Includes
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-.. code-block:: c++
-
-   // ns-3 document style descriptor for e-macs
-
-   // ns-3 license disclaimer
-
-   // Example description
-
-   // ns-3 header includes
-   #include <ns3/core-module.h>
-   #include <ns3/network-module.h>
-   #include <ns3/mobility-module.h>
-   #include <ns3/config-store-module.h>
-   #include <ns3/wifi-module.h>
-   #include <ns3/internet-module.h>
-
-   // Kodo includes
-   #include <kodo/rlnc/full_rlnc_codes.hpp>
-   #include <kodo/trace.hpp>
-
-   // Simulation includes
-   #include <iostream>
-   #include <vector>
-   #include <string>
-   #include <ctime>
+.. literalinclude:: ../src/wifi_broadcast/main.cc
+   :language: c++
+   :start-after: //! [2]
+   :end-before: //! [3]
+   :linenos:
 
 As with any source code, the overview comments provide a reference to the users
-regarding project licensing and a brief introduction to what we are simulating.
-The includes are ordered from the most general to particular functionalities
-within ns-3 and Kodo. From ns-3, the necessary modules are:
+regarding project general aspects. The E-macs descriptor is part of the
+ns-3 coding style to allow E-macs developers' editor to recognize the document
+type. Following, licensing terms and an introduction to what we are simulating
+are displayed. Header includes are ordered from most general to particular
+functionalities within ns-3 and Kodo. From ns-3, the necessary modules are:
 
 * Core module: For simulation event handling. This module provide a set of
-  class-based APIs that control the simulation behaviour. It is essential for
+  class-based APIs that control the simulation behavior. It is essential for
   every ns-3 simulation.
 * Network module: For creation and management of simulated devices. ns-3 has
   mainly two building blocks which represent a transmission/reception
@@ -88,17 +80,15 @@ within ns-3 and Kodo. From ns-3, the necessary modules are:
 * Config-store module: A specialized ns-3 database for internal attributes and
   default values for the different APIs.
 * WiFi module: A PHY and MAC layer models for WiFi. Necessary for our medium
-  access control.
+  access control and channel model.
 * Internet module: For handling the IPv4 protocol at the network layer.
 
-From Kodo, the header ``full_rlnc_codes`` contains the description of the
-encoder and decoder objects that we use. ``trace`` is an internal class to
-provide a visual description of internal encoder and decoder processing. Other
-includes are particular to this implementation and they can be found in standard
-C++ code.
+Other includes are particular to this implementation and they can be found in
+standard C++ code. From Kodo, the header ``broadcast-rlnc.h`` contains the
+description of the encoder and decoder objects that we use.
 
-Required identifiers and types
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Default Namespace
+^^^^^^^^^^^^^^^^^
 
 We will be working within the ns-3 scope given that most of our objects are from
 this library. This is typical across ns-3 code.
@@ -107,160 +97,168 @@ this library. This is typical across ns-3 code.
 
    using namespace ns3;
 
-Also, for our enconder and decoder types, we need some ``typedefs`` to make
-easy calls on them.
+Simulation Class
+^^^^^^^^^^^^^^^^
+
+Before starting, we describe a Kodo object created in ``broadcast-rlnc.h``
+with the purpose to represent the RLNC broadcast topology. In this sense, we
+represent our Kodo simulation as a class with different functionalities.
+Of course, this is purely subjective. You may choose how you represent your
+objects in your simulation. Although, we choose this way because it enabled
+us to modularize all the simulation into a single object which is controlled
+by the network through the tasks of the net devices. Also, other ns-3 objects
+can extract information from it in an easy way.
+
+The ``BroadcastRlnc`` class can be roughly defined in the following way:
 
 .. code-block:: c++
 
-   typedef kodo::full_rlnc_encoder<fifi::binary,kodo::disable_trace> rlnc_encoder;
-   typedef kodo::full_rlnc_decoder<fifi::binary,kodo::enable_trace> rlnc_decoder;
+  #pragma once
 
-The RLNC encoder and decoder are template classes. The first input type is the
-field size represented through an object (``struct`` in this case) from our
+  #include <kodo/rlnc/full_rlnc_codes.hpp>
+  #include <kodo/trace.hpp>
+  #include <kodo/wrap_copy_payload_decoder.hpp>
+
+
+  template<class field, class encoderTrace, class decoderTrace>
+  class BroadcastRlnc
+  {
+  public:
+
+    using rlnc_encoder = typename kodo::full_rlnc_encoder<field, encoderTrace>;
+    using non_copy_rlnc_decoder = typename kodo::full_rlnc_decoder<field,
+      decoderTrace>;
+
+    using rlnc_decoder = typename kodo::wrap_copy_payload_decoder<
+      non_copy_rlnc_decoder>;
+
+    using encoder_pointer = typename rlnc_encoder::factory::pointer;
+    using decoder_pointer = typename rlnc_decoder::factory::pointer;
+
+    BroadcastRlnc (const uint32_t users, const uint32_t generationSize,
+      const uint32_t packetSize, const std::vector<ns3::Ptr<ns3::Socket>>& sinks)
+      : m_users (users),
+        m_generationSize (generationSize),
+        m_packetSize (packetSize),
+        m_sinks (sinks)
+    {
+      // Constructor
+    }
+
+    void SendPacket (ns3::Ptr<ns3::Socket> socket, ns3::Time pktInterval)
+    {
+      // Encoder logic
+    }
+
+    void ReceivePacket (ns3::Ptr<ns3::Socket> socket)
+    {
+      // Decoders logic
+    }
+
+  private:
+
+    const uint32_t m_users;
+    const uint32_t m_generationSize;
+    const uint32_t m_packetSize;
+
+    encoder_pointer m_encoder;
+    std::vector<decoder_pointer> m_decoders;
+    std::vector<ns3::Ptr<ns3::Socket>> m_sinks;
+    std::map<ns3::Ptr<ns3::Socket>,decoder_pointer> m_socketMap;
+
+    std::vector<uint8_t> m_payload_buffer;
+    uint32_t m_transmission_count;
+  };
+
+A broadcast topology is a template class. We will describe them to have
+of what they model and control. The first template argument is the finite
+field we will be using, represented through an object from our
 `Fifi  <https://github.com/steinwurf/fifi>`_ library. Fifi is a dependency for
-Kodo where all the finite field arithmetics resides. Since we are interested in
-:math:`q = 2`, we choose ``fifi:binary``. However, other field types from Fifi
-might be chosen too according to your application. Current available filed sizes
-are: :math:`q = {2^4, 2^8, 2^{16}, 2^{32}-5}`.
+Kodo where all the finite field arithmetics resides. In the ``main.cc`` file,
+you can see that since we are interested in :math:`q = 2`, we choose
+``fifi:binary``. However, other field types from Fifi might be chosen too
+according to your application. Current available field sizes are:
+:math:`q = {2^4, 2^8, 2^{16}, 2^{32}-5}`.
 
-The second input is a ``struct`` that controls the use of tracing in the given
-object. ``kodo::enable_trace`` or ``kodo::disable_trace`` respectively enables
-or disables the tracing functionality in the objects where they are employed.
-For our implementation, we enable tracing for our decoder and disable it for
-the encoder. Later in the simulation runs, we will check what options does
-tracing has on each device type.
+The second and third template arguments control the use of tracing in the
+simulation encoder and decoder objects. In ``main.cc``, ``kodo::enable_trace``
+and ``kodo::disable_trace`` respectively enables or disables the tracing
+functionality where it is employed. For our implementation, we enable tracing
+for our decoders and disable it for the encoder. Later in the simulation
+runs, we will check what options does tracing has on each device type.
 
-Main simulation class
-^^^^^^^^^^^^^^^^^^^^^
+We create a set of ``typedefs`` required to make easy calls. ``rlnc_encoder``
+to name our encoder class. The ``rlnc_decoder`` case is slightly different.
+Normally, in Kodo, every time a packet is received in a decoder, the payload is
+modified during decoding. To overcome this problem, the API has an extension
+that ensures the payload is not overwritten, namely
+``kodo::wrap_copy_payload_decoder<decoder_type>``, where ``decoder_type`` in
+our case is a common decoder type created from the API. Then, we create two
+types of pointers, one for the encoder (``encoder_pointer``) and another for
+the decoder (``decoder_pointer``). An encoder or decoder pointer, points to an
+instance of the specified type.
 
-We represent our Kodo simulation as a class with different functionalities. Of
-course, this is purely subjective. You may choose how you represent your objects
-in your simulation. Although, we choose this way because it enabled us to
-modularize all the simulation into a single object that controls the system
-through the tasks of the devices. Also, other ns-3 objects can extract
-information from it in an easy way.
-
-The ``KodoSimulation`` class can be roughly defined in the following way:
-
-.. code-block:: c++
-
-   class KodoSimulation
-   {
-   public:
-
-     KodoSimulation(const rlnc_encoder::pointer& encoder,
-                    const rlnc_decoder::pointer& decoder)
-       : m_encoder(encoder),
-         m_decoder(decoder)
-     {
-       // Constructor
-     }
-
-     void ReceivePacket (Ptr<Socket> socket)
-     {
-       // Receiver actions performed when a packet is received on its socket
-     }
-
-     void GenerateTraffic (Ptr<Socket> socket, Time pktInterval)
-     {
-       // Transmitter actions performed every "pktInterval" on its socket
-     }
-
-   private:
-
-     rlnc_encoder::pointer m_encoder;  // Pointer to encoder
-     rlnc_decoder::pointer m_decoder;  // Pointer to decoder
-
-     std::vector<uint8_t> m_payload_buffer; // Buffer for handling current
-                                            // coded packet and its coefficients
-
-     uint32_t m_transmission_count;  // Amount of transmissions from the encoder
-
-   };
-
-For the simulation, ``void GenerateTraffic(Ptr<Socket> socket, Time
+For the simulation, ``void SendPacket(ns3::Ptr<ns3::Socket> socket, ns3::Time
 pktInterval)`` generates coded packets from generic data (created in the
-constructor) every ``pktInterval`` units of ``Time`` (which is a ns-3 type) and
-sends them to the decoder through its socket connection, represented by the
-ns-3 template-based smart pointer object ``Ptr<Socket>``. Several ns-3 objects
-are represented in this way. So quite often you will see this kind of pointer
-employed. This type of pointer is made to make a proper memory usage.
+constructor) every ``pktInterval`` units of ``Time`` and sends them to the
+decoders through their socket connections, represented by the
+ns-3 template-based smart pointer object ``ns3::Ptr<ns3::Socket>``. Several
+ns-3 objects are represented in this way. So quite often you will see this
+kind of pointer employed. This ns-3 pointer is intended to make a proper
+memory usage.
 
-As we will check later, ``void ReceivePacket(Ptr<Socket> socket)`` will be
-invoked through a callback whenever a packet is received at the decoder. Both
-sockets make use of ``m_payload_buffer``. The transmitter creates coded
-packets from the data and puts them in the buffer. Conversely, a received coded
-packet is placed in the buffer and then to the decoding matrix.
+As we will check later, ``void ReceivePacket(ns3::Ptr<ns3::Socket> socket)``
+will be invoked through a callback whenever a packet is received at a
+decoder. In this case, the decoder that triggered the callback is obtained
+from an internal map. All nodes make use of ``m_payload_buffer``. The
+transmitter creates coded packets from the data and puts them in the buffer.
+Conversely, a received coded packet is placed in the buffer and then to its
+respective decoding matrix.
 
 You can check the source code to verify that these functionalities are
 performed by the APIs ``m_encoder->encode()`` and ``m_decoder->decode()``. For
 the encoding case, the amount of bytes required from the buffer to store the
-coded packet and its coefficients is returned. This amount is needed for the
-ns-3 ``Create<Packet>`` template-based constructor to create the ns-3 coded
-packet that is actually sent (and received). Finally, ``m_transmission_count``
-indicates how many packets were sent by the encoder during the whole process.
-Please make a review to the implementation of ``GenerateTraffic`` and
-``ReceivePacket`` to verify the expected behaviour of the nodes when packets
-are sent or received respectively.
+coded packet and its coefficients is returned. This amount is needed for
+``ns3::Create<ns3::Packet>`` template-based constructor to create the ns-3
+coded packet that is actually sent (and received). Finally,
+``m_transmission_count`` indicates how many packets were sent by the encoder
+during the whole process. Please make a review to the implementation of
+``SendPacket`` and ``ReceivePacket`` to verify the expected behavior of the
+nodes when packets are sent or received respectively.
 
-Default parameters and command parsing
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Default Parameters and Command-line Parsing
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. code-block:: c++
-
- int main (int argc, char *argv[])
- {
-   std::string phyMode ("DsssRate1Mbps");
-   double rss = -93;  // dBm
-   uint32_t packetSize = 1000; // bytes
-   double interval = 1.0; // seconds
-   uint32_t generationSize = 5;
-
-   CommandLine cmd;
-
-   cmd.AddValue ("phyMode", "Wifi Phy mode", phyMode);
-   cmd.AddValue ("rss", "received signal strength", rss);
-   cmd.AddValue ("packetSize", "size of application packet sent", packetSize);
-   cmd.AddValue ("interval", "interval (seconds) between packets", interval);
-   cmd.AddValue ("generationSize", "Set the generation size to use",
-                 generationSize);
-
-   cmd.Parse (argc, argv);
-
-   // Convert to time object
-   Time interPacketInterval = Seconds (interval);
+.. literalinclude:: ../src/wifi_broadcast/main.cc
+   :language: c++
+   :start-after: //! [4]
+   :end-before: //! [5]
+   :linenos:
 
 The first part of the ``main`` function introduces us to the basic simulation
 parameters regarding physical layer mode for WiFi (Direct Sequence Spread
 Spectrum of 1 Mbps rate), receiver signal strength of -93 dBm, 1 KB for packet
-size, 1 second interval duration between ns-3 events (we will use it later) and
-a generation size of 5 packets. After that, the ``CommandLine`` class is ns-3's
-command line parser used to modify those values (if required) with ``AddValue``
-and ``Parse``. Then, the interval duration is converted to the ns-3 ``Time``
-format.
+size, 1 second interval duration between ns-3 events (we will use it later),
+a generation size of 5 packets and 2 users (receivers). After that, the
+``CommandLine`` class is ns-3's command line parser used to modify those
+values (if required) with ``AddValue`` and ``Parse``. Then, the interval
+duration is converted to the ns-3 ``Time`` format.
 
 
 Configuration defaults
 ^^^^^^^^^^^^^^^^^^^^^^
 
-.. code-block:: c++
-
-  // disable fragmentation for frames below 2200 bytes
-  Config::SetDefault ("ns3::WifiRemoteStationManager::FragmentationThreshold",
-                      StringValue ("2200"));
-
-  // turn off RTS/CTS for frames below 2200 bytes
-  Config::SetDefault ("ns3::WifiRemoteStationManager::RtsCtsThreshold",
-                      StringValue ("2200"));
-
-  // Fix non-unicast data rate to be the same as that of unicast
-  Config::SetDefault ("ns3::WifiRemoteStationManager::NonUnicastMode",
-                      StringValue (phyMode));
+.. literalinclude:: ../src/wifi_broadcast/main.cc
+   :language: c++
+   :start-after: //! [5]
+   :end-before: //! [6]
+   :linenos:
 
 Before continuing, you will see many features of ns-3's `WiFi implementation
-<http://www.nsnam.org/docs/release/3.20/models/singlehtml/index.html#document-wifi>`_.
-Besides the WiFi properties, in the previous link you will find a typical
-workflow about setting and configuring WiFi devices in your simulation.
+<http://www.nsnam.org/docs/release/3.20/models/singlehtml/index.html#
+document-wifi>`_. Besides the WiFi properties, in the previous link you will
+find a typical workflow about setting and configuring WiFi devices in your
+simulation.
 
 This part basically sets off some MAC properties that we do not need (at least
 for our purposes), namely frame fragmentation to be applied for frames larger
@@ -269,36 +267,14 @@ than 2200 bytes and setting the broadcast data rate to be the same as unicast
 for the given ``phyMode``. However, they need to be included in order to work
 with the WiFi MAC.
 
-WiFi PHY and channel helpers for nodes
+WiFi PHY and Channel Helpers for Nodes
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. code-block:: c++
-
-  // Source and destination
-  NodeContainer c;
-  c.Create (2);
-
-  // The below set of helpers will help us to put together the WiFi NICs we want
-  WifiHelper wifi;
-  wifi.SetStandard (WIFI_PHY_STANDARD_80211b);
-
-  YansWifiPhyHelper wifiPhy =  YansWifiPhyHelper::Default ();
-
-  // This is one parameter that matters when using FixedRssLossModel
-  // set it to zero; otherwise, gain will be added
-  wifiPhy.Set ("RxGain", DoubleValue (0) );
-
-  // ns-3 supports RadioTap and Prism tracing extensions for 802.11b
-  wifiPhy.SetPcapDataLinkType (YansWifiPhyHelper::DLT_IEEE802_11_RADIO);
-
-  YansWifiChannelHelper wifiChannel;
-  wifiChannel.SetPropagationDelay ("ns3::ConstantSpeedPropagationDelayModel");
-
-  // The below FixedRssLossModel will cause the rss to be fixed regardless
-  // of the distance between the two stations, and the transmit power
-  wifiChannel.AddPropagationLoss ("ns3::FixedRssLossModel","Rss",
-                                  DoubleValue (rss));
-  wifiPhy.SetChannel (wifiChannel.Create ());
+.. literalinclude:: ../src/wifi_broadcast/main.cc
+   :language: c++
+   :start-after: //! [6]
+   :end-before: //! [7]
+   :linenos:
 
 In this part we start to build the topology for our simulation following
 a typical ns-3 workflow. By typical we mean that this can be done in different
@@ -325,22 +301,18 @@ a fixed value regardless of the position the nodes have. This fixed value is
 set to -93 dBm, but we can modify it through argument parsing. With these
 settings, we create our WiFi PHY layer channel by doing ``wifiPhy.SetChannel
 (wifiChannel.Create ());``. If you want to read more about how the helpers are
-implemented, you can check the `Yans description <http://cutebugs.net/files/wns2-yans.pdf>`_
-for further details.
+implemented, you can check the
+`Yans description <http://cutebugs.net/files/wns2-yans.pdf>`_ for further
+details.
 
-WiFi MAC and net device helpers
+WiFi MAC and Net Device Helpers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. code-block:: c++
-
-  // Add a non-QoS upper mac, and disable rate control
-  NqosWifiMacHelper wifiMac = NqosWifiMacHelper::Default ();
-  wifi.SetRemoteStationManager ("ns3::ConstantRateWifiManager",
-                                "DataMode",StringValue (phyMode),
-                                "ControlMode",StringValue (phyMode));
-  // Set it to adhoc mode
-  wifiMac.SetType ("ns3::AdhocWifiMac");
-  NetDeviceContainer devices = wifi.Install (wifiPhy, wifiMac, c);
+.. literalinclude:: ../src/wifi_broadcast/main.cc
+   :language: c++
+   :start-after: //! [7]
+   :end-before: //! [8]
+   :linenos:
 
 Now that we have created the physical objects (the nodes, remember our previous
 definition), we proceed to create the network interface cards (NICs, i.e. net
@@ -358,19 +330,14 @@ packet transmissions. With all the previous settings we create our (2) WiFi
 cards and put them in a container by doing
 ``NetDeviceContainer devices = wifi.Install (wifiPhy, wifiMac, c);``.
 
-Mobility model and helper
+Mobility Model and Helper
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. code-block:: c++
-
-  MobilityHelper mobility;
-  Ptr<ListPositionAllocator> positionAlloc =
-    CreateObject<ListPositionAllocator> ();
-  positionAlloc->Add (Vector (0.0, 0.0, 0.0));
-  positionAlloc->Add (Vector (5.0, 0.0, 0.0));
-  mobility.SetPositionAllocator (positionAlloc);
-  mobility.SetMobilityModel ("ns3::ConstantPositionMobilityModel");
-  mobility.Install (c);
+.. literalinclude:: ../src/wifi_broadcast/main.cc
+   :language: c++
+   :start-after: //! [8]
+   :end-before: //! [9]
+   :linenos:
 
 The ns-3 ``MobilityHelper`` class assigns a model for the velocities of
 the receivers within ns-3. Even though we had fixed the received power of the
@@ -379,62 +346,33 @@ create a ``Vector`` describing the initial (and remaining) coordinates for both
 transmitter and receiver in a 3D grid. Then, we put them in the helper with a
 ``ConstantPositionMobilityModel`` for the nodes.
 
-Internet and application protocol helpers
+Internet and Application Protocol Helpers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. code-block:: c++
-
-  InternetStackHelper internet;
-  internet.Install (c);
-
-  Ipv4AddressHelper ipv4;
-  ipv4.SetBase ("10.1.1.0", "255.255.255.0");
-  Ipv4InterfaceContainer i = ipv4.Assign (devices);
+.. literalinclude:: ../src/wifi_broadcast/main.cc
+   :language: c++
+   :start-after: //! [9]
+   :end-before: //! [10]
+   :linenos:
 
 After we have set up the devices and the two lowest layers, we need to set up
 the network and application layer protocols. The ``InternetStackHelper``
 provides functionalities for IPv4, ARP, UDP, TCP, IPv6, Neighbor Discovery, and
 other related protocols. You can find more about the implementation of the
-helper in this `link <http://www.nsnam.org/docs/release/3.20/models/singlehtml/index.html#document-internet-models>`_.
-A similar process is made for the IPv4 address assignment. We use the address
-range ``10.1.1.0`` with the subnet mask ``255.255.255.0``, assign it to the
-``devices`` and put the result in a container.
+helper in this
+`link <http://www.nsnam.org/docs/release/3.20/models/singlehtml/index.html#docu
+ment-internet-models>`_. A similar process is made for the IPv4 address
+assignment. We use the address range ``10.1.1.0`` with the subnet mask
+``255.255.255.0``, assign it to the ``devices``.
 
-Simulation calls
-^^^^^^^^^^^^^^^^
+Sockets Construction
+^^^^^^^^^^^^^^^^^^^^
 
-.. code-block:: c++
-
-  rlnc_encoder::factory encoder_factory(generationSize, packetSize);
-  rlnc_decoder::factory decoder_factory(generationSize, packetSize);
-
-  KodoSimulation kodoSimulator(encoder_factory.build(),
-                               decoder_factory.build());
-
-With previous defined typedefs, we call the encoder and decoder factories to
-set and generate objects with the defined inputs. Then, we create the instances
-with ``encoder_factory.build()`` and ``decoder_factory.build()`` to call the
-simulation class constructor. This does not run the simulation as we will see,
-but it creates the objets called by ns-3 to perform the tasks of the transmitter
-and receiver.
-
-Socket creation and connections
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-.. code-block:: c++
-
-  TypeId tid = TypeId::LookupByName ("ns3::UdpSocketFactory");
-  Ptr<Socket> recvSink = Socket::CreateSocket (c.Get (0), tid);
-  InetSocketAddress local = InetSocketAddress (Ipv4Address::GetAny (), 80);
-  recvSink->Bind (local);
-  recvSink->SetRecvCallback (MakeCallback (&KodoSimulation::ReceivePacket,
-                                           &kodoSimulator));
-
-  Ptr<Socket> source = Socket::CreateSocket (c.Get (1), tid);
-  InetSocketAddress remote = InetSocketAddress (Ipv4Address ("255.255.255.255"),
-                                                80);
-  source->SetAllowBroadcast (true);
-  source->Connect (remote);
+.. literalinclude:: ../src/wifi_broadcast/main.cc
+   :language: c++
+   :start-after: //! [10]
+   :end-before: //! [11]
+   :linenos:
 
 For the application protocols to work with a given data, we need a pair between
 an IP address and a logical port to create a socket address for socket
@@ -442,52 +380,72 @@ communication (besides of course, the socket itself). ns-3 supports two sockets
 APIs for user space applications. The first is ns-3 native, while the second
 (which is based on the first) resembles more a real system POSIX-like socket
 API. For further information about the differences, please refer to ns-3's
-`socket implementation <http://www.nsnam.org/docs/release/3.20/models/singlehtml/index.html#document-network>`_.
-We will focus on the ns-3 socket API variant.
+`socket implementation <http://www.nsnam.org/docs/release/3.20/models/singlehtml
+/index.html#document-network>`_. We will focus on the ns-3 socket API variant.
+The first line is meant to create the socket type from a lookup search given by
+the name ``UdpSocketFactory``. It creates this type of socket on the receivers
+and the transmitter. We have chosen the previous socket type in order to
+represent a UDP connection that sends RLNC coded packets.
 
-The first two lines are meant to create the socket type from a lookup search
-given by the name ``UdpSocketFactory``. They create this type of socket on the
-receiver and the transmitter. We have chosen the previous socket type in order
-to represent a UDP connection that sends RLNC coded packets. Then, we create
-the local socket address for binding purposes. For it, we choose the default
-``0.0.0.0`` address obtained from ``Ipv4Address::GetAny ()`` and port 80 (to
-represent random HTTP traffic). The receiver binds to this address for socket
-hearing. Everytime a packet is received we trigger a callback to the reference
-``&KodoSimulation::ReceivePacket`` which takes the hearing socket as an argument.
-This executes the respective member function of the reference ``&kodoSimulator``.
-For the transmitter (source) we make a similar process but instead we allow
+Simulation Calls
+^^^^^^^^^^^^^^^^
+
+.. literalinclude:: ../src/wifi_broadcast/main.cc
+   :language: c++
+   :start-after: //! [11]
+   :end-before: //! [12]
+   :linenos:
+
+As we mentioned earlier, we use the binary field with a disabled trace in the
+encoder and enabled for the recoders. Then, we call the object that handles
+the topology by doing ``simulation wifiBroadcast (users, generationSize,
+packetSize, sinks);`` to call the broadcast RLNC class constructor. This does
+not run the simulation as we will see, but it creates the objets called by
+ns-3 to perform the tasks of the transmitter and receiver.
+
+Sockets Connections
+^^^^^^^^^^^^^^^^^^^
+
+.. literalinclude:: ../src/wifi_broadcast/main.cc
+   :language: c++
+   :start-after: //! [12]
+   :end-before: //! [13]
+   :linenos:
+
+Then, we create the remote and local socket addresses for binding purposes. For
+the transmitter (source) we make a similar process but instead we allow
 broadcasting with ``source->SetAllowBroadcast (true)`` and connect to the
-broadcast address. This completes our socket connection process and links the
-pieces for the simulation.
+broadcast address. For the receivers, we choose the default ``0.0.0.0`` address
+obtained from ``Ipv4Address::GetAny ()`` and port 80 (to represent random HTTP
+traffic). The receiver binds to this address for socket listening. Every time
+a packet is received we trigger a callback to the reference ``&simulation::
+ReceivePacket`` which takes the listening socket as an argument. This executes
+the respective member function of the reference ``&wifiBroadcast``. This
+completes our socket connection process and links the pieces for the simulation.
+Finally, we populate the routing tables to ensure that we are routed inside
+the topology.
 
-Simulation event handler
+Simulation Event Handler
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. code-block:: c++
+.. literalinclude:: ../src/wifi_broadcast/main.cc
+   :language: c++
+   :start-after: //! [13]
+   :end-before: //! [14]
+   :linenos:
 
-  // Pcap tracing
-  wifiPhy.EnablePcap ("wifi-simple-adhoc", devices);
-
-  Simulator::ScheduleWithContext (source->GetNode ()->GetId (),
-                                  Seconds (1.0),
-                                  &KodoSimulation::GenerateTraffic,
-                                  &kodoSimulator,
-                                  source, interPacketInterval);
-
-  Simulator::Run ();
-  Simulator::Destroy ();
-
-Finally, ``wifiPhy.EnablePcap ("wifi-simple-adhoc", devices);`` allows the net
+Finally, ``wifiPhy.EnablePcap ("wifi-broadcast-rlnc", devices);`` allows the net
 devices to create pcap files from the given devices. One file per net device.
-File naming will be: ``wifi-simple-adhoc-[NODE_ID]-[DEVICE_ID].pcap`` and the
-format of these files should be the one of RadioTap and should be located on your
-``~/kodo-ns3-examples/`` folder. Later, we will review how to read those files.
+File naming will be: ``wifi-broadcast-rlnc-[NODE_ID]-[DEVICE_ID].pcap`` and the
+format of these files should be the one of RadioTap and should be located on
+your ``~/kodo-ns3-examples/`` folder. Later, we will review how to read those
+files.
 
 After the pcap setting, we use one of the ns-3 core features, event scheduling.
-The ``Simulator`` is inherent to ns-3 and defines how events are handled
+The ``Simulator`` class is inherent to ns-3 and defines how events are handled
 discretely. The ``ScheduleWithContext`` member function basically tells ns-3
-to schedule the ``KodoSimulation::GenerateTraffic`` function every second from
-the transmitter instance of ``kodoSimulator`` and provide its arguments, e.g.
+to schedule the ``simulation::SendPacket`` function every second from
+the transmitter instance of ``wiredBroadcast`` and provide its arguments, e.g.
 ns-3 socket pointer ``source`` and ``Time`` packet interval
 ``interPacketInterval``. Among the event schedulers, you will see ``Schedule``
 vs. ``ScheduleWithContext``. The main difference between these two functions
@@ -496,82 +454,157 @@ context (the node identifier of the currently executed network node) belongs
 to the given node. Meanwhile, ``Schedule`` may receive the context from a
 previous scheduled event, which can have the context from a different node.
 You can find more details about  the simulator functions in the ns-3
-`event scheduling <http://www.nsnam.org/docs/manual/singlehtml/index.html#document-events>`_
-manual. With all previous descriptions, we are able to run the simulation to
-see some basic effects of network coding in ns-3 with Kodo.
+`event scheduling <http://www.nsnam.org/docs/manual/singlehtml/index.html#
+document-events>`_ manual. With all previous descriptions, we are able to run
+the simulation to see some basic effects of network coding in ns-3 with Kodo.
 
-Simulation runs
+Simulation Runs
 ---------------
 
 Now that we know each part of our setup, we will run some simulations in order
-that you should know what to expect. We will run the default behaviour and
+that you should know what to expect. We will run the default behavior and
 change some parameters to check known results.
 
-Default run
+Default Run
 ^^^^^^^^^^^
 
 First type ``cd ~/dev/kodo-ns3-examples`` in your terminal for you to be in
-the main path of your cloned repository. Remember that at this point, **you need
-to have configured and built the projects with no errors**. The default run goes
-with 5 packets in the binary field with only the decoder trace enabled. For the
-trace, we have only set ``input_symbol_coefficients`` to see the coding
-coefficients of a received packet and ``decoder_state`` to see how the state
-matrix evolves. As a starter, type: ::
+the main path of your cloned repository. Remember that at this point, **you
+need to have configured and built the projects with no errors**. The default
+run goes with 5 packets in the binary field with 2 users and only the decoder
+trace enabled. For the trace, we have only set ``input_symbol_coefficients``
+to see the coding coefficients of a received packet and ``decoder_state`` to
+see how he state matrix evolves. As a starter, type: ::
 
-  ./build/linux/wifi_broadcast/wifi_broadcast
+  ./build/linux/src/wifi_broadcast/wifi_broadcast
 
 You should see an output similar to this: ::
 
-  Received one packet at decoder
-  Trace decoder:
+  +---------------------+
+  |Sending a combination|
+  +---------------------+
+  Received a packet at decoder 1
+  Trace on decoder 1 is:
+  input_symbol_coefficients:
+  C: 1 1 0 0 0
+
+  decoder_state:
+  000 C:  1 1 0 0 0
+  001 ?:  0 0 0 0 0
+  002 ?:  0 0 0 0 0
+  003 ?:  0 0 0 0 0
+  004 ?:  0 0 0 0 0
+
+  Received a packet at decoder 2
+  Trace on decoder 2 is:
+  input_symbol_coefficients:
+  C: 1 1 0 0 0
+
+  decoder_state:
+  000 C:  1 1 0 0 0
+  001 ?:  0 0 0 0 0
+  002 ?:  0 0 0 0 0
+  003 ?:  0 0 0 0 0
+  004 ?:  0 0 0 0 0
+
+  +---------------------+
+  |Sending a combination|
+  +---------------------+
+  Received a packet at decoder 1
+  Trace on decoder 1 is:
   input_symbol_coefficients:
   C: 0 1 0 1 0
 
   decoder_state:
-  000 ?:  0 0 0 0 0
+  000 C:  1 0 0 1 0
   001 C:  0 1 0 1 0
   002 ?:  0 0 0 0 0
   003 ?:  0 0 0 0 0
   004 ?:  0 0 0 0 0
 
-  Received one packet at decoder
-  Trace decoder:
+  Received a packet at decoder 2
+  Trace on decoder 2 is:
   input_symbol_coefficients:
-  C: 0 0 0 1 0
+  C: 0 1 0 1 0
 
   decoder_state:
-  000 ?:  0 0 0 0 0
-  001 C:  0 1 0 0 0
+  000 C:  1 0 0 1 0
+  001 C:  0 1 0 1 0
   002 ?:  0 0 0 0 0
-  003 C:  0 0 0 1 0
+  003 ?:  0 0 0 0 0
   004 ?:  0 0 0 0 0
 
-  Received one packet at decoder
-  Trace decoder:
+  +---------------------+
+  |Sending a combination|
+  +---------------------+
+  Received a packet at decoder 1
+  Trace on decoder 1 is:
   input_symbol_coefficients:
-  C: 1 0 0 0 1
+  C: 0 0 1 0 0
 
   decoder_state:
-  000 C:  1 0 0 0 1
-  001 C:  0 1 0 0 0
-  002 ?:  0 0 0 0 0
-  003 C:  0 0 0 1 0
+  000 C:  1 0 0 1 0
+  001 C:  0 1 0 1 0
+  002 C:  0 0 1 0 0
+  003 ?:  0 0 0 0 0
   004 ?:  0 0 0 0 0
 
-  Received one packet at decoder
-  Trace decoder:
+  Received a packet at decoder 2
+  Trace on decoder 2 is:
   input_symbol_coefficients:
-  C: 1 0 1 0 0
+  C: 0 0 1 0 0
 
   decoder_state:
-  000 C:  1 0 0 0 1
+  000 C:  1 0 0 1 0
+  001 C:  0 1 0 1 0
+  002 C:  0 0 1 0 0
+  003 ?:  0 0 0 0 0
+  004 ?:  0 0 0 0 0
+
+  +---------------------+
+  |Sending a combination|
+  +---------------------+
+  Received a packet at decoder 1
+  Trace on decoder 1 is:
+  input_symbol_coefficients:
+  C: 0 1 1 0 0
+
+  decoder_state:
+  000 C:  1 0 0 0 0
   001 C:  0 1 0 0 0
-  002 C:  0 0 1 0 1
+  002 C:  0 0 1 0 0
   003 C:  0 0 0 1 0
   004 ?:  0 0 0 0 0
 
-  Received one packet at decoder
-  Trace decoder:
+  Received a packet at decoder 2
+  Trace on decoder 2 is:
+  input_symbol_coefficients:
+  C: 0 1 1 0 0
+
+  decoder_state:
+  000 C:  1 0 0 0 0
+  001 C:  0 1 0 0 0
+  002 C:  0 0 1 0 0
+  003 C:  0 0 0 1 0
+  004 ?:  0 0 0 0 0
+
+  +---------------------+
+  |Sending a combination|
+  +---------------------+
+  Received a packet at decoder 1
+  Trace on decoder 1 is:
+  input_symbol_coefficients:
+  C: 0 1 0 0 1
+
+  decoder_state:
+  000 U:  1 0 0 0 0
+  001 U:  0 1 0 0 0
+  002 U:  0 0 1 0 0
+  003 U:  0 0 0 1 0
+  004 U:  0 0 0 0 1
+
+  Received a packet at decoder 2
+  Trace on decoder 2 is:
   input_symbol_coefficients:
   C: 0 1 0 0 1
 
@@ -584,54 +617,54 @@ You should see an output similar to this: ::
 
   Decoding completed! Total transmissions: 5
 
-Here we observe that everytime a packet is received, the previously
-mentioned information is printed. For the ``input_symbols_coefficients`` output,
-``C:`` indicates that we have a received a *coded* packet with the given
-coding vector. In this output, the first given coded packet (CP) is:
-:math:`CP_1 = p_2 + p_4`.
+Here we observe that every time a packet is received, the previously
+mentioned information is printed for each receiver. For the
+``input_symbols_coefficients`` output, ``C:`` indicates that we have a
+received a *coded* packet with the given coding vector. In this output,
+the first given coded packet (CP) is: :math:`CP_1 = p_1 + p_2`.
 
 .. note:: Normally the ``rlnc_encoder`` type (based on the
    ``full_rlnc_encoder``), would have generated packets in a systematic way,
-   but here we set that feature off in the ``KodoSimulation`` class constructor,
+   but here we set that feature off in the ``BroadcastRlnc`` class constructor,
    through the encoder API ``m_encoder->set_systematic_off()``. Also, normally
-   the encoder starts with the same seed in every run but have also changed that
-   too in the constructor with ``m_encoder->seed(time(0))``. So, we proceed
-   with this example to explain the simulation, but you will obtain another
-   result in your runs. However, the results obtained with this example apply in
-   general.
+   the encoder starts with the same seed in every run but we have also changed
+   that too in the constructor with ``m_encoder->seed((uint32_t)time(0))``.
+   So, we proceed with this example to explain the simulation, but you will
+   obtain another result in your runs. However, the results obtained with
+   this example apply in general.
 
 After the input symbols have been checked, the decoder trace shows the
 ``decoder_state``. This is the current decoding matrix in an equivalent row
-echelon form. Given that we have received :math:`p_2 + p_4`, we put them in the
-second row because the pivot for :math:`p_2` is there. Also, we can argue that
-the pivot for :math:`p_1` is in first row and so on. The second received coded
-packet is :math:`CP_2 = p_4`. Notice that when we print the decoder state
-again, we have changed the equation of the second row because with the current
-information we can calculate :math:`p_2 = CP_1 + CP_2` (remember we are in
-modulo-2 arithmetic). However, we still keep these values as "coded" (``C:``),
-because we need to receive the complete generation to guarantee full decoding.
-Packet reception continues until we have :math:`g` linearly independent (l.i.)
-coded packets.
+echelon form. Given that we have received :math:`p_1 + p_2`, we put them in the
+first row because the pivot for :math:`p_1` is there. Also, we can argue that
+the pivot for :math:`p_2` is in the second row and so on. The second received
+coded packet is :math:`CP_2 = p_2 + p_4`. Notice that when we print the decoder
+state again, we have changed the equation of the second row because with the
+current information we can calculate
+:math:`CP_{1,new} = CP_1 + CP_2 = p_1 + p_4` (remember we are in modulo-2
+arithmetic). We keep these values as "coded" (``C:``), because we need to
+receive the complete generation to guarantee full decoding. Packet reception
+continues until we have :math:`g` linearly independent (l.i.) coded packets.
 
-You can also see there two more types of symbols indicators. ``?:`` indicates
+You can also see two more types of symbols indicators. ``?:`` indicates
 that the corresponding pivot packet has not been *seen* by the decoder. Seeing
 packet :math:`k` means that we are able to compute :math:`p_k
 + \sum_{l > k} \alpha_l p_l`, i.e. to be able to compute :math:`p_k` plus a
-combinations of packets of indexes greater than :math:`k`. Even though it seems
-simple and unrelated, the concept of seeing a packet will prove to be useful in
-future examples. Finally, ``U:`` indicates that the packet is uncoded, normally
-you will see this when the complete generation is decoded.
+combinations of packets of indexes greater than :math:`k`. A seen packet helps
+to reduce the numbers of operations required for decoding. Finally, ``U:``
+indicates that the packet is uncoded, normally you will see this when the
+complete generation is decoded.
 
 At the end, we see that decoding was performed after 5 transmissions. There are
 two reasons for this to occur. First, no linearly dependent (l.d.)
-combinations ocurred during the random process. Second, there were no packet
+combinations occurred during the random process. Second, there were no packet
 erasures neither. We will make some changes to see these effects.
 
-Changing the field and generation size
+Changing the Field and Generation Size
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Try to run the example again several times, you should see that the amount of
-tranmissions vary between 5 and 7, maybe sometimes a little more, due to
+transmissions vary between 5 and 7, maybe sometimes a little more, due to
 randomness. On average, for :math:`q = 2` you should expect that
 :math:`g + 1.6` transmissions are necessary to transmit :math:`g` l.i.
 packets. To verify this, you can save the following bash script as
@@ -694,34 +727,73 @@ dependent packets, even when the last coded packet is being sent.
 To see the new coding coefficients for :math:`q = 2^8`, but for only a
 generation size of 3 packets, type now: ::
 
-  ./build/linux/wifi_broadcast/wifi_broadcast --generationSize=3
+  ./build/linux/src/wifi_broadcast/wifi_broadcast --generationSize=3
 
 You should see something similar to: ::
 
-  Received one packet at decoder
-  Trace decoder:
+  +---------------------+
+  |Sending a combination|
+  +---------------------+
+  Received a packet at decoder 1
+  Trace on decoder 1 is:
   input_symbol_coefficients:
-  C: 224 129 0
+  C: 28 3 52
 
   decoder_state:
-  000 C:  1 198 0
+  000 C:  1 253 209
   001 ?:  0 0 0
   002 ?:  0 0 0
 
-  Received one packet at decoder
-  Trace decoder:
+  Received a packet at decoder 2
+  Trace on decoder 2 is:
   input_symbol_coefficients:
-  C: 159 115 75
+  C: 28 3 52
 
   decoder_state:
-  000 C:  1 0 56
-  001 C:  0 1 74
+  000 C:  1 253 209
+  001 ?:  0 0 0
   002 ?:  0 0 0
 
-  Received one packet at decoder
-  Trace decoder:
+  +---------------------+
+  |Sending a combination|
+  +---------------------+
+  Received a packet at decoder 1
+  Trace on decoder 1 is:
   input_symbol_coefficients:
-  C: 240 92 115
+  C: 10 255 216
+
+  decoder_state:
+  000 C:  1 0 197
+  001 C:  0 1 144
+  002 ?:  0 0 0
+
+  Received a packet at decoder 2
+  Trace on decoder 2 is:
+  input_symbol_coefficients:
+  C: 10 255 216
+
+  decoder_state:
+  000 C:  1 0 197
+  001 C:  0 1 144
+  002 ?:  0 0 0
+
+  +---------------------+
+  |Sending a combination|
+  +---------------------+
+  Received a packet at decoder 1
+  Trace on decoder 1 is:
+  input_symbol_coefficients:
+  C: 31 182 104
+
+  decoder_state:
+  000 U:  1 0 0
+  001 U:  0 1 0
+  002 U:  0 0 1
+
+  Received a packet at decoder 2
+  Trace on decoder 2 is:
+  input_symbol_coefficients:
+  C: 31 182 104
 
   decoder_state:
   000 U:  1 0 0
@@ -737,7 +809,7 @@ can verify the coding coefficients now vary between 0 and 255 given that we
 have changed the field size. Try running the example with these changes a
 couple of times so you can verify the above in general.
 
-Changing the receiver signal strength
+Changing the Receiver Signal Strength
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 As we mentioned earlier, our WiFi PHY layer relies on constant position and
@@ -746,48 +818,54 @@ received power. In general, packet error rate varies with the signal
 reception level, so we will adjust this. The receiver sensitivity for this
 channel is -96 dBm. It means that for ``rss`` values lower than this, we will
 have no packet recovery. This goes a little further from a typical erasure
-channel where we may or may not have packet losses regurlarly, the reason being
+channel where we may or may not have packet losses regularly, the reason being
 that receiver position and received power are fixed.
 
 To change the ``rss`` value , simply type: ::
 
-  ./build/linux/wifi_broadcast/wifi_broadcast --rss=-96
+  ./build/linux/src/wifi_broadcast/wifi_broadcast --rss=-96
 
 You will see no output because the program gets into an infinite loop. To finish
 the program type ``Ctrl+C`` in your terminal. To verify that the running
-program endend properly, verify that a ``^C`` sign appears in your terminal. The
+program ended, verify that a ``^C`` sign appears in your terminal. The
 program enters a loop because we receive no packets at all and the decoder will
 never be full rank.
 
-Using other tracing features
+Using Other Tracing Features
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 So far we have seen only the decoder state in terms of rank and symbol
 coefficients. In the ``filters`` construct on the ``ReceivePacket``  function
-in the ``main.cpp`` file, you can add the ``"symbol_storage"`` option to see a
-hex dump of the packets. Do so, save your files, rebuild and type: ::
+in the ``broadcast-rlnc.h`` file, you can add the ``"symbol_storage"`` option
+to see a hex dump of the packets. To avoid a many prints, we will use a low
+generation and field size with 1 user in the binary field. To do so, set the
+field again to ``fifi::binary`` in ``main.cc``, save your files, rebuild
+and type: ::
 
-  ./build/linux/wifi_broadcast/wifi_broadcast --generationSize=3
+  ./build/linux/src/wifi_broadcast/wifi_broadcast --generationSize=3 --users=1
 
-Then, you will get an output like this (here we used the binary field): ::
+Then, you will get an output like this: ::
 
-  Received one packet at decoder
-  Trace decoder:
+  +---------------------+
+  |Sending a combination|
+  +---------------------+
+  Received a packet at decoder 1
+  Trace on decoder 1 is:
   input_symbol_coefficients:
-  C: 0 1 1
+  C: 1 1 1
 
   decoder_state:
-  000 ?:  0 0 0
-  001 C:  0 1 1
+  000 C:  1 1 1
+  001 ?:  0 0 0
   002 ?:  0 0 0
 
   symbol_storage:
-  0 A:
-  0000  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
-  0010  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+  0 I:
+  0000  78 78 78 78 78 78 78 78 78 78 78 78 78 78 78 78  xxxxxxxxxxxxxxxx
+  0010  78 78 78 78 78 78 78 78 78 78 78 78 78 78 78 78  xxxxxxxxxxxxxxxx
   ....
   03e0
-  1 I:
+  1 A:
   0000  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
   0010  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
   ....
@@ -798,18 +876,51 @@ Then, you will get an output like this (here we used the binary field): ::
   ....
   03e0
 
-  Received one packet at decoder
-  Trace decoder:
+  +---------------------+
+  |Sending a combination|
+  +---------------------+
+  Received a packet at decoder 1
+  Trace on decoder 1 is:
   input_symbol_coefficients:
-  C: 0 0 1
+  C: 1 1 1
 
   decoder_state:
-  000 ?:  0 0 0
-  001 C:  0 1 0
-  002 C:  0 0 1
+  000 C:  1 1 1
+  001 ?:  0 0 0
+  002 ?:  0 0 0
 
   symbol_storage:
-  0 A:
+  0 I:
+  0000  78 78 78 78 78 78 78 78 78 78 78 78 78 78 78 78  xxxxxxxxxxxxxxxx
+  0010  78 78 78 78 78 78 78 78 78 78 78 78 78 78 78 78  xxxxxxxxxxxxxxxx
+  ....
+  03e0
+  1 A:
+  0000  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+  0010  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+  ....
+  03e0
+  2 A:
+  0000  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+  0010  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+  ....
+  03e0
+
+  +---------------------+
+  |Sending a combination|
+  +---------------------+
+  Received a packet at decoder 1
+  Trace on decoder 1 is:
+  input_symbol_coefficients:
+  C: 1 0 1
+
+  decoder_state:
+  000 C:  1 0 1
+  001 C:  0 1 0
+  002 ?:  0 0 0
+
+  symbol_storage:
+  0 I:
   0000  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
   0010  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
   ....
@@ -819,16 +930,19 @@ Then, you will get an output like this (here we used the binary field): ::
   0010  78 78 78 78 78 78 78 78 78 78 78 78 78 78 78 78  xxxxxxxxxxxxxxxx
   ....
   03e0
-  2 I:
-  0000  78 78 78 78 78 78 78 78 78 78 78 78 78 78 78 78  xxxxxxxxxxxxxxxx
-  0010  78 78 78 78 78 78 78 78 78 78 78 78 78 78 78 78  xxxxxxxxxxxxxxxx
+  2 A:
+  0000  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+  0010  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
   ....
   03e0
 
-  Received one packet at decoder
-  Trace decoder:
+  +---------------------+
+  |Sending a combination|
+  +---------------------+
+  Received a packet at decoder 1
+  Trace on decoder 1 is:
   input_symbol_coefficients:
-  C: 1 0 1
+  C: 1 0 0
 
   decoder_state:
   000 U:  1 0 0
@@ -852,33 +966,34 @@ Then, you will get an output like this (here we used the binary field): ::
   ....
   03e0
 
-  Decoding completed! Total transmissions: 5
+  Decoding completed! Total transmissions: 4
 
 Now, we see the data in rows of 16 bytes. If you look at the constructor in
 ``main.cpp``, you can confirm that we constantly fill the buffer with ``x``,
 since the example is just for showing purposes.
 
 The symbol storage can be mainly in 3 states depending on how the memory is
-assigned in Kodo. In the library we have 2 types of memory assigment for object
-creation, i.e. we can create a `shallow copy or a deep copy <http://stackoverflow.com/a/184745>`_.
-For this implementation, we use a deep copy by default and we will only have 2
-of them, namely ``A:`` (available) and ``I:`` (initiliazed) meaning that the
-memory is ready and initialized to be used, respectively. Notice that whenever
-we still have coded packets, we only print zeros. In the case of a shallow
-copy, we might see the ``?:`` indicator that will tell us that the storage
-has not been assigned. This trace feature is useful particularly we you want to
-debug the decoding process with some known data.
+assigned in Kodo. In the library we have 2 types of memory assignment for object
+creation, i.e. we can create a `shallow copy or a deep copy <http://stackover
+flow.com/a/184745>`_. For this implementation, we use a deep copy by default
+and we will only have 2 of them, namely ``A:`` (available) and ``I:``
+(initialized) meaning that the memory is ready and initialized to be used,
+respectively. Notice that whenever we still have coded packets, we only print
+zeros. In the case of a shallow copy, we might see the ``?:`` indicator that
+will tell us that the storage has not been assigned. This trace feature is
+useful particularly we you want to debug the decoding process with some
+known data.
 
 Finally, try disabling the decoder trace and enable the encoder trace. This
 trace only has the symbol storage feature. Simply switch the structs in the
-encoder and decoder templates, save, rebuild your project and rerun the example
+main function, save, rebuild your project and rerun the example
 with the previous setting, you will only see your data in the encoder.
 
-Review pcap traces
+Review pcap Traces
 ^^^^^^^^^^^^^^^^^^
 
 As we described earlier, the simulation leaves pcap format files
-(``wifi-simple-adhoc-*-*.pcap``) in your ``~/dev/kodo-ns3-examples`` folder.
+(``wifi-broadcast-rlnc-*-*.pcap``) in your ``~/dev/kodo-ns3-examples`` folder.
 You can read these files with different programs like tcpdump or Wireshark.
 tcpdump is standard on most Unix-like systems and is based on the libpcap
 library. `Wireshark <https://www.wireshark.org/>`_ is another free, open-source
@@ -886,8 +1001,8 @@ packet analyzer which you can get online. Just for showing purposes we will use
 tcpdump, but you can choose the one you prefer the most. For reading both files,
 simply type: ::
 
-  tcpdump -r wifi-simple-adhoc-0-0.pcap -nn -tt
-  tcpdump -r wifi-simple-adhoc-1-0.pcap -nn -tt
+  tcpdump -r wifi-broadcast-rlnc-0-0.pcap -nn -tt
+  tcpdump -r wifi-broadcast-rlnc-1-0.pcap -nn -tt
 
 You will get this output (it will look different on your terminal): ::
 
@@ -902,7 +1017,7 @@ You will get this output (it will look different on your terminal): ::
   4.000000 4000000us tsft 1.0 Mb/s 2412 MHz 11b IP 10.1.1.1.49153 >
   10.1.1.255.80: UDP, length 1002
 
-  reading from file wifi-simple-adhoc-1-0.pcap, link-type IEEE802_11_RADIO
+  reading from file wifi-broadcast-rlnc-1-0.pcap, link-type IEEE802_11_RADIO
   (802.11 plus radiotap header)
   1.008720 1008720us tsft 1.0 Mb/s 2412 MHz 11b -93dB signal -101dB noise
   IP 10.1.1.1.49153 > 10.1.1.255.80: UDP, length 1002

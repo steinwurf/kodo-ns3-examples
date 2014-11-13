@@ -1,4 +1,4 @@
-Before you start
+Before You Start
 ================
 
 .. _before_you_start:
@@ -8,41 +8,35 @@ are available `here <https://github.com/steinwurf/kodo-ns3-examples>`_.
 Please follow the instructions shown there to get the project running.
 **Once you have built the project**, you can follow this tutorial.
 
-Examples overview
------------------
+Overview
+--------
 
 Currently the repository ``kodo-ns3-examples`` contains 3 basic examples
 in its main path regarding how to use the library with ns-3, namely:
 
 * ``wifi_broadcast``: This example consists on broadcasting packets
-  with RLNC on a single transmitter receiver pair with an IEEE 802.11b WiFi
+  with RLNC from a transmitter to N receivers with an IEEE 802.11b WiFi
   channel.
 * ``wired_broadcast``: This example consists on broadcasting packets
-  with RLNC from a transmitter to 2 receivers with the same erasure channel.
+  with RLNC from a transmitter to N receivers with the same erasure channel.
 * ``encoder_recoder_decoder``: This example shows the gain of RLNC
-  with recoding in a 2-hop line network consisting of an encoder, recoder and
-  decoder with different erasure rates. Recoding can be set on or off and
-  erasures rate modified by command line parsing.
+  with recoding in a 2-hop line network consisting of an encoder, N recoders and
+  a decoder with different erasure rates. Recoding can be set on or off and
+  erasure rates modified by command-line parsing.
 
-Examples builds
----------------
+Automated Builds
+----------------
 
-You can check the build status of the repository master branch in our
-`buildbot <http://buildbot.steinwurf.dk/stats?projects=kodo-ns3-examples>`_ page.
-There you can check statistics and builds for different platforms and compilers
-for this but also other projects like Kodo itself.
+You can check the build status of the repository master branch on our
+`buildbot <http://buildbot.steinwurf.dk/stats?projects=kodo-ns3-examples>`_
+page. Our buildbot display the supported combinations of platforms,
+operating systems, and compilers. At the link, you can check
+build status and build statistics for them in the respective waterfall link.
+This information is provided also for other Steinwurf projects such as Kodo
+itself.
 
-Platform and compiler support
------------------------------
-
-Currently we support the examples in 64-bit Linux (Debian Jessie) and Mac
-(OSX Mavericks 10.9) desktop machines with Python 2.7. For the compilers case,
-we run the builds for GCC 4.8 and Clang 3.4. If you want to check a build for a
-particular platform - compiler combination not listed here, please let us know
-through our developers mailing list.
-
-What do we assume you know before the tutorial?
------------------------------------------------
+What You Should Know Before the Tutorial
+----------------------------------------
 
 Kodo
 ^^^^
@@ -56,7 +50,7 @@ get a clear idea of what the library does, are:
 * `Steinwurf buildbot <http://buildbot.steinwurf.dk/>`_
 
 ns-3
-^^^^^^^
+^^^^
 
 `ns-3 <http://www.nsnam.org/>`_ is a network simulator of the OSI layers
 written in C++ for research and educational purposes under the GPLv2 license.
@@ -82,11 +76,11 @@ Our main building tool is ``waf`` in the same way it is for ns-3. So, if you
 have used ns-3 before this should be transparent to you. If you have not used
 ``waf`` , you can review a description of the tool with some examples in the
 `waf documentation <http://docs.waf.googlecode.com/git/apidocs_17/index.html>`_.
-Nevertheless, we differ from ns-3's waf implemantion and ``wscripts`` to fit
+Nevertheless, we differ from ns-3's waf implementation and ``wscripts`` to fit
 our particular needs. For this reason, we highly recommend you to follow the
 instructions in the repository link mentioned at the beginning of this document.
 
-Comments and questions
+Comments and Questions
 ----------------------
 
 If for some reason your project does not build or you have any other issues or

@@ -14,8 +14,6 @@
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
- *
- * Author: Néstor J. Hernández M. <nestor@steinwurf.com>
  */
 
 // This object implements RLNC (random linear network coding) in
@@ -142,7 +140,8 @@ public:
       m_socketMap.find (socket)) + 1;
 
     recoder->decode (&m_payload_buffer[0]);
-    std::cout << "Received a coded packet at RECODER " << id << "\n" << std::endl;
+    std::cout << "Received a coded packet at RECODER " << id << "\n"
+      << std::endl;
 
     if (kodo::has_trace<rlnc_recoder>::value)
       {
