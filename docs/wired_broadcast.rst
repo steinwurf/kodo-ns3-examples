@@ -1,4 +1,4 @@
-Broadcast RLNC with a N-user erasure channel
+Broadcast RLNC with a N-user Erasure Channel
 ============================================
 
 .. _wired_broadcast:
@@ -20,10 +20,10 @@ will assume that all links have the same erasure rate for simplicity,
    :end-before: //! [1]
    :linenos:
 
-What to simulate?
------------------
+What to Simulate
+----------------
 
-* Behaviour: The sender keeps transmitting the generation until all
+* Behavior: The sender keeps transmitting the generation until all
   receivers has :math:`g` linearly independent (l.i.) coded packets.
   Packets might or might not be loss at the given rate.
 * Inputs: Main parameters will be generation size, field size and packet loss
@@ -35,7 +35,7 @@ What to simulate?
   theoretical expected values regarding the amount of transmissions to
   decode.
 
-Program description
+Program Description
 -------------------
 
 In your local repository, you should have a folder named
@@ -43,8 +43,8 @@ In your local repository, you should have a folder named
 which contains the source code of this simulation. Its structure is similar
 to the previous one, so now we will focus on the main differences.
 
-Default parameters and command parsing
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Default Parameters and Command-line Parsing
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 For the default parameters, we show what has been added for the erasure rate:
 
@@ -56,7 +56,7 @@ For the default parameters, we show what has been added for the erasure rate:
   // Command parsing
   cmd.AddValue ("errorRate", "Packet erasure rate for the links", errorRate);
 
-Topology and net helpers
+Topology and Net Helpers
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
 For this part, there are some changes because we have removed the WiFi protocol
@@ -79,10 +79,10 @@ the Internet stack and IP addresses to our topology.
 The remaining elements of the simulation are very similar to the first example,
 you can review them and check the differences.
 
-Simulations runs
-----------------
+Simulation Runs
+---------------
 
-Default run
+Default Run
 ^^^^^^^^^^^
 
 Given that now we have an erasure rate different from zero and we can control
@@ -128,7 +128,7 @@ You will get an output like this: ::
 
 Now we can see when a packet is received at each decoder. As expected, a packet
 is sent every time slot to both decoders and the process stops when both
-decoders have :math:`g` l.i. combinations. We can observe this behaviour in the
+decoders have :math:`g` l.i. combinations. We can observe this behavior in the
 previous output. At the 4th transmission, receiver 1 did not get the combination
 although receiver 2 did. Nevertheless, this is compensated in the last
 transmission where receiver 1 gets its remaining combination. Besides,
@@ -183,7 +183,7 @@ transmissions to decode in a pure broadcast RLNC for two receivers, converges
 to 9.4847 transmissions for the previous setting. We will also set some
 parameters to observe the difference in the total number of transmissions.
 
-Changing the field size
+Changing the Field Size
 ^^^^^^^^^^^^^^^^^^^^^^^
 
 Set ``fifi::binary8`` as the field size in the encoder and decoder templates,
@@ -207,7 +207,7 @@ decoding probability increases with a higher field size for each decoder. This
 ensures that, on average, each decoder requires less transmissions to complete
 decoding.
 
-Changing the packet erasure rate
+Changing the Packet Erasure Rate
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 One interesting feature that we have added is a ``RateErrorModel`` which
@@ -260,7 +260,7 @@ For the required erasures rate, we observe that if we modify the erasure rate
 in the links, the expected number of transmissions changes. By increasing
 the error rate, we need more transmissions to overcome the losses.
 
-Review pcap traces
+Review pcap Traces
 ^^^^^^^^^^^^^^^^^^
 
 We have added also a trace file per each net device in order to

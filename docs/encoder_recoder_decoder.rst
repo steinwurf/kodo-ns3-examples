@@ -1,4 +1,4 @@
-Encoder, Recoders, Decoder with erasure channels
+Encoder, Recoders, Decoder with Erasure Channels
 ================================================
 
 .. _encoder_recoder_decoder:
@@ -18,10 +18,10 @@ and :math:`\epsilon_{R-D} = 0.2`. Topology is shown as follows:
    :end-before: //! [1]
    :linenos:
 
-What to simulate?
------------------
+What to Simulate
+----------------
 
-* Behaviour: The sender keeps transmitting the generation until the
+* Behavior: The sender keeps transmitting the generation until the
   decoder or all the recoders have :math:`g` linearly independent (l.i.) coded
   packets. As with previous examples, packets might or might not be loss at the
   given rates in the respective links. Additionally, we have 2 operation
@@ -38,7 +38,7 @@ What to simulate?
   theoretical expected values regarding the amount of transmissions to
   decode.
 
-Program description
+Program Description
 -------------------
 
 In your local repository, you should have a folder named
@@ -46,7 +46,7 @@ In your local repository, you should have a folder named
 file which contains the source code of this simulation. Its structure is similar
 to previous simulations, so now we will focus on the main differences.
 
-Header includes
+Header Includes
 ^^^^^^^^^^^^^^^
 
 .. literalinclude:: ../src/encoder_recoder_decoder/main.cc
@@ -56,9 +56,9 @@ Header includes
    :linenos:
 
 The ``EncoderRecodersDecoderRlnc`` class in ``encoder-recoders-decoder.h``
-is used to model the expected behaviour of the nodes in our simulation.
+is used to model the expected behavior of the nodes in our simulation.
 
-Simulation class
+Simulation Class
 ^^^^^^^^^^^^^^^^
 
 The ``EncoderRecodersDecoderRlnc`` class can be roughly defined in the
@@ -146,14 +146,14 @@ to split the functionality of recoding (or forwarding) and receiving with
 decoding. The recoding functionality is performed with ``recoder->recode ()``,
 where ``recoder`` is a pointer to a ``rlnc_recoder``.
 
-For control variables, for the recoding or forwarding behaviour, we included a
+For control variables, for the recoding or forwarding behavior, we included a
 boolean as a construction argument. Also we keep track of the decoder rank
 with a counter, in order to notify when a l.i. combination is received at the
 decoder. Finally, we include a counter for the total number of transmissions
 from all the recoders for counting total transmissions in general.
 
-Default parameters and command parsing
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Default Parameters and Command-line Parsing
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 For the default parameters, we show what has been added for this example:
 
@@ -176,7 +176,7 @@ For the default parameters, we show what has been added for this example:
   cmd.AddValue ("recoders", "Amount of recoders", recoders);
 
 
-Topology and net helpers
+Topology and Net Helpers
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. literalinclude:: ../src/encoder_recoder_decoder/main.cc
@@ -196,7 +196,7 @@ the IP addresses as shown in the previous topology figure. For the one-to-many,
 we use the ``"10.1.X.X"`` subnet and for the many-to-one, the ``"10.2.1.X"``
 subnet.
 
-Simulation event handler
+Simulation Event Handler
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. literalinclude:: ../src/encoder_recoder_decoder/main.cc
@@ -211,10 +211,10 @@ previously having received a packet. However, the recoder will only send
 combinations from the coded packets that it has. All recoders send their
 coded packet at the same time.
 
-Simulations runs
-----------------
+Simulation Runs
+---------------
 
-Default run
+Default Run
 ^^^^^^^^^^^
 
 To run the default simulation, just type: ::
