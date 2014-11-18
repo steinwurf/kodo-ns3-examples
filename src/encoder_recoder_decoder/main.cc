@@ -206,7 +206,7 @@ int main (int argc, char *argv[])
       errorRecodersDecoder[n] = CreateObject<RateErrorModel> ();
       errorRecodersDecoder[n]->SetAttribute ("ErrorRate", DoubleValue (
         errorRateRecoderDecoder));
-      recodersDecoderDev.Get (2*n)->SetAttribute ("ReceiveErrorModel",
+      recodersDecoderDev.Get (2*n+1)->SetAttribute ("ReceiveErrorModel",
         PointerValue (errorRecodersDecoder[n]));
 
       // Activate models
