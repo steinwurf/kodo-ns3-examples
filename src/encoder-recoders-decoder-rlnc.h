@@ -85,6 +85,8 @@ public:
     m_encoder_transmission_count = 0;
     m_recoders_transmission_count = 0;
     m_decoder_rank = 0;
+
+    m_previous_packets = std::vector<ns3::Ptr<ns3::Packet>> (m_users);
   }
 
   void SendPacketEncoder (ns3::Ptr<ns3::Socket> socket, ns3::Time pktInterval)
@@ -96,7 +98,7 @@ public:
          all_recoders_decoded = all_recoders_decoded && recoder->is_complete ();
       }
 
-    if (!all_recoders_decoded && (m_recodingFlag && !m_decoder->is_complete ()))
+    if (!(m_decoder->is_complete () || (m_recodingFlag && all_recoders_decoded)))
       {
         std::cout << "+----------------------------------+" << std::endl;
         std::cout << "|Sending a combination from ENCODER|" << std::endl;
@@ -131,17 +133,17 @@ public:
     auto packet = socket->Recv ();
     packet->CopyData (&m_payload_buffer[0], recoder->payload_size ());
 
-    if (!m_recodingFlag)
-      {
-        m_previous_packet = packet;
-      }
-
     auto id = std::distance (std::begin (m_socketMap),
       m_socketMap.find (socket)) + 1;
 
     recoder->decode (&m_payload_buffer[0]);
     std::cout << "Received a coded packet at RECODER " << id << "\n"
       << std::endl;
+
+    if (!m_recodingFlag)
+      {
+        m_previous_packets[id-1] = packet;
+      }
 
     if (kodo::has_trace<rlnc_recoder>::value)
       {
@@ -193,7 +195,7 @@ public:
               }
             else
               {
-                auto packet = m_previous_packet;
+                auto packet = m_previous_packets[id-1];
 
                 // Remove all packet tags in order to the callback retag them to avoid
                 // ~/ns-3-dev/src/common/packet-tag-list.cc, line=139 assert failure.
@@ -272,5 +274,5 @@ private:
   uint32_t m_encoder_transmission_count;
   uint32_t m_recoders_transmission_count;
   uint32_t m_decoder_rank;
-  ns3::Ptr<ns3::Packet> m_previous_packet;
+  std::vector<ns3::Ptr<ns3::Packet>> m_previous_packets;
 };
