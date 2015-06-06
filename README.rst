@@ -1,14 +1,17 @@
 Introduction
 ------------
-This repository contains examples that show how you can build an ns-3
-using the Kodo erasure coding library (http://github.com/steinwurf/kodo).
+This repository contains examples that show you how to build a standalone
+ns-3 simulation using the Kodo erasure coding library 
+(http://steinwurf.com/kodo/).
 
-To obtain a valid Kodo license **you must fill out the license request** form_.
-Kodo is available under a research and educational friendly license,
+A valid Kodo license is required if you wish to use this project.
+Please request a license by **filling out the license request** form_.
+
+Kodo is available under a research- and education-friendly license,
 you can see the details here_.
 
 .. _form: http://steinwurf.com/license/
-.. _here: https://github.com/steinwurf/kodo/blob/master/LICENSE.rst
+.. _here: http://steinwurf.com/research-license/
 
 ns-3 (http://nsnam.org) is a discrete-event network simulator, targeted
 primarily for research and educational use. ns-3 is licensed under the GNU
@@ -22,16 +25,17 @@ Using ns-3 as a Library
 -----------------------
 In the example provided in this repository we use ns-3 as a library, i.e.
 we build ns-3 separately and then simply link against it to build our
-simulation. In contrast to developing the simulation by directly modifying
-the ns-3 source code or putting it in the scratch folder. This has several
-advantages (this is of course purely subjective and you are free to disagree).
+simulation. This has several advantages over developing the 
+simulation by directly modifying the ns-3 source code or its examples
+(of course, this list is purely subjective and you are free to disagree).
 
 * It becomes easier to upgrade to the next version of ns-3 as it becomes
   available.
 * If you want to distribute your changes, it can be done easily without
   distributing the entire ns-3 simulator.
 * You can freely choose whatever build system you prefer. Note that we
-  also use the same build system as ns-3, namely Waf, because it rocks!
+  also use the same build system as ns-3, namely Waf, but we use
+  a different version of waf!
 
 Getting Started
 ---------------
@@ -40,129 +44,115 @@ You may find lots of information about this on the ns-3 webpage.
 
 http://www.nsnam.org/wiki/index.php/Installation.
 
-Below we have recorded the steps needed to get ns-3 up and running
-by cloning the repository.
+On Ubuntu/Debian, you need to install the following packages::
 
-Clone ns-3 Repository (Ubuntu)
-------------------------------
-First we need to make sure we have the tool required: ::
+  sudo apt-get install g++ python mercurial git-core
 
-  sudo apt-get install gcc g++ python mercurial
+Below we have recorded the steps needed to get ns-3 up and running.
 
-Now clone the ns-3 repository: ::
+Installing ns-3
+---------------
+First clone the ns-3 repository (we start from the home folder
+here as an example, but you can change this)::
 
+  cd ~
   hg clone http://code.nsnam.org/ns-3-dev/
 
-This will download the ns-3 simulator to your computer, into a
-``ns-3-dev`` folder. We will switch  to the latest release. One
-advantage or this approach is that is will be easy for us to
-upgrade to the next version of ns-3 when it is release.
+This will download the ns-3 simulator to your computer into
+the ``ns-3-dev`` folder. We will switch to the specific ns-3 release,
+which is currently supported by the examples.
 
-To see the current tagged version of ns-3 run: ::
+Check the current tagged version of ns-3::
 
   cd ns-3-dev
   hg tags
 
-We will select the currently newest release: ::
+We will select the currently supported release::
 
   hg checkout ns-3.21
 
-Configure the ns-3 project by running: ::
+Configure the ns-3 project by running::
 
-  ./waf configure
+  python waf configure
 
 This will output a whole bunch of information about the modules
 enabled based on the availability of tools and libraries installed
 on your development machine. We will only need the ``Real Time Simulator``,
-this should be marked ``enabled``. Now we may proceed and build the
-ns-3 simulator libraries: ::
+this should be marked ``enabled``. Now we can build the
+ns-3 simulator libraries::
 
-  ./waf build
+  python waf build
 
-The ns-3 libraries should now be built and we may use them in our
+The ns-3 libraries should be built and we will use them in our
 simulations.
 
-Update to a New Version
------------------------
-When a new version of ns-3 gets released you can get the new version easily by
-running (in the ``ns-3-dev`` folder): ::
+Building the Kodo ns-3 examples
+-------------------------------
+After building ns-3, you can build the example simulations provided in this
+repository.
 
-  hg pull
+First you have to clone this repository. Note that you *should not* clone
+the repository inside your ``ns-3-dev`` folder, because the examples will not 
+work there. For example, this clone command will create the ``kodo-ns3-examples``
+folder in your home folder::
 
-Then to see the tagged versions: ::
+  cd ~
+  git clone git@github.com:steinwurf/kodo-ns3-examples.git
 
-  hg tags
+Configure and build the project::
 
-And as previously described to switch to version ``xx`` do a
-(for example): ::
+  cd kodo-ns3-examples
+  python waf configure --ns3-path=~/ns-3-dev
 
-  hg checkout ns-3.xx
+The ``waf configure`` command ensures that all dependencies are downloaded
+(by default, waf will create a folder called  ``bundle_dependencies`` to
+store these libraries). The ``--ns3-path`` specifies the folder where
+you made the ns-3 checkout and built the ns-3 libraries.
 
-Now you have to go through the ``configure`` and ``build`` steps again,
-described in the previous section.
+Now you can build the examples by running::
+  
+  python waf build
 
-Examples Description and Repository Building
---------------------------------------------
-After building ns-3 you can build the example simulations provided by this
-repository. Currently we have the following examples:
+Currently we have the following examples:
 
-* ``wifi_broadcast``: This example consists on broadcasting packets with RLNC
-  to N receivers with an IEEE 802.11b WiFi channel.
-* ``wired_broadcast``: This example consists on broadcasting packets with RLNC
+* ``wifi_broadcast``: This example demonstrates broadcasting packets with RLNC
+  to N receivers over an IEEE 802.11b WiFi channel.
+* ``wired_broadcast``: This example demonstrates broadcasting packets with RLNC
   from a transmitter to N receivers with the same erasure channel.
 * ``encoder_recoder_decoder``: This example shows the gain of RLNC with recoding
-  in 2-hop line network consisting of an encoder, N recoders and a decoder with
-  different erasure rates. Recoding can be set on or off and erasures rate
-  modified by command line parsing.
+  in a 2-hop line network consisting of an encoder, N recoders and a decoder with
+  different erasure rates. Recoding can be turned on or off and erasure rates
+  can be modified by command line options.
 
 You can see more documentation of each example in the ``main.cc`` file comments
 regarding what each example does. There you can also check how to control and
 set up the simulation parameters like packet, field and generation sizes
 among others.
 
-Configure the project by running: ::
-
-  ./waf configure --bundle-path=~/dev/bundle_dependencies --ns3-path=~/dev/ns-3-dev
-
-The ``waf configure`` ensures that all tools needed by Kodo are available and
-prepares to build Kodo. Kodo relies on a number of auxiliary libraries
-(see kodo.readthedocs.org). By specifying the ``--bundle-path`` option, this
-informs ``waf`` about where the downloaded libraries should be placed. You may
-omit the ``--bundle-path`` option which in that case ``waf`` will create a
-local directory in the Kodo folder called  ``bundle_dependencies`` and
-store the libraries there. The ``--ns3-path`` specifies the folder where
-you have made the ns-3 checkout and built the ns-3 libraries.
-
-Now you should be able to build the examples by running: ::
-
-  ./waf build
-
-This will produce different binaries in the ``./build/linux/src`` folder, one
-per example. Probably the build will throw some warnings, but if it is
-successful, you will be able to continue the test.
+The build command will generate binaries in the ``./build/linux/src`` folder, 
+one for each example. Probably the build will show some warnings, but if it is
+successful, you will be able to run the examples.
 
 Try running the ``wifi_broadcast`` example by typing: ::
 
   ./build/linux/src/wifi_broadcast/wifi_broadcast
 
-You should see how the decoding matrix changes with each combination sent. Due
-to the channel nature, here you will only see the linear dependence effect. You
+You should see how the decoding matrix changes with each combination sent. 
+You will see if a received packet is linearly dependent or not. You
 will also see when the decoding process is completed and how many transmissions
-where required.
+were required.
 
 Tutorial
 --------
-To follow a more comprehensive description of the examples, please follow
-the tutorial in the `Kodo-ns3 tutorial <http://kodo-ns3-examples.readthedocs.or
-g/en/latest/>`_. We provide a guide describing what do we want to simulate and
-how do we proceed to represent it for the three examples. At the end of each
-example we verify known results to validate our model and provide parameters
-to the final user for modifying them.
+Our `Kodo-ns3 tutorial <http://kodo-ns3-examples.readthedocs.org/en/latest/>`_ 
+provides a more comprehensive description of these examples.
+For each example, we verify known results to validate our model and provide 
+parameters to the user for modifying them.
 
 Comments, Feedback & Bugs
 -------------------------
-All comments, questions, and feedback regarding the examples can be
-posted to our dev mailing list (hosted at google groups):
+All comments, questions and feedback regarding the examples should be
+posted to our developer mailing list (hosted at Google Groups):
 
 * http://groups.google.com/group/steinwurf-dev
 
