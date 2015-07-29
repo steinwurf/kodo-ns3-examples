@@ -1,7 +1,7 @@
 Introduction
 ------------
 This repository contains examples that show you how to build a standalone
-ns-3 simulation using the Kodo erasure coding library 
+ns-3 simulation using the Kodo erasure coding library
 (http://steinwurf.com/kodo/).
 
 A valid Kodo license is required if you wish to use this project.
@@ -25,7 +25,7 @@ Using ns-3 as a Library
 -----------------------
 In the example provided in this repository we use ns-3 as a library, i.e.
 we build ns-3 separately and then simply link against it to build our
-simulation. This has several advantages over developing the 
+simulation. This has several advantages over developing the
 simulation by directly modifying the ns-3 source code or its examples
 (of course, this list is purely subjective and you are free to disagree).
 
@@ -69,7 +69,7 @@ Check the current tagged version of ns-3::
 
 We will select the currently supported release::
 
-  hg checkout ns-3.21
+  hg checkout ns-3.23
 
 Configure the ns-3 project by running::
 
@@ -91,8 +91,8 @@ Building the Kodo ns-3 examples
 After building ns-3, you can build the example simulations provided in this
 repository.
 
-First you have to clone this repository. Note that you *should not* clone
-the repository inside your ``ns-3-dev`` folder, because the examples will not 
+First you have to clone this repository. Note that you **should not** clone
+the repository inside your ``ns-3-dev`` folder, because the examples will not
 work there. For example, this clone command will create the ``kodo-ns3-examples``
 folder in your home folder::
 
@@ -110,7 +110,7 @@ store these libraries). The ``--ns3-path`` specifies the folder where
 you made the ns-3 checkout and built the ns-3 libraries.
 
 Now you can build the examples by running::
-  
+
   python waf build
 
 Currently we have the following examples:
@@ -129,24 +129,24 @@ regarding what each example does. There you can also check how to control and
 set up the simulation parameters like packet, field and generation sizes
 among others.
 
-The build command will generate binaries in the ``./build/linux/src`` folder, 
+The build command will generate binaries in the ``./build/linux/src`` folder,
 one for each example. Probably the build will show some warnings, but if it is
 successful, you will be able to run the examples.
 
-Try running the ``wifi_broadcast`` example by typing: ::
+Try running the ``wifi_broadcast`` example by typing::
 
   ./build/linux/src/wifi_broadcast/wifi_broadcast
 
-You should see how the decoding matrix changes with each combination sent. 
+You should see how the decoding matrix changes with each combination sent.
 You will see if a received packet is linearly dependent or not. You
 will also see when the decoding process is completed and how many transmissions
 were required.
 
 Tutorial
 --------
-Our `Kodo-ns3 tutorial <http://kodo-ns3-examples.readthedocs.org/en/latest/>`_ 
+Our `Kodo-ns3 tutorial <http://kodo-ns3-examples.readthedocs.org/en/latest/>`_
 provides a more comprehensive description of these examples.
-For each example, we verify known results to validate our model and provide 
+For each example, we verify known results to validate our model and provide
 parameters to the user for modifying them.
 
 Comments, Feedback & Bugs
