@@ -226,14 +226,13 @@ int main (int argc, char *argv[])
   //! [11]
   // The field and traces types we will use.
   // Here we consider GF(2). For GF(2^8) just change "binary" for "binary8"
-  using field = fifi::binary;
-  using encoderTrace = kodo::disable_trace;
-  using decoderTrace = kodo::enable_trace;
 
-  using simulation = BroadcastRlnc<field, encoderTrace, decoderTrace>;
+  using enableTrace = false;
+  using simulation = BroadcastRlnc;
 
   // Creates the broadcast topology class for the current example
-  simulation wifiBroadcast (users, generationSize, packetSize, sinks);
+  simulation wifiBroadcast (enableTrace, users, generationSize, packetSize,
+    sinks);
   //! [12]
   // Transmitter socket connections. Set transmitter for broadcasting
   uint16_t port = 80;

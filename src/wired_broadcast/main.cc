@@ -167,13 +167,12 @@ int main (int argc, char *argv[])
 
   // The field and traces types we will use. Here we consider GF(2). For GF(2^8)
   // just change "binary" for "binary8"
-  using field = fifi::binary;
-  using encoderTrace = kodo::disable_trace;
-  using decoderTrace = kodo::disable_trace;
+  using enableTrace = false;
+  using simulation = BroadcastRlnc;
 
-  using simulation = BroadcastRlnc<field, encoderTrace, decoderTrace>;
   // Creates the broadcast topology class for the current example
-  simulation wiredBroadcast (users, generationSize, packetSize, sinks);
+  simulation wiredBroadcast (enableTrace, users, generationSize, packetSize,
+    sinks);
 
   // Receiver socket connections
   InetSocketAddress local = InetSocketAddress (Ipv4Address::GetAny (), port);
