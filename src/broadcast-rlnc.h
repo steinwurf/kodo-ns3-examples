@@ -21,29 +21,34 @@
 
 #pragma once
 
-#include <kodo/rlnc/full_rlnc_codes.hpp>
-#include <kodo/trace.hpp>
-#include <kodo/wrap_copy_payload_decoder.hpp>
+// #include <kodo/rlnc/full_rlnc_codes.hpp>
+// #include <kodo/trace.hpp>
+// #include <kodo/wrap_copy_payload_decoder.hpp>
 
+#include <kodocpp/kodocpp.hpp>
 
-template<class field, class encoderTrace, class decoderTrace>
 class BroadcastRlnc
 {
 public:
 
-  using rlnc_encoder = typename kodo::full_rlnc_encoder<field, encoderTrace>;
-  using non_copy_rlnc_decoder = typename kodo::full_rlnc_decoder<field,
-    decoderTrace>;
+  // using rlnc_encoder = typename kodo::full_rlnc_encoder<field, encoderTrace>;
+  // using non_copy_rlnc_decoder = typename kodo::full_rlnc_decoder<field,
+  //   decoderTrace>;
 
-  using rlnc_decoder = typename kodo::wrap_copy_payload_decoder<
-    non_copy_rlnc_decoder>;
+  // using rlnc_decoder = typename kodo::wrap_copy_payload_decoder<
+  //   non_copy_rlnc_decoder>;
 
-  using encoder_pointer = typename rlnc_encoder::factory::pointer;
-  using decoder_pointer = typename rlnc_decoder::factory::pointer;
+  // using encoder_pointer = typename rlnc_encoder::factory::pointer;
+  // using decoder_pointer = typename rlnc_decoder::factory::pointer;
 
-  BroadcastRlnc (const uint32_t users, const uint32_t generationSize,
+  BroadcastRlnc (kodocpp::kodo_code_type codeType,
+    kodocpp::kodo_finite_field codeField, const bool enableTrace,
+    const uint32_t users, const uint32_t generationSize,
     const uint32_t packetSize, const std::vector<ns3::Ptr<ns3::Socket>>& sinks)
-    : m_users (users),
+    : m_codeType (codeType),
+      m_codeField (codeField),
+      m_enableTrace (enableTrace),
+      m_users (users),
       m_generationSize (generationSize),
       m_packetSize (packetSize),
       m_sinks (sinks)
@@ -143,6 +148,9 @@ public:
 
 private:
 
+  kodocpp::kodo_code_type codeType;
+  kodocpp::kodo_finite_field codeField;
+  const bool enableTrace;
   const uint32_t m_users;
   const uint32_t m_generationSize;
   const uint32_t m_packetSize;
