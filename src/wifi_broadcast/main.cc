@@ -152,7 +152,8 @@ int main (int argc, char *argv[])
   NodeContainer c;
   c.Create (1 + users); // Sender + receivers
 
-  // The below set of helpers will help us to put together the wifi NICs we want
+  // The below set of helpers will help us to put together the wifi NICs we
+  // want
   WifiHelper wifi;
   wifi.SetStandard (WIFI_PHY_STANDARD_80211b); // OFDM at 2.4 GHz
 
@@ -227,12 +228,15 @@ int main (int argc, char *argv[])
   // The field and traces types we will use.
   // Here we consider GF(2). For GF(2^8) just change "binary" for "binary8"
 
-  using enableTrace = false;
-  using simulation = BroadcastRlnc;
+  bool enableTrace = false;
+
+  std::cout << "Class call" << std::endl;
 
   // Creates the broadcast topology class for the current example
-  simulation wifiBroadcast (enableTrace, users, generationSize, packetSize,
-    sinks);
+  BroadcastRlnc wifiBroadcast (enableTrace, users, generationSize, packetSize,
+    source, sinks);
+
+  std::cout << "Class class created" << std::endl;
   //! [12]
   // Transmitter socket connections. Set transmitter for broadcasting
   uint16_t port = 80;
@@ -246,8 +250,8 @@ int main (int argc, char *argv[])
   for (const auto sink : sinks)
     {
       sink->Bind (local);
-      sink->SetRecvCallback (MakeCallback (&simulation::ReceivePacket,
-        &wifiBroadcast));
+      sink->SetRecvCallback (MakeCallback (&BroadcastRlnc::ReceivePacket,
+         &wifiBroadcast));
     }
 
   // Turn on global static routing so we can be routed across the network
@@ -257,7 +261,7 @@ int main (int argc, char *argv[])
   wifiPhy.EnablePcap ("wifi-broadcast-rlnc", devices);
 
   Simulator::ScheduleWithContext (source->GetNode ()->GetId (), Seconds (1.0),
-    &simulation::SendPacket, &wifiBroadcast, source, interPacketInterval);
+    &BroadcastRlnc::SendPacket, &wifiBroadcast, source, interPacketInterval);
 
   Simulator::Run ();
   Simulator::Destroy ();

@@ -12,7 +12,7 @@ kodoc_path = [os.path.dirname(kodoc_lib.abspath())]
 bld.program(
     features='cxx test',
     source=['main.cc'],
-    target='wifi_broadcast',
+    target='wired_broadcast',
     libpath=ns3_build,
     rpath=ns3_build + kodoc_path,
     includes=ns3_build,

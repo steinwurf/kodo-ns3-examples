@@ -165,14 +165,14 @@ int main (int argc, char *argv[])
       sinks[n] = Socket::CreateSocket (star.GetSpokeNode (n), tid);
     }
 
-  // The field and traces types we will use. Here we consider GF(2). For GF(2^8)
+  // The field and traces types we will use. Here we consider GF(2). For
+  // GF(2^8)
   // just change "binary" for "binary8"
-  using enableTrace = false;
-  using simulation = BroadcastRlnc;
+  bool enableTrace = false;
 
   // Creates the broadcast topology class for the current example
-  simulation wiredBroadcast (enableTrace, users, generationSize, packetSize,
-    sinks);
+  BroadcastRlnc wiredBroadcast (enableTrace, users, generationSize, packetSize,
+    source, sinks);
 
   // Receiver socket connections
   InetSocketAddress local = InetSocketAddress (Ipv4Address::GetAny (), port);
@@ -181,7 +181,7 @@ int main (int argc, char *argv[])
     {
       sink->Bind (local);
       sink->SetRecvCallback (MakeCallback (
-        &simulation::ReceivePacket, &wiredBroadcast));
+        &BroadcastRlnc::ReceivePacket, &wiredBroadcast));
     }
 
   // Turn on global static routing so we can be routed across the network
@@ -191,7 +191,7 @@ int main (int argc, char *argv[])
   pointToPoint.EnablePcapAll ("wired-broadcast-rlnc");
 
   Simulator::ScheduleWithContext (source->GetNode ()->GetId (), Seconds (1.0),
-    &simulation::SendPacket, &wiredBroadcast, source, interPacketInterval);
+    &BroadcastRlnc::SendPacket, &wiredBroadcast, source, interPacketInterval);
 
   Simulator::Run ();
   Simulator::Destroy ();
