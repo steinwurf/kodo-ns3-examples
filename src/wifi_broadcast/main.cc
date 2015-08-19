@@ -103,6 +103,7 @@
 // Simulation includes
 #include <iostream>
 #include <vector>
+#include <algorithm>
 #include <string>
 #include <ctime>
 
@@ -228,16 +229,13 @@ int main (int argc, char *argv[])
   // The field and traces types we will use.
   // Here we consider GF(2). For GF(2^8) just change "binary" for "binary8"
 
+
   bool enableTrace = false;
 
-  std::cout << "Class call" << std::endl;
-
-  // Creates the broadcast topology class for the current example
   BroadcastRlnc wifiBroadcast (enableTrace, users, generationSize, packetSize,
     source, sinks);
 
-  std::cout << "Class class created" << std::endl;
-  //! [12]
+  // //! [12]
   // Transmitter socket connections. Set transmitter for broadcasting
   uint16_t port = 80;
   InetSocketAddress remote = InetSocketAddress (
@@ -251,7 +249,7 @@ int main (int argc, char *argv[])
     {
       sink->Bind (local);
       sink->SetRecvCallback (MakeCallback (&BroadcastRlnc::ReceivePacket,
-         &wifiBroadcast));
+        &wifiBroadcast));
     }
 
   // Turn on global static routing so we can be routed across the network
