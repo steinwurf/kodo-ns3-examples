@@ -56,7 +56,7 @@ def options(opt):
     bundle.add_dependency(opt, resolve.ResolveGitMajorVersion(
         name='kodo-cpp',
         git_repository='github.com/steinwurf/kodo-cpp.git',
-        major_version=2))
+        major_version=3))
 
     bundle.add_dependency(opt, resolve.ResolveGitMajorVersion(
         name='platform',
