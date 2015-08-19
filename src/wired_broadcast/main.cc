@@ -168,7 +168,7 @@ int main (int argc, char *argv[])
   // The field and traces types we will use. Here we consider GF(2). For
   // GF(2^8)
   // just change "binary" for "binary8"
-  bool enableTrace = false;
+  bool enableTrace = true;
 
   // Creates the broadcast topology class for the current example
   BroadcastRlnc wiredBroadcast (enableTrace, users, generationSize, packetSize,

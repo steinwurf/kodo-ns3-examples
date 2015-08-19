@@ -21,21 +21,11 @@
 
 #pragma once
 
-// #include <kodo/wrap_copy_payload_decoder.hpp>
-// #include <cstdlib>
-// #include <typeinfo>
 #include <kodocpp/kodocpp.hpp>
 
 class BroadcastRlnc
 {
 public:
-
-  // using rlnc_encoder = typename kodo::full_rlnc_encoder<field, encoderTrace>;
-  // using non_copy_rlnc_decoder = typename kodo::full_rlnc_decoder<field,
-  //   decoderTrace>;
-
-  // using rlnc_decoder = typename kodo::wrap_copy_payload_decoder<
-  //   non_copy_rlnc_decoder>;
 
   BroadcastRlnc (const bool enableTrace, const uint32_t users,
     const uint32_t generationSize, const uint32_t packetSize,
@@ -59,25 +49,24 @@ public:
     // Encoder creation and settings
     kodocpp::encoder encoder = encoder_factory.build ();
     encoder.set_systematic_off ();
+
+    if (encoder.has_set_trace_stdout ())
+      {
+        encoder.set_trace_stdout ();
+      }
+
+    // Data symbols
     std::vector<uint8_t> data_in (encoder.block_size (), 'x');
     encoder.set_symbols (data_in.data (), encoder.payload_size ());
     m_payload.resize (encoder.payload_size ());
 
-    if (encoder.has_set_trace_stdout ())
-    {
-      encoder.set_trace_stdout ();
-    }
-
     m_encoder.emplace_back (encoder);
-    std::cout << "Encoder stored in vector with emplace_back" << std::endl;
 
     // Decoders creation and settings
     for (uint32_t n = 0; n < m_users; n++)
-     {
-        std::cout << "Creating decoder " << n << "... " << std::endl;
+      {
         m_decoders.emplace_back (decoder_factory.build ());
-        std::cout << "Decoder " << n << " stored" << std::endl;
-     }
+      }
 
     // Initialize transmission count
     m_transmissionCount = 0;
@@ -126,18 +115,21 @@ public:
 
     std::cout << "Received a packet at decoder " << n + 1 << std::endl;
 
-    // if (kodo::has_trace<rlnc_decoder>::value)
-    //   {
-    //     auto filter = [] (const std::string& zone)
-    //     {
-    //       std::set<std::string> filters =
-    //         {"decoder_state","input_symbol_coefficients"};
-    //       return filters.count (zone);
-    //     };
+    if (m_decoders.at (n).has_set_trace_callback ())
+      {
+        auto callback = [](const std::string& zone, const std::string& data)
+        {
+          std::set<std::string> filters =
+            {"decoder_state","input_symbol_coefficients"};
+          if (filters.count (zone))
+            {
+              std::cout << zone << ":" << std::endl;
+              std::cout << data << std::endl;
+            }
+        };
 
-    //     std::cout << "Trace on decoder " << id << " is: " << std::endl;
-    //     kodo::trace (decoder, std::cout, filter);
-    //   }
+        m_decoders.at (n).set_trace_callback (callback);
+      }
   }
 
 private:
