@@ -51,25 +51,22 @@ public:
     srand(static_cast<uint32_t>(time(0)));
 
     // Call factories from basic parameters
-    kodocpp::encoder_factory encoder_factory (kodo_full_vector, kodo_binary,
+    kodocpp::encoder_factory encoder_factory (kodo_full_vector, kodo_binary8,
       m_generationSize, m_packetSize, m_enableTrace);
-    kodocpp::decoder_factory decoder_factory (kodo_full_vector, kodo_binary,
+    kodocpp::decoder_factory decoder_factory (kodo_full_vector, kodo_binary8,
       m_generationSize, m_packetSize, m_enableTrace);
 
     // Encoder creation and settings
     kodocpp::encoder encoder = encoder_factory.build ();
-    std::cout << "Encoder created with factory build" << std::endl;
     encoder.set_systematic_off ();
-    std::cout << "Systematic flag set to off" << std::endl;
-
-    // (&(m_encoderMap.at(m_source)))->set_systematic_off ();
-
-    // Initialize the input with any data and save it in the map
     std::vector<uint8_t> data_in (encoder.block_size (), 'x');
     encoder.set_symbols (data_in.data (), encoder.payload_size ());
-    std::cout << "Symbols set for the encoder" << std::endl;
     m_payload.resize (encoder.payload_size ());
-    std::cout << "Payload resized" << std::endl;
+
+    if (encoder.has_set_trace_stdout ())
+    {
+      encoder.set_trace_stdout ();
+    }
 
     m_encoder.emplace_back (encoder);
     std::cout << "Encoder stored in vector with emplace_back" << std::endl;
@@ -85,8 +82,6 @@ public:
     // Initialize transmission count
     m_transmissionCount = 0;
   }
-
-
 
   void SendPacket (ns3::Ptr<ns3::Socket> socket, ns3::Time pktInterval)
   {
@@ -106,12 +101,6 @@ public:
         auto packet = ns3::Create<ns3::Packet> (&m_payload[0], bytes_used);
         socket->Send (packet);
         m_transmissionCount++;
-
-        // if (kodo::has_trace<rlnc_encoder>::value)
-        //   {
-        //     std::cout << "Trace encoder:" << std::endl;
-        //     kodo::trace (encoder, std::cout);
-        //   }
 
         ns3::Simulator::Schedule (pktInterval, &BroadcastRlnc::SendPacket,
           this, socket, pktInterval);

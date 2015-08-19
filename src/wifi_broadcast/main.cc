@@ -230,7 +230,7 @@ int main (int argc, char *argv[])
   // Here we consider GF(2). For GF(2^8) just change "binary" for "binary8"
 
 
-  bool enableTrace = false;
+  bool enableTrace = true;
 
   BroadcastRlnc wifiBroadcast (enableTrace, users, generationSize, packetSize,
     source, sinks);
