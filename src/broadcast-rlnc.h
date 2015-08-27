@@ -27,11 +27,13 @@ class BroadcastRlnc
 {
 public:
 
-  BroadcastRlnc (const bool enableTrace, const uint32_t users,
+  BroadcastRlnc (const kodo_code_type codeType, const kodo_finite_field field, const bool enableTrace, const uint32_t users,
     const uint32_t generationSize, const uint32_t packetSize,
     const ns3::Ptr<ns3::Socket>& source,
     const std::vector<ns3::Ptr<ns3::Socket>>& sinks)
-    : m_enableTrace (enableTrace),
+    : m_codeType (codeType),
+      m_field (field),
+      m_enableTrace (enableTrace),
       m_users (users),
       m_generationSize (generationSize),
       m_packetSize (packetSize),
@@ -41,9 +43,9 @@ public:
     srand(static_cast<uint32_t>(time(0)));
 
     // Call factories from basic parameters
-    kodocpp::encoder_factory encoder_factory (kodo_full_vector, kodo_binary8,
+    kodocpp::encoder_factory encoder_factory (m_codeType, m_field,
       m_generationSize, m_packetSize, m_enableTrace);
-    kodocpp::decoder_factory decoder_factory (kodo_full_vector, kodo_binary8,
+    kodocpp::decoder_factory decoder_factory (m_codeType, m_field,
       m_generationSize, m_packetSize, m_enableTrace);
 
     // Encoder creation and settings
@@ -136,6 +138,8 @@ public:
 
 private:
 
+  const kodo_code_type m_codeType;
+  const kodo_finite_field m_field;
   const bool m_enableTrace;
   const uint32_t m_users;
   const uint32_t m_generationSize;

@@ -171,7 +171,8 @@ int main (int argc, char *argv[])
   bool enableTrace = true;
 
   // Creates the broadcast topology class for the current example
-  BroadcastRlnc wiredBroadcast (enableTrace, users, generationSize, packetSize,
+  BroadcastRlnc wiredBroadcast (kodo_full_vector, kodo_binary,
+    enableTrace, users, generationSize, packetSize,
     source, sinks);
 
   // Receiver socket connections

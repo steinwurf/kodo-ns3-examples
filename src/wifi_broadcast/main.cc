@@ -232,7 +232,8 @@ int main (int argc, char *argv[])
 
   bool enableTrace = true;
 
-  BroadcastRlnc wifiBroadcast (enableTrace, users, generationSize, packetSize,
+  BroadcastRlnc wifiBroadcast (kodo_full_vector, kodo_binary,
+    enableTrace, users, generationSize, packetSize,
     source, sinks);
 
   // //! [12]
