@@ -107,11 +107,13 @@ public:
     // Find the socket index
     auto it = std::find(m_sinks.begin (), m_sinks.end (), socket);
     auto n = std::distance (m_sinks.begin (), it);
+    std::vector<uint8_t> data;
+    data.resize (m_decoders.at (n).payload_size ());
 
     // Use the index to generate the packet
     auto packet = socket->Recv ();
-    packet->CopyData (&m_payload[0], m_decoders.at (n).payload_size ());
-    m_decoders.at (n).read_payload (&m_payload[0]);
+    packet->CopyData (&data[0], m_decoders.at (n).payload_size ());
+    m_decoders.at (n).read_payload (&data[0]);
 
     std::cout << "Received a packet at decoder " << n + 1 << std::endl;
 
