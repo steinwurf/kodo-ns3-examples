@@ -1,0 +1,20 @@
+#! /usr/bin/env python
+# encoding: utf-8
+
+import os
+
+ns3_build = bld.env['NS3_BUILD']
+ns3_libs = bld.env['NS3_LIBS']
+
+kodoc_lib = bld.get_tgen_by_name('kodoc').link_task.outputs[0]
+kodoc_path = [os.path.dirname(kodoc_lib.abspath())]
+
+bld.program(
+    features='cxx test',
+    source=['main.cc'],
+    target='encoder_recoder_decoder',
+    libpath=ns3_build,
+    rpath=ns3_build + kodoc_path,
+    includes=ns3_build,
+    lib=ns3_libs,
+    use=['kodocpp_includes'])
