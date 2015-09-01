@@ -168,6 +168,10 @@ def configure(conf):
 
 def build(bld):
 
+    # The ns-3 headers produce lots of warnings with -pedantic
+    if '-pedantic' in bld.env['CXXFLAGS']:
+        bld.env['CXXFLAGS'].remove('-pedantic')
+
     # Build the kodocpp includes
     bld(name='kodocpp_includes',
         includes='src',
@@ -191,4 +195,4 @@ def build(bld):
 
     bld.recurse('src/wired_broadcast')
     bld.recurse('src/wifi_broadcast')
-#    bld.recurse('src/encoder_recoder_decoder')
+    #bld.recurse('src/encoder_recoder_decoder')

@@ -226,12 +226,11 @@ int main (int argc, char *argv[])
       sinks[n] = Socket::CreateSocket (c.Get (1+n), tid);
     }
   //! [11]
-  // The field and traces types we will use.
-  // Here we consider GF(2). For GF(2^8) just change "binary" for "binary8"
-
-
+  // The field and trace types we will use. By default, we use GF(2).
+  // To get GF(2^8), just change "kodo_binary" to "kodo_binary8".
   bool enableTrace = true;
 
+  // Creates the BroadcastRlnc helper for this broadcast topology
   BroadcastRlnc wifiBroadcast (kodo_full_vector, kodo_binary,
     enableTrace, users, generationSize, packetSize,
     source, sinks);
