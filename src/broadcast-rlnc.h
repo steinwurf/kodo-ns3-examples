@@ -55,7 +55,7 @@ public:
 
     // Initialize data buffer
     std::vector<uint8_t> data_in (m_encoder.block_size (), 'x');
-    m_encoder.set_symbols (data_in.data (), m_encoder.payload_size ());
+    m_encoder.set_symbols (data_in.data (), m_encoder.block_size ());
     m_payload.resize (m_encoder.payload_size ());
 
     // Decoders creation and settings
@@ -118,7 +118,7 @@ public:
 
   void ReceivePacket (ns3::Ptr<ns3::Socket> socket)
   {
-    // Find the socket index
+    // Find the decoder index based on the socket
     auto it = std::find(m_sinks.begin (), m_sinks.end (), socket);
     auto n = std::distance (m_sinks.begin (), it);
 
