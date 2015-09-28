@@ -103,6 +103,7 @@
 // Simulation includes
 #include <iostream>
 #include <vector>
+#include <algorithm>
 #include <string>
 #include <ctime>
 
@@ -152,7 +153,8 @@ int main (int argc, char *argv[])
   NodeContainer c;
   c.Create (1 + users); // Sender + receivers
 
-  // The below set of helpers will help us to put together the wifi NICs we want
+  // The below set of helpers will help us to put together the wifi NICs we
+  // want
   WifiHelper wifi;
   wifi.SetStandard (WIFI_PHY_STANDARD_80211b); // OFDM at 2.4 GHz
 
@@ -224,17 +226,16 @@ int main (int argc, char *argv[])
       sinks[n] = Socket::CreateSocket (c.Get (1+n), tid);
     }
   //! [11]
-  // The field and traces types we will use.
-  // Here we consider GF(2). For GF(2^8) just change "binary" for "binary8"
-  using field = fifi::binary;
-  using encoderTrace = kodo::disable_trace;
-  using decoderTrace = kodo::enable_trace;
+  // The field and trace types we will use. By default, we use GF(2).
+  // To get GF(2^8), just change "kodo_binary" to "kodo_binary8".
+  bool enableTrace = true;
 
-  using simulation = BroadcastRlnc<field, encoderTrace, decoderTrace>;
+  // Creates the BroadcastRlnc helper for this broadcast topology
+  BroadcastRlnc wifiBroadcast (kodo_full_vector, kodo_binary,
+    enableTrace, users, generationSize, packetSize,
+    source, sinks);
 
-  // Creates the broadcast topology class for the current example
-  simulation wifiBroadcast (users, generationSize, packetSize, sinks);
-  //! [12]
+  // //! [12]
   // Transmitter socket connections. Set transmitter for broadcasting
   uint16_t port = 80;
   InetSocketAddress remote = InetSocketAddress (
@@ -247,7 +248,7 @@ int main (int argc, char *argv[])
   for (const auto sink : sinks)
     {
       sink->Bind (local);
-      sink->SetRecvCallback (MakeCallback (&simulation::ReceivePacket,
+      sink->SetRecvCallback (MakeCallback (&BroadcastRlnc::ReceivePacket,
         &wifiBroadcast));
     }
 
@@ -258,7 +259,7 @@ int main (int argc, char *argv[])
   wifiPhy.EnablePcap ("wifi-broadcast-rlnc", devices);
 
   Simulator::ScheduleWithContext (source->GetNode ()->GetId (), Seconds (1.0),
-    &simulation::SendPacket, &wifiBroadcast, source, interPacketInterval);
+    &BroadcastRlnc::SendPacket, &wifiBroadcast, source, interPacketInterval);
 
   Simulator::Run ();
   Simulator::Destroy ();

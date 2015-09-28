@@ -17,7 +17,7 @@
  */
 
 // This example shows how to use the Kodo library for recoding at many
-// intermediate nodes in a network within a ns-3 simulation. Recoding is
+// intermediate nodes in a network within a ns-3 EncoderRecodersDecoderRlnc. Recoding is
 // one of the characteristic features of network coding because it
 // differentiates from end-to-end codes by allowing any intermediate node
 // to recode a coded packet, even if its data set has not been completely
@@ -246,29 +246,26 @@ int main (int argc, char *argv[])
       recodersSockets[n]->Connect (decoderSocketAddress);
     }
 
-  // Simulation setup
-  using field = fifi::binary8;
-  using encoderTrace = kodo::disable_trace;
-  using decoderTrace = kodo::disable_trace;
+  // The field and trace types we will use. By default, we use GF(2^8).
+  // To get GF(2), just change "kodo_binary8" to "kodo_binary".
+  bool enableTrace = false;
 
-  using simulation = EncoderRecodersDecoderRlnc<
-    field, encoderTrace, decoderTrace>;
-
-  simulation multihop (recoders, generationSize, packetSize, recodersSockets,
+  EncoderRecodersDecoderRlnc multihop (kodo_full_vector, kodo_binary8,
+    enableTrace, recoders, generationSize, packetSize, recodersSockets,
     recodingFlag);
 
   // Recoders callbacks
   for (uint32_t n = 0; n < recoders; n++)
     {
       recodersSockets[n]-> SetRecvCallback (MakeCallback (
-        &simulation::ReceivePacketRecoder, &multihop));
+        &EncoderRecodersDecoderRlnc::ReceivePacketRecoder, &multihop));
     }
 
   // Decoder
   Ptr<Socket> decoderSocket = Socket::CreateSocket (decoder.Get (0), tid);
   decoderSocket->Bind (local);
   decoderSocket->SetRecvCallback (MakeCallback (
-    &simulation::ReceivePacketDecoder, &multihop));
+    &EncoderRecodersDecoderRlnc::ReceivePacketDecoder, &multihop));
 
   // Turn on global static routing so we can actually be routed across the hops
   Ipv4GlobalRoutingHelper::PopulateRoutingTables ();
@@ -280,15 +277,16 @@ int main (int argc, char *argv[])
   // Schedule processes
   // Encoder
   Simulator::ScheduleWithContext (encoderSocket->GetNode ()->GetId (),
-    Seconds (1.0), &simulation::SendPacketEncoder, &multihop, encoderSocket,
-    interPacketInterval);
+    Seconds (1.0), &EncoderRecodersDecoderRlnc::SendPacketEncoder,
+    &multihop, encoderSocket, interPacketInterval);
+
   //! [6]
   // Recoders
   for (auto recoderSocket : recodersSockets)
     {
       Simulator::ScheduleWithContext (recoderSocket->GetNode ()->GetId (),
-        Seconds (1.5), &simulation::SendPacketRecoder, &multihop, recoderSocket,
-        interPacketInterval);
+        Seconds (1.5), &EncoderRecodersDecoderRlnc::SendPacketRecoder,
+        &multihop, recoderSocket,interPacketInterval);
     }
   //! [7]
   Simulator::Run ();

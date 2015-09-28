@@ -165,15 +165,14 @@ int main (int argc, char *argv[])
       sinks[n] = Socket::CreateSocket (star.GetSpokeNode (n), tid);
     }
 
-  // The field and traces types we will use. Here we consider GF(2). For GF(2^8)
-  // just change "binary" for "binary8"
-  using field = fifi::binary;
-  using encoderTrace = kodo::disable_trace;
-  using decoderTrace = kodo::disable_trace;
+  // The field and trace types we will use. By default, we use GF(2).
+  // To get GF(2^8), just change "kodo_binary" to "kodo_binary8".
+  bool enableTrace = true;
 
-  using simulation = BroadcastRlnc<field, encoderTrace, decoderTrace>;
-  // Creates the broadcast topology class for the current example
-  simulation wiredBroadcast (users, generationSize, packetSize, sinks);
+  // Creates the BroadcastRlnc helper for this broadcast topology
+  BroadcastRlnc wiredBroadcast (kodo_full_vector, kodo_binary,
+    enableTrace, users, generationSize, packetSize,
+    source, sinks);
 
   // Receiver socket connections
   InetSocketAddress local = InetSocketAddress (Ipv4Address::GetAny (), port);
@@ -182,7 +181,7 @@ int main (int argc, char *argv[])
     {
       sink->Bind (local);
       sink->SetRecvCallback (MakeCallback (
-        &simulation::ReceivePacket, &wiredBroadcast));
+        &BroadcastRlnc::ReceivePacket, &wiredBroadcast));
     }
 
   // Turn on global static routing so we can be routed across the network
@@ -192,7 +191,7 @@ int main (int argc, char *argv[])
   pointToPoint.EnablePcapAll ("wired-broadcast-rlnc");
 
   Simulator::ScheduleWithContext (source->GetNode ()->GetId (), Seconds (1.0),
-    &simulation::SendPacket, &wiredBroadcast, source, interPacketInterval);
+    &BroadcastRlnc::SendPacket, &wiredBroadcast, source, interPacketInterval);
 
   Simulator::Run ();
   Simulator::Destroy ();
