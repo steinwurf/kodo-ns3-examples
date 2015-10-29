@@ -9,7 +9,7 @@ bld.program(
     source=['main.cc'],
     target='encoder_recoder_decoder',
     libpath=ns3_build,
-    rpath=ns3_build,
+    rpath=ns3_build + ['.'],
     includes=ns3_build,
     lib=ns3_libs,
     use=['kodocpp_includes'])
