@@ -45,9 +45,9 @@ public:
     // Call factories from basic parameters
 
     kodocpp::encoder_factory encoder_factory (m_codeType, m_field,
-      m_generationSize, m_packetSize, m_enableTrace);
+      m_generationSize, m_packetSize);
     kodocpp::decoder_factory decoder_factory (m_codeType, m_field,
-      m_generationSize, m_packetSize, m_enableTrace);
+      m_generationSize, m_packetSize);
 
     // Create encoder and disable systematic mode
     m_encoder = encoder_factory.build ();
@@ -75,7 +75,7 @@ public:
     // Create decoder and its data buffer
     m_decoder = decoder_factory.build ();
     m_decoder_buffer.resize (m_decoder.block_size ());
-    m_decoder.set_const_symbols (m_decoder_buffer.data (),
+    m_decoder.set_mutable_symbols (m_decoder_buffer.data (),
         m_decoder.block_size ());
 
     // Initialize transmission counts
@@ -221,7 +221,6 @@ private:
 
   const kodo_code_type m_codeType;
   const kodo_finite_field m_field;
-  const bool m_enableTrace;
   const uint32_t m_users;
   const uint32_t m_generationSize;
   const uint32_t m_packetSize;

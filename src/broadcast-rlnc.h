@@ -139,7 +139,6 @@ private:
 
   const kodo_code_type m_codeType;
   const kodo_finite_field m_field;
-  const bool m_enableTrace;
   const uint32_t m_users;
   const uint32_t m_generationSize;
   const uint32_t m_packetSize;
