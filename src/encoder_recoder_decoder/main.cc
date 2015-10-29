@@ -246,13 +246,8 @@ int main (int argc, char *argv[])
       recodersSockets[n]->Connect (decoderSocketAddress);
     }
 
-  // The field and trace types we will use. By default, we use GF(2^8).
-  // To get GF(2), just change "kodo_binary8" to "kodo_binary".
-  bool enableTrace = false;
-
   EncoderRecodersDecoderRlnc multihop (kodo_full_vector, kodo_binary8,
-    enableTrace, recoders, generationSize, packetSize, recodersSockets,
-    recodingFlag);
+    recoders, generationSize, packetSize, recodersSockets, recodingFlag);
 
   // Recoders callbacks
   for (uint32_t n = 0; n < recoders; n++)

@@ -28,14 +28,12 @@ class EncoderRecodersDecoderRlnc
 public:
 
   EncoderRecodersDecoderRlnc (const kodo_code_type codeType,
-    const kodo_finite_field field, const bool enableTrace,
-    const uint32_t users, const uint32_t generationSize,
-    const uint32_t packetSize,
+    const kodo_finite_field field, const uint32_t users,
+    const uint32_t generationSize, const uint32_t packetSize,
     const std::vector<ns3::Ptr<ns3::Socket>>& recodersSockets,
     const bool recodingFlag)
     : m_codeType (codeType),
       m_field (field),
-      m_enableTrace (enableTrace),
       m_users (users),
       m_generationSize (generationSize),
       m_packetSize (packetSize),
@@ -48,8 +46,6 @@ public:
 
     kodocpp::encoder_factory encoder_factory (m_codeType, m_field,
       m_generationSize, m_packetSize, m_enableTrace);
-    kodocpp::decoder_factory recoder_factory (m_codeType, m_field,
-      m_generationSize, m_packetSize, m_enableTrace);
     kodocpp::decoder_factory decoder_factory (m_codeType, m_field,
       m_generationSize, m_packetSize, m_enableTrace);
 
@@ -57,19 +53,30 @@ public:
     m_encoder = encoder_factory.build ();
     m_encoder.set_systematic_off ();
 
-    // Initialize the input data
-    std::vector<uint8_t> data_in (m_encoder.block_size (), 'x');
-    m_encoder.set_symbols (data_in.data (), m_encoder.block_size ());
+    // Initialize the encoder data buffer
+    m_encoder_buffer.resize (m_encoder.block_size ());
+    m_encoder.set_const_symbols (m_encoder_buffer.data (),
+        m_encoder.block_size ());
     m_payload.resize (m_encoder.payload_size ());
 
     // Create recoders and place them in a vector
+    m_recoder_buffers.resize (m_users);
     for (uint32_t n = 0; n < m_users; n++)
      {
-       m_recoders.emplace_back (recoder_factory.build ());
+       kodocpp::decoder recoder = decoder_factory.build ();
+
+       // Create data buffer for the decoder
+       m_recoder_buffers[n].resize (recoder.block_size ());
+       recoder.set_mutable_symbols(m_recoder_buffers[n].data (),
+         recoder.block_size ());
+       m_recoders.emplace_back (recoder);
      }
 
-    // Encoder creation and settings
+    // Create decoder and its data buffer
     m_decoder = decoder_factory.build ();
+    m_decoder_buffer.resize (m_decoder.block_size ());
+    m_decoder.set_const_symbols (m_decoder_buffer.data (),
+        m_decoder.block_size ());
 
     // Initialize transmission counts
     m_encoder_transmission_count = 0;
@@ -95,7 +102,7 @@ public:
         std::cout << "+-----------------------------------+" << std::endl;
 
         uint32_t bytes_used = m_encoder.write_payload (&m_payload[0]);
-        auto packet = ns3::Create<ns3::Packet>  (&m_payload[0], bytes_used);
+        auto packet = ns3::Create<ns3::Packet> (&m_payload[0], bytes_used);
         socket->Send (packet);
         m_encoder_transmission_count++;
 
@@ -221,8 +228,11 @@ private:
   const bool m_recodingFlag;
 
   kodocpp::encoder m_encoder;
+  std::vector<uint8_t> m_encoder_buffer;
   std::vector<kodocpp::decoder> m_recoders;
+  std::vector<std::vector<uint8_t>> m_recoder_buffers;
   kodocpp::decoder m_decoder;
+  std::vector<uint8_t> m_decoder_buffer;
   std::vector<ns3::Ptr<ns3::Socket>> m_recodersSockets;
 
   std::vector<uint8_t> m_payload;

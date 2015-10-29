@@ -28,13 +28,12 @@ class BroadcastRlnc
 public:
 
   BroadcastRlnc (const kodo_code_type codeType, const kodo_finite_field field,
-    const bool enableTrace, const uint32_t users,
-    const uint32_t generationSize, const uint32_t packetSize,
+    const uint32_t users, const uint32_t generationSize,
+    const uint32_t packetSize,
     const ns3::Ptr<ns3::Socket>& source,
     const std::vector<ns3::Ptr<ns3::Socket>>& sinks)
     : m_codeType (codeType),
       m_field (field),
-      m_enableTrace (enableTrace),
       m_users (users),
       m_generationSize (generationSize),
       m_packetSize (packetSize),
@@ -45,39 +44,43 @@ public:
 
     // Create factories using the supplied parameters
     kodocpp::encoder_factory encoder_factory (m_codeType, m_field,
-      m_generationSize, m_packetSize, m_enableTrace);
+      m_generationSize, m_packetSize);
     kodocpp::decoder_factory decoder_factory (m_codeType, m_field,
-      m_generationSize, m_packetSize, m_enableTrace);
+      m_generationSize, m_packetSize);
 
     // Create encoder and disable systematic mode
     m_encoder = encoder_factory.build ();
     m_encoder.set_systematic_off ();
 
-    // Initialize data buffer
-    std::vector<uint8_t> data_in (m_encoder.block_size (), 'x');
-    m_encoder.set_symbols (data_in.data (), m_encoder.block_size ());
+    // Initialize the encoder data buffer
+    m_encoder_buffer.resize (m_encoder.block_size ());
+    m_encoder.set_const_symbols (m_encoder_buffer.data (),
+      m_encoder.block_size ());
     m_payload.resize (m_encoder.payload_size ());
 
-    // Decoders creation and settings
+    // Create decoders
+    m_decoder_buffers.resize (m_users);
     for (uint32_t n = 0; n < m_users; n++)
       {
         kodocpp::decoder decoder = decoder_factory.build ();
 
-        // Enable tracing on each decoder
-        if (decoder.has_set_trace_callback ())
+        // Add custom trace callback to each decoder
+        auto callback = [](const std::string& zone, const std::string& data)
           {
-            auto callback = [](const std::string& zone, const std::string& data)
-            {
-              std::set<std::string> filters =
-               {"decoder_state", "symbol_coefficients_before_read_symbol"};
-              if (filters.count (zone))
-                {
-                  std::cout << zone << ":" << std::endl;
-                  std::cout << data << std::endl;
-                }
-            };
-            decoder.set_trace_callback (callback);
-          }
+            std::set<std::string> filters =
+              { "decoder_state", "symbol_coefficients_before_read_symbol" };
+            if (filters.count (zone))
+              {
+                std::cout << zone << ":" << std::endl;
+                std::cout << data << std::endl;
+              }
+          };
+        decoder.set_trace_callback (callback);
+
+        // Create data buffer for the decoder
+        m_decoder_buffers[n].resize (decoder.block_size ());
+        decoder.set_mutable_symbols(m_decoder_buffers[n].data (),
+          decoder.block_size ());
 
         m_decoders.emplace_back (decoder);
       }
@@ -144,7 +147,9 @@ private:
   ns3::Ptr<ns3::Socket> m_source;
   std::vector<ns3::Ptr<ns3::Socket>> m_sinks;
   kodocpp::encoder m_encoder;
+  std::vector<uint8_t> m_encoder_buffer;
   std::vector<kodocpp::decoder> m_decoders;
+  std::vector<std::vector<uint8_t>> m_decoder_buffers;
 
   std::vector<uint8_t> m_payload;
   uint32_t m_transmissionCount;
