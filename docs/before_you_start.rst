@@ -5,7 +5,6 @@ Before You Start
 
 The project description, licensing, source code and how to compile
 are available `here <https://github.com/steinwurf/kodo-ns3-examples>`_.
-Please follow the instructions shown there to get the project running.
 **Once you have built the project**, you can follow this tutorial.
 
 Overview
@@ -38,25 +37,6 @@ itself.
 What You Should Know Before the Tutorial
 ----------------------------------------
 
-Kodo
-^^^^
-
-Kodo is a C++ library from `Steinwurf <http://www.steinwurf.com>`_ that
-implements Random Linear Network Coding. The links you should review first to
-get a clear idea of what the library does, are:
-
-* `Kodo documentation <http://kodo.readthedocs.org/en/latest/>`_
-* `Kodo source code <https://github.com/steinwurf/kodo>`_
-* `Steinwurf buildbot <http://buildbot.steinwurf.dk/>`_
-
-ns-3
-^^^^
-
-`ns-3 <http://www.nsnam.org/>`_ is a network simulator of the OSI layers
-written in C++ for research and educational purposes under the GPLv2 license.
-You can find documentation regarding a tutorial, a manual and a model
-description in this `link <http://www.nsnam.org/documentation/>`_.
-
 C++
 ^^^
 
@@ -68,6 +48,37 @@ highly based object oriented projects, we strongly recommend you to spend some
 time on class related topics, particularly object properties (polymorphism,
 inheritance) and templates (generic classes or functions based on abstract
 types). In the mentioned C++ tutorial you may find plenty examples for this.
+
+
+Kodo
+^^^^
+
+Kodo is a C++ library from `Steinwurf <http://www.steinwurf.com>`_ that
+implements Random Linear Network Coding. The links you should review first to
+get a clear idea of what the library does, are:
+
+* `Kodo documentation <http://kodo-docs.steinwurf.com/en/latest/>`_
+* `Kodo source code <https://github.com/steinwurf/kodo>`_
+
+
+Kodo C++ bindings
+^^^^^^^^^^^^^^^^^
+
+To ease the development process, we use a C++
+`bindings <https://github.com/steinwurf/kodo-cpp>`_ that are high level
+wrappers. Besides making the process easier, they provide encapsulation
+and abstraction from the library. If you want to get more details, please
+refer to the previous link. There you will find documentation and examples
+regading on how to use the bindings.
+
+
+ns-3
+^^^^
+
+`ns-3 <http://www.nsnam.org/>`_ is a network simulator of the OSI layers
+written in C++ for research and educational purposes under the GPLv2 license.
+You can find documentation regarding a tutorial, a manual and a model
+description in this `link <http://www.nsnam.org/documentation/>`_.
 
 Waf
 ^^^
