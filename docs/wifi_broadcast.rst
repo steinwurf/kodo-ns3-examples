@@ -115,31 +115,23 @@ The ``BroadcastRlnc`` class can be roughly defined in the following way:
 
   #pragma once
 
-  #include <kodo/rlnc/full_rlnc_codes.hpp>
-  #include <kodo/trace.hpp>
-  #include <kodo/wrap_copy_payload_decoder.hpp>
+  #include <kodocpp/kodocpp.hpp>
 
-
-  template<class field, class encoderTrace, class decoderTrace>
   class BroadcastRlnc
   {
   public:
 
-    using rlnc_encoder = typename kodo::full_rlnc_encoder<field, encoderTrace>;
-    using non_copy_rlnc_decoder = typename kodo::full_rlnc_decoder<field,
-      decoderTrace>;
-
-    using rlnc_decoder = typename kodo::wrap_copy_payload_decoder<
-      non_copy_rlnc_decoder>;
-
-    using encoder_pointer = typename rlnc_encoder::factory::pointer;
-    using decoder_pointer = typename rlnc_decoder::factory::pointer;
-
-    BroadcastRlnc (const uint32_t users, const uint32_t generationSize,
-      const uint32_t packetSize, const std::vector<ns3::Ptr<ns3::Socket>>& sinks)
-      : m_users (users),
+    BroadcastRlnc (const kodo_code_type codeType, const kodo_finite_field field,
+      const uint32_t users, const uint32_t generationSize,
+      const uint32_t packetSize,
+      const ns3::Ptr<ns3::Socket>& source,
+      const std::vector<ns3::Ptr<ns3::Socket>>& sinks)
+      : m_codeType (codeType),
+        m_field (field),
+        m_users (users),
         m_generationSize (generationSize),
         m_packetSize (packetSize),
+        m_source (source),
         m_sinks (sinks)
     {
       // Constructor
@@ -157,46 +149,48 @@ The ``BroadcastRlnc`` class can be roughly defined in the following way:
 
   private:
 
+    const kodo_code_type m_codeType;
+    const kodo_finite_field m_field;
     const uint32_t m_users;
     const uint32_t m_generationSize;
     const uint32_t m_packetSize;
 
-    encoder_pointer m_encoder;
-    std::vector<decoder_pointer> m_decoders;
+    ns3::Ptr<ns3::Socket> m_source;
     std::vector<ns3::Ptr<ns3::Socket>> m_sinks;
-    std::map<ns3::Ptr<ns3::Socket>,decoder_pointer> m_socketMap;
+    kodocpp::encoder m_encoder;
+    std::vector<uint8_t> m_encoder_buffer;
+    std::vector<kodocpp::decoder> m_decoders;
+    std::vector<std::vector<uint8_t>> m_decoder_buffers;
 
-    std::vector<uint8_t> m_payload_buffer;
-    uint32_t m_transmission_count;
+    std::vector<uint8_t> m_payload;
+    uint32_t m_transmissionCount;
   };
 
-A broadcast topology is a template class. We will describe them to have
-of what they model and control. The first template argument is the finite
-field we will be using, represented through an object from our
-`Fifi  <https://github.com/steinwurf/fifi>`_ library. Fifi is a dependency for
-Kodo where all the finite field arithmetics resides. In the ``main.cc`` file,
-you can see that since we are interested in :math:`q = 2`, we choose
-``fifi:binary``. However, other field types from Fifi might be chosen too
+The broadcast topology is a simple class. We will describe its parts in detail
+what they model and control from a high level perspective.
+We first need to include main header for the bindings
+``<kodocpp/kodocpp.hpp>`` since they contain all the objects required for
+the C++ bindings to work.
+
+First, we need to define our encoder and decoders. For this purpose,
+we have to specify the coding scheme that we are going to employ and
+the field type in which the finite field arithmetics are going to be
+carried. This is done by employing the data types ``kodo_code_type``
+and ``kodo_finite_field`` which are defined in the bindings.
+To avoid using templated classes, we pass the required code type
+and field type as constructor arguments.
+
+Given that we want to perform our basic simulation with RLNC, the
+type in the bindings is ``kodo_full_vector``. You can look at it as
+a wrapper for the codecs in the
+`Kodo  <https://github.com/steinwurf/kodo>`_ library. Similarly,
+``kodo_binary`` is the field type in the bindings for the binary
+field implementation (since we are interested in :math:`q = 2`)
+which is defined in the
+`Fifi  <https://github.com/steinwurf/fifi>`_ library. However, other
+field types from Fifi might be chosen too from their bindings
 according to your application. Current available field sizes are:
-:math:`q = {2^4, 2^8, 2^{16}, 2^{32}-5}`.
-
-The second and third template arguments control the use of tracing in the
-simulation encoder and decoder objects. In ``main.cc``, ``kodo::enable_trace``
-and ``kodo::disable_trace`` respectively enables or disables the tracing
-functionality where it is employed. For our implementation, we enable tracing
-for our decoders and disable it for the encoder. Later in the simulation
-runs, we will check what options does tracing has on each device type.
-
-We create a set of ``typedefs`` required to make easy calls. ``rlnc_encoder``
-to name our encoder class. The ``rlnc_decoder`` case is slightly different.
-Normally, in Kodo, every time a packet is received in a decoder, the payload is
-modified during decoding. To overcome this problem, the API has an extension
-that ensures the payload is not overwritten, namely
-``kodo::wrap_copy_payload_decoder<decoder_type>``, where ``decoder_type`` in
-our case is a common decoder type created from the API. Then, we create two
-types of pointers, one for the encoder (``encoder_pointer``) and another for
-the decoder (``decoder_pointer``). An encoder or decoder pointer, points to an
-instance of the specified type.
+:math:`q = {2, 2^4, 2^8}`.
 
 For the simulation, ``void SendPacket(ns3::Ptr<ns3::Socket> socket, ns3::Time
 pktInterval)`` generates coded packets from generic data (created in the
@@ -209,14 +203,16 @@ memory usage.
 
 As we will check later, ``void ReceivePacket(ns3::Ptr<ns3::Socket> socket)``
 will be invoked through a callback whenever a packet is received at a
-decoder. In this case, the decoder that triggered the callback is obtained
-from an internal map. All nodes make use of ``m_payload_buffer``. The
-transmitter creates coded packets from the data and puts them in the buffer.
-Conversely, a received coded packet is placed in the buffer and then to its
-respective decoding matrix.
+decoder socket. In this case, the decoder that triggered the
+callback is obtained from looking into a vector container.
+The transmitter creates coded packets from the data and puts them
+in ``m_payload`` to send it over.
+Conversely, a received coded packet is placed in a local ``payload``
+to be read by the inteded decoder and its respective decoding matrix.
 
 You can check the source code to verify that these functionalities are
-performed by the APIs ``m_encoder->encode()`` and ``m_decoder->decode()``. For
+performed by the APIs ``m_encoder.write_payload()`` and
+``m_decoders[n].read_payload()``. For
 the encoding case, the amount of bytes required from the buffer to store the
 coded packet and its coefficients is returned. This amount is needed for
 ``ns3::Create<ns3::Packet>`` template-based constructor to create the ns-3
@@ -396,12 +392,13 @@ Simulation Calls
    :end-before: //! [12]
    :linenos:
 
-As we mentioned earlier, we use the binary field with a disabled trace in the
-encoder and enabled for the recoders. Then, we call the object that handles
-the topology by doing ``simulation wifiBroadcast (users, generationSize,
-packetSize, sinks);`` to call the broadcast RLNC class constructor. This does
-not run the simulation as we will see, but it creates the objets called by
-ns-3 to perform the tasks of the transmitter and receiver.
+As we mentioned earlier, we use the RLNC codec and binary for our encoder
+and decoders. Then, we call the object that handles
+the topology by doing ``BroadcastRlnc wifiBroadcast (kodo_full_vector,
+kodo_binary, users, generationSize, packetSize, sinks);`` to call
+the broadcast RLNC class constructor. This does not run the simulation as
+we will see, but it creates the objets called by ns-3 to perform the tasks
+of the transmitter and receiver.
 
 Sockets Connections
 ^^^^^^^^^^^^^^^^^^^
@@ -418,7 +415,7 @@ broadcasting with ``source->SetAllowBroadcast (true)`` and connect to the
 broadcast address. For the receivers, we choose the default ``0.0.0.0`` address
 obtained from ``Ipv4Address::GetAny ()`` and port 80 (to represent random HTTP
 traffic). The receiver binds to this address for socket listening. Every time
-a packet is received we trigger a callback to the reference ``&simulation::
+a packet is received we trigger a callback to the reference ``&BroadcastRlnc::
 ReceivePacket`` which takes the listening socket as an argument. This executes
 the respective member function of the reference ``&wifiBroadcast``. This
 completes our socket connection process and links the pieces for the simulation.
@@ -444,8 +441,8 @@ files.
 After the pcap setting, we use one of the ns-3 core features, event scheduling.
 The ``Simulator`` class is inherent to ns-3 and defines how events are handled
 discretely. The ``ScheduleWithContext`` member function basically tells ns-3
-to schedule the ``simulation::SendPacket`` function every second from
-the transmitter instance of ``wiredBroadcast`` and provide its arguments, e.g.
+to schedule the ``BroadcastRlnc::SendPacket`` function every second from
+the transmitter instance of ``wifiBroadcast`` and provide its arguments, e.g.
 ns-3 socket pointer ``source`` and ``Time`` packet interval
 ``interPacketInterval``. Among the event schedulers, you will see ``Schedule``
 vs. ``ScheduleWithContext``. The main difference between these two functions
