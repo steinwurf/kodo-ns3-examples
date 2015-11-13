@@ -57,6 +57,7 @@ public:
     m_encoder.set_const_symbols (m_encoder_buffer.data (),
       m_encoder.block_size ());
     m_payload.resize (m_encoder.payload_size ());
+    std::cout << "Test" << std::endl;
 
     // Create decoders
     m_decoder_buffers.resize (m_users);
