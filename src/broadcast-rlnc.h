@@ -80,7 +80,7 @@ public:
 
         // Create data buffer for the decoder
         m_decoder_buffers[n].resize (decoder.block_size ());
-        decoder.set_mutable_symbols(m_decoder_buffers[n].data (),
+        decoder.set_mutable_symbols (m_decoder_buffers[n].data (),
           decoder.block_size ());
 
         m_decoders.emplace_back (decoder);
