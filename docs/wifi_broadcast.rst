@@ -465,133 +465,189 @@ change some parameters to check known results.
 Default Run
 ^^^^^^^^^^^
 
-First type ``cd ~/dev/kodo-ns3-examples`` in your terminal for you to be in
-the main path of your cloned repository. Remember that at this point, **you
-need to have configured and built the projects with no errors**. The default
-run goes with 5 packets in the binary field with 2 users and only the decoder
-trace enabled. For the trace, we have only set ``input_symbol_coefficients``
-to see the coding coefficients of a received packet and ``decoder_state`` to
-see how he state matrix evolves. As a starter, type: ::
+First type ``cd ~/dev/kodo-ns3-examples/build/linux/src/wifi_broadcast/``
+in your terminal for you to be in the path of this example in your cloned
+repository. It is important that you run the example in this path,
+**otherwise it will not work** since the binary that the bindings rely on
+will not be located. Also remember that at this point,
+**you need to have configured and built the project with no errors**.
+If you review the constructor of the ``BroadcastRlnc`` class, you will
+observe that there is a local callback function made with a
+lambda expression.
+
+.. note:: A lambda expression is basically a pointer to a function and is
+  a feature available since C++11.
+
+The default run goes with 5 packets in the binary field with 2 users and
+only the decoder trace enabled.
+
+
+This   we have
+only set ``input_symbol_coefficients`` to see the coding coefficients of a
+received packet and ``decoder_state`` to see how he state matrix evolves.
+
+As a starter, type: ::
 
   ./build/linux/src/wifi_broadcast/wifi_broadcast
 
 You should see an output similar to this: ::
 
-  +---------------------+
-  |Sending a combination|
-  +---------------------+
-  Received a packet at decoder 1
-  Trace on decoder 1 is:
-  input_symbol_coefficients:
-  C: 1 1 0 0 0
+  +----------------------+
+  |Sending a coded packet|
+  +----------------------+
+  Received a packet at Decoder 1
+  symbol_coefficients_before_read_symbol:
+  C: 0 1 1 1 1
 
   decoder_state:
-  000 C:  1 1 0 0 0
-  001 ?:  0 0 0 0 0
+  000 ?:  0 0 0 0 0
+  001 S:  0 1 1 1 1
   002 ?:  0 0 0 0 0
   003 ?:  0 0 0 0 0
   004 ?:  0 0 0 0 0
 
-  Received a packet at decoder 2
-  Trace on decoder 2 is:
-  input_symbol_coefficients:
-  C: 1 1 0 0 0
+  Received a packet at Decoder 2
+  symbol_coefficients_before_read_symbol:
+  C: 0 1 1 1 1
 
   decoder_state:
-  000 C:  1 1 0 0 0
-  001 ?:  0 0 0 0 0
+  000 ?:  0 0 0 0 0
+  001 S:  0 1 1 1 1
   002 ?:  0 0 0 0 0
   003 ?:  0 0 0 0 0
   004 ?:  0 0 0 0 0
 
-  +---------------------+
-  |Sending a combination|
-  +---------------------+
-  Received a packet at decoder 1
-  Trace on decoder 1 is:
-  input_symbol_coefficients:
-  C: 0 1 0 1 0
-
-  decoder_state:
-  000 C:  1 0 0 1 0
-  001 C:  0 1 0 1 0
-  002 ?:  0 0 0 0 0
-  003 ?:  0 0 0 0 0
-  004 ?:  0 0 0 0 0
-
-  Received a packet at decoder 2
-  Trace on decoder 2 is:
-  input_symbol_coefficients:
-  C: 0 1 0 1 0
-
-  decoder_state:
-  000 C:  1 0 0 1 0
-  001 C:  0 1 0 1 0
-  002 ?:  0 0 0 0 0
-  003 ?:  0 0 0 0 0
-  004 ?:  0 0 0 0 0
-
-  +---------------------+
-  |Sending a combination|
-  +---------------------+
-  Received a packet at decoder 1
-  Trace on decoder 1 is:
-  input_symbol_coefficients:
-  C: 0 0 1 0 0
-
-  decoder_state:
-  000 C:  1 0 0 1 0
-  001 C:  0 1 0 1 0
-  002 C:  0 0 1 0 0
-  003 ?:  0 0 0 0 0
-  004 ?:  0 0 0 0 0
-
-  Received a packet at decoder 2
-  Trace on decoder 2 is:
-  input_symbol_coefficients:
-  C: 0 0 1 0 0
-
-  decoder_state:
-  000 C:  1 0 0 1 0
-  001 C:  0 1 0 1 0
-  002 C:  0 0 1 0 0
-  003 ?:  0 0 0 0 0
-  004 ?:  0 0 0 0 0
-
-  +---------------------+
-  |Sending a combination|
-  +---------------------+
-  Received a packet at decoder 1
-  Trace on decoder 1 is:
-  input_symbol_coefficients:
+  +----------------------+
+  |Sending a coded packet|
+  +----------------------+
+  Received a packet at Decoder 1
+  symbol_coefficients_before_read_symbol:
   C: 0 1 1 0 0
 
   decoder_state:
-  000 C:  1 0 0 0 0
-  001 C:  0 1 0 0 0
-  002 C:  0 0 1 0 0
-  003 C:  0 0 0 1 0
+  000 ?:  0 0 0 0 0
+  001 S:  0 1 1 0 0
+  002 ?:  0 0 0 0 0
+  003 S:  0 0 0 1 1
   004 ?:  0 0 0 0 0
 
-  Received a packet at decoder 2
-  Trace on decoder 2 is:
-  input_symbol_coefficients:
+  Received a packet at Decoder 2
+  symbol_coefficients_before_read_symbol:
   C: 0 1 1 0 0
 
   decoder_state:
-  000 C:  1 0 0 0 0
-  001 C:  0 1 0 0 0
-  002 C:  0 0 1 0 0
-  003 C:  0 0 0 1 0
+  000 ?:  0 0 0 0 0
+  001 S:  0 1 1 0 0
+  002 ?:  0 0 0 0 0
+  003 S:  0 0 0 1 1
   004 ?:  0 0 0 0 0
 
-  +---------------------+
-  |Sending a combination|
-  +---------------------+
-  Received a packet at decoder 1
-  Trace on decoder 1 is:
-  input_symbol_coefficients:
+  +----------------------+
+  |Sending a coded packet|
+  +----------------------+
+  Received a packet at Decoder 1
+  symbol_coefficients_before_read_symbol:
+  C: 0 0 1 0 1
+
+  decoder_state:
+  000 ?:  0 0 0 0 0
+  001 S:  0 1 0 0 1
+  002 S:  0 0 1 0 1
+  003 S:  0 0 0 1 1
+  004 ?:  0 0 0 0 0
+
+  Received a packet at Decoder 2
+  symbol_coefficients_before_read_symbol:
+  C: 0 0 1 0 1
+
+  decoder_state:
+  000 ?:  0 0 0 0 0
+  001 S:  0 1 0 0 1
+  002 S:  0 0 1 0 1
+  003 S:  0 0 0 1 1
+  004 ?:  0 0 0 0 0
+
+  +----------------------+
+  |Sending a coded packet|
+  +----------------------+
+  Received a packet at Decoder 1
+  symbol_coefficients_before_read_symbol:
+  C: 1 0 1 1 0
+
+  decoder_state:
+  000 S:  1 0 0 0 0
+  001 S:  0 1 0 0 1
+  002 S:  0 0 1 0 1
+  003 S:  0 0 0 1 1
+  004 ?:  0 0 0 0 0
+
+  Received a packet at Decoder 2
+  symbol_coefficients_before_read_symbol:
+  C: 1 0 1 1 0
+
+  decoder_state:
+  000 S:  1 0 0 0 0
+  001 S:  0 1 0 0 1
+  002 S:  0 0 1 0 1
+  003 S:  0 0 0 1 1
+  004 ?:  0 0 0 0 0
+
+  +----------------------+
+  |Sending a coded packet|
+  +----------------------+
+  Received a packet at Decoder 1
+  symbol_coefficients_before_read_symbol:
   C: 0 1 0 0 1
+
+  decoder_state:
+  000 S:  1 0 0 0 0
+  001 S:  0 1 0 0 1
+  002 S:  0 0 1 0 1
+  003 S:  0 0 0 1 1
+  004 ?:  0 0 0 0 0
+
+  Received a packet at Decoder 2
+  symbol_coefficients_before_read_symbol:
+  C: 0 1 0 0 1
+
+  decoder_state:
+  000 S:  1 0 0 0 0
+  001 S:  0 1 0 0 1
+  002 S:  0 0 1 0 1
+  003 S:  0 0 0 1 1
+  004 ?:  0 0 0 0 0
+
+  +----------------------+
+  |Sending a coded packet|
+  +----------------------+
+  Received a packet at Decoder 1
+  symbol_coefficients_before_read_symbol:
+  C: 0 1 1 1 1
+
+  decoder_state:
+  000 S:  1 0 0 0 0
+  001 S:  0 1 0 0 1
+  002 S:  0 0 1 0 1
+  003 S:  0 0 0 1 1
+  004 ?:  0 0 0 0 0
+
+  Received a packet at Decoder 2
+  symbol_coefficients_before_read_symbol:
+  C: 0 1 1 1 1
+
+  decoder_state:
+  000 S:  1 0 0 0 0
+  001 S:  0 1 0 0 1
+  002 S:  0 0 1 0 1
+  003 S:  0 0 0 1 1
+  004 ?:  0 0 0 0 0
+
+  +----------------------+
+  |Sending a coded packet|
+  +----------------------+
+  Received a packet at Decoder 1
+  symbol_coefficients_before_read_symbol:
+  C: 0 1 1 1 0
 
   decoder_state:
   000 U:  1 0 0 0 0
@@ -600,10 +656,9 @@ You should see an output similar to this: ::
   003 U:  0 0 0 1 0
   004 U:  0 0 0 0 1
 
-  Received a packet at decoder 2
-  Trace on decoder 2 is:
-  input_symbol_coefficients:
-  C: 0 1 0 0 1
+  Received a packet at Decoder 2
+  symbol_coefficients_before_read_symbol:
+  C: 0 1 1 1 0
 
   decoder_state:
   000 U:  1 0 0 0 0
@@ -612,7 +667,8 @@ You should see an output similar to this: ::
   003 U:  0 0 0 1 0
   004 U:  0 0 0 0 1
 
-  Decoding completed! Total transmissions: 5
+  Decoding completed! Total transmissions: 7
+
 
 Here we observe that every time a packet is received, the previously
 mentioned information is printed for each receiver. For the
