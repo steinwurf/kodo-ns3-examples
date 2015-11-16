@@ -897,7 +897,7 @@ coefficients. In the constructor, just after, we create the decoder
 instances in the ``broadcast-rlnc.h`` file, you can comment the callback
 and its setting in each decoder and just add the line
 ``decoder.set_trace_stdout ();``. With this setting you will remove all
-the filters and see a more detailed information regarding the simulation.
+the filters and see the full decoder trace in the simulation.
 To avoid a many prints, we will use a low generation and field size with
 1 user in the binary field. To do so, set the field again to ``kodo_binary``
 in ``main.cc`` for the field type, save your files, rebuild and type: ::
