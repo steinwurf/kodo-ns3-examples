@@ -476,19 +476,24 @@ observe that there is a local callback function made with a
 lambda expression.
 
 .. note:: A lambda expression is basically a pointer to a function and is
-  a feature available since C++11.
+  a feature available since C++11. If you need further information on this
+  topic, please check the C++ tutorial mentioned at the beginning of this
+  guide.
 
-The default run goes with 5 packets in the binary field with 2 users and
-only the decoder trace enabled.
+The callback is to enable tracing in our examples, e.g. to observe how the
+packets are being processed. The callback uses filters to control the
+outputs that we want to observe. In the class constructor, the options
+that are enabled are: (i) ``symbol_coefficients_before_read_symbol`` which
+tells how are the coding coefficients of the received packet before
+inserting it in the coding matrix and (ii) ``decoder_state`` which tells
+how is the state of the coding coefficients matrix at the decoder after
+performing Gaussian elimination.
+Laer, the default run goes with 5 packets in the binary field with 2 users
+and the previosuly tracing options defined.
 
+As a starter (once located in the path described earlier), type: ::
 
-This   we have
-only set ``input_symbol_coefficients`` to see the coding coefficients of a
-received packet and ``decoder_state`` to see how he state matrix evolves.
-
-As a starter, type: ::
-
-  ./build/linux/src/wifi_broadcast/wifi_broadcast
+  ./wifi_broadcast
 
 You should see an output similar to this: ::
 
@@ -672,26 +677,28 @@ You should see an output similar to this: ::
 
 Here we observe that every time a packet is received, the previously
 mentioned information is printed for each receiver. For the
-``input_symbols_coefficients`` output, ``C:`` indicates that we have a
-received a *coded* packet with the given coding vector. In this output,
-the first given coded packet (CP) is: :math:`CP_1 = p_1 + p_2`.
+``symbol_coefficients_before_read_symbol`` output, ``C:`` indicates
+that we have a received a *coded* packet with the given coding vector.
+In this output, the first given coded packet (CP)
+is: :math:`CP_1 = p_2 + p_3 + p_4 + p_5`.
 
-.. note:: Normally the ``rlnc_encoder`` type (based on the
-   ``full_rlnc_encoder``), would have generated packets in a systematic way,
+.. note:: Normally the encoder (based on the ``kodo_full_vector``),
+   would ve generated packets in a systematic way,
    but here we set that feature off in the ``BroadcastRlnc`` class constructor,
-   through the encoder API ``m_encoder->set_systematic_off()``. Also, normally
+   through the encoder API ``m_encoder.set_systematic_off()``. Also, normally
    the encoder starts with the same seed in every run but we have also changed
-   that too in the constructor with ``m_encoder->seed((uint32_t)time(0))``.
+   that too in the constructor with ``srand(static_cast<uint32_t>(time(0)))``.
    So, we proceed with this example to explain the simulation, but you will
    obtain another result in your runs. However, the results obtained with
    this example apply in general.
 
 After the input symbols have been checked, the decoder trace shows the
 ``decoder_state``. This is the current decoding matrix in an equivalent row
-echelon form. Given that we have received :math:`p_1 + p_2`, we put them in the
-first row because the pivot for :math:`p_1` is there. Also, we can argue that
-the pivot for :math:`p_2` is in the second row and so on. The second received
-coded packet is :math:`CP_2 = p_2 + p_4`. Notice that when we print the decoder
+echelon form. Given that we have received :math:`p_2 + p_3 + p_4 + p_5`,
+we put them in the second row because the pivot for :math:`p_2` is
+there. Also, we can argue that the pivot for :math:`p_3` is in the
+third row and so on. The second received coded packet is
+:math:`CP_2 = p_2 + p_4`. Notice that when we print the decoder
 state again, we have changed the equation of the second row because with the
 current information we can calculate
 :math:`CP_{1,new} = CP_1 + CP_2 = p_1 + p_4` (remember we are in modulo-2
