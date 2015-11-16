@@ -731,7 +731,8 @@ transmissions vary between 5 and 7, maybe sometimes a little more, due to
 randomness. On average, for :math:`q = 2` you should expect that
 :math:`g + 1.6` transmissions are necessary to transmit :math:`g` l.i.
 packets. To verify this, you can save the following bash script as
-``extra_packet_per_generation.bash`` in your ``~/dev/kodo-ns3-examples``:
+``extra_packet_per_generation.bash`` in your
+``~/dev/kodo-ns3-examples/build/[OS]/src/wifi_broadcast`` folder:
 
 .. code-block:: bash
 
@@ -748,8 +749,7 @@ packets. To verify this, you can save the following bash script as
 
    for (( c=1; c<=${N}; c++ ))
    do
-       COMB=`./build/linux/wifi_broadcast/wifi_broadcast | \
-             grep "Total transmissions:" | cut -f5 -d\ `
+       COMB=`./wifi_broadcast | grep "Total transmissions:" | cut -f5 -d\ `
        SUM=$(( ${SUM} + ${COMB} ))
    done
 
@@ -757,106 +757,101 @@ packets. To verify this, you can save the following bash script as
 
    echo "Extra packets per generation: ${EXTRA}"
 
-To set the permissions for this file, type in type in your
-terminal: ::
+To set the permissions for this file, type in your terminal: ::
 
    chmod 755 extra_packet_per_generation.bash
 
-This enables you and others to run and read the script, but only you to write it.
-You can set this according to the needs in your system. For further permissions,
-you can refer to the ``chmod`` instruction for Unix-like systems.
+This enables you and others to run and read the script, but only you
+to write it. You can set this according to the needs in your system. For
+further permissions, you can refer to the ``chmod`` instruction for Unix-like
+systems.
 
 The script receives two arguments: numbers of runs and generation size.
 Basically it returns how much extra packets per generation were necessary for
 decoding. Try to running as follows: ::
 
    ./extra_packet_per_generation.bash 100 5
-   Extra packets per generation: .9400
+   Extra packets per generation: 1.3600
    ./extra_packet_per_generation.bash 1000 5
-   Extra packets per generation: 1.4790
+   Extra packets per generation: 1.5770
    ./extra_packet_per_generation.bash 10000 5
-   Extra packets per generation: 1.5657
+   Extra packets per generation: 1.5823
 
 You can see that as we increase the amount of runs, we approach to 1.6 extra
 packets per generation. This is due to the linear dependency process of the
 coded packets. However, this happens because we are using the binary field.
-Set the field to :math:`q = 2^8` by setting ``fifi::binary8`` in the encoder
-and decoder templates, rebuild the project (by typing again ``./waf build`` in
-your ``~/dev/kodo-ns3-examples`` folder) and rerun the script even with 100
-samples, to see that the amount of extra packets is zero (at least with 4
-decimal places). This is because it is very unlikely to receive linearly
-dependent packets, even when the last coded packet is being sent.
+Set the field to :math:`q = 2^8` by setting ``kodo_binary8`` in the
+constructor arguments in ``main.cc``, rebuild the project (by typing again
+``python waf build`` in your ``~/dev/kodo-ns3-examples`` folder) and rerun
+the script even with 100 samples, to see that the amount of extra packets
+is zero (at least with 4 decimal places). This is because it is
+very unlikely to receive linearly dependent packets, even when the
+last coded packet is being sent.
 
 To see the new coding coefficients for :math:`q = 2^8`, but for only a
-generation size of 3 packets, type now: ::
+generation size of 3 packets, type now (in the respective folder): ::
 
-  ./build/linux/src/wifi_broadcast/wifi_broadcast --generationSize=3
+  ./wifi_broadcast --generationSize=3
 
 You should see something similar to: ::
 
-  +---------------------+
-  |Sending a combination|
-  +---------------------+
-  Received a packet at decoder 1
-  Trace on decoder 1 is:
-  input_symbol_coefficients:
-  C: 28 3 52
+  +----------------------+
+  |Sending a coded packet|
+  +----------------------+
+  Received a packet at Decoder 1
+  symbol_coefficients_before_read_symbol:
+  C: 134 44 251
 
   decoder_state:
-  000 C:  1 253 209
+  000 S:  1 21 169
   001 ?:  0 0 0
   002 ?:  0 0 0
 
-  Received a packet at decoder 2
-  Trace on decoder 2 is:
-  input_symbol_coefficients:
-  C: 28 3 52
+  Received a packet at Decoder 2
+  symbol_coefficients_before_read_symbol:
+  C: 134 44 251
 
   decoder_state:
-  000 C:  1 253 209
+  000 S:  1 21 169
   001 ?:  0 0 0
   002 ?:  0 0 0
 
-  +---------------------+
-  |Sending a combination|
-  +---------------------+
-  Received a packet at decoder 1
-  Trace on decoder 1 is:
-  input_symbol_coefficients:
-  C: 10 255 216
+  +----------------------+
+  |Sending a coded packet|
+  +----------------------+
+  Received a packet at Decoder 1
+  symbol_coefficients_before_read_symbol:
+  C: 9 166 29
 
   decoder_state:
-  000 C:  1 0 197
-  001 C:  0 1 144
+  000 S:  1 0 149
+  001 S:  0 1 65
   002 ?:  0 0 0
 
-  Received a packet at decoder 2
-  Trace on decoder 2 is:
-  input_symbol_coefficients:
-  C: 10 255 216
+  Received a packet at Decoder 2
+  symbol_coefficients_before_read_symbol:
+  C: 9 166 29
 
   decoder_state:
-  000 C:  1 0 197
-  001 C:  0 1 144
+  000 S:  1 0 149
+  001 S:  0 1 65
   002 ?:  0 0 0
 
-  +---------------------+
-  |Sending a combination|
-  +---------------------+
-  Received a packet at decoder 1
-  Trace on decoder 1 is:
-  input_symbol_coefficients:
-  C: 31 182 104
+  +----------------------+
+  |Sending a coded packet|
+  +----------------------+
+  Received a packet at Decoder 1
+  symbol_coefficients_before_read_symbol:
+  C: 144 87 3
 
   decoder_state:
   000 U:  1 0 0
   001 U:  0 1 0
   002 U:  0 0 1
 
-  Received a packet at decoder 2
-  Trace on decoder 2 is:
-  input_symbol_coefficients:
-  C: 31 182 104
+  Received a packet at Decoder 2
+  symbol_coefficients_before_read_symbol:
+  C: 144 87 3
 
   decoder_state:
   000 U:  1 0 0
@@ -867,202 +862,174 @@ You should see something similar to: ::
 
 Notice how the size of the decoding matrix changes due to the effect of the
 generation size. This is expected because the size of the decoding matrix is
-given by the minimum amount of linear combinations required to decode. Also, you
-can verify the coding coefficients now vary between 0 and 255 given that we
-have changed the field size. Try running the example with these changes a
-couple of times so you can verify the above in general.
+given by the minimum amount of linear combinations required to decode.
+Also, you can verify the coding coefficients now vary between 0 and 255
+given that we have changed the field size. Try running the example with
+these changes a couple of times so you can verify the above in general.
 
 Changing the Receiver Signal Strength
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 As we mentioned earlier, our WiFi PHY layer relies on constant position and
 power values. We originally set up the ``rss`` value to -93 dBm to indicate our
-received power. In general, packet error rate varies with the signal
-reception level, so we will adjust this. The receiver sensitivity for this
-channel is -96 dBm. It means that for ``rss`` values lower than this, we will
+received power. In general, the packet error rate varies with the signal
+reception level, so we will adjust this. In this case, the receiver sensitivity
+is -96 dBm. It means that for ``rss`` values lower than this, we will
 have no packet recovery. This goes a little further from a typical erasure
 channel where we may or may not have packet losses regularly, the reason being
-that receiver position and received power are fixed.
+that receiver position and power are both fixed.
 
 To change the ``rss`` value , simply type: ::
 
-  ./build/linux/src/wifi_broadcast/wifi_broadcast --rss=-96
+  ./wifi_broadcast --rss=-96
 
-You will see no output because the program gets into an infinite loop. To finish
-the program type ``Ctrl+C`` in your terminal. To verify that the running
-program ended, verify that a ``^C`` sign appears in your terminal. The
-program enters a loop because we receive no packets at all and the decoder will
-never be full rank.
+You will see no output because the program gets into an infinite loop.
+To finish the program type ``Ctrl+C`` in your terminal.
+To verify that the running program ended, verify that a ``^C`` sign
+appears in your terminal. The program enters a loop because we receive no
+packets at all and the decoder will never be full rank.
 
 Using Other Tracing Features
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 So far we have seen only the decoder state in terms of rank and symbol
-coefficients. In the ``filters`` construct on the ``ReceivePacket``  function
-in the ``broadcast-rlnc.h`` file, you can add the ``"symbol_storage"`` option
-to see a hex dump of the packets. To avoid a many prints, we will use a low
-generation and field size with 1 user in the binary field. To do so, set the
-field again to ``fifi::binary`` in ``main.cc``, save your files, rebuild
-and type: ::
+coefficients. In the constructor, just after, we create the decoder
+instances in the ``broadcast-rlnc.h`` file, you can comment the callback
+and its setting in each decoder and just add the line
+``decoder.set_trace_stdout ();``. With this setting you will remove all
+the filters and see a more detailed information regarding the simulation.
+To avoid a many prints, we will use a low generation and field size with
+1 user in the binary field. To do so, set the field again to ``kodo_binary``
+in ``main.cc`` for the field type, save your files, rebuild and type: ::
 
-  ./build/linux/src/wifi_broadcast/wifi_broadcast --generationSize=3 --users=1
+  ./wifi_broadcast --generationSize=2 --users=1
 
-Then, you will get an output like this: ::
+Then, you will get an output like the following: ::
 
-  +---------------------+
-  |Sending a combination|
-  +---------------------+
-  Received a packet at decoder 1
-  Trace on decoder 1 is:
-  input_symbol_coefficients:
-  C: 1 1 1
+  set_mutable_symbols:
+  size: 2000
+  mutable_partial_shallow_symbol_storage:
+  Has partial symbol = 0
+  +----------------------+
+  |Sending a coded packet|
+  +----------------------+
+  Received a packet at Decoder 1
+  rank_before_decode:
+  Rank = 0
+
+  symbol_data_before_read_symbol:
+  0000  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+  0010  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+  ....
+  03e0
+
+  symbol_coefficients_before_read_symbol:
+  C: 1 1
+
+  decoding_status_tracker:
+  Update symbol index = 0 status from ? to S
 
   decoder_state:
-  000 C:  1 1 1
-  001 ?:  0 0 0
-  002 ?:  0 0 0
+  000 S:  1 1
+  001 ?:  0 0
 
-  symbol_storage:
-  0 I:
-  0000  78 78 78 78 78 78 78 78 78 78 78 78 78 78 78 78  xxxxxxxxxxxxxxxx
-  0010  78 78 78 78 78 78 78 78 78 78 78 78 78 78 78 78  xxxxxxxxxxxxxxxx
-  ....
-  03e0
-  1 A:
-  0000  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
-  0010  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
-  ....
-  03e0
-  2 A:
+  symbol_data_after_read_symbol:
   0000  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
   0010  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
   ....
   03e0
 
-  +---------------------+
-  |Sending a combination|
-  +---------------------+
-  Received a packet at decoder 1
-  Trace on decoder 1 is:
-  input_symbol_coefficients:
-  C: 1 1 1
+  symbol_coefficients_after_read_symbol:
+  C: 1 1
+
+  rank_after_decode:
+  Rank = 1
+
+  +----------------------+
+  |Sending a coded packet|
+  +----------------------+
+  Received a packet at Decoder 1
+  rank_before_decode:
+  Rank = 1
+
+  symbol_data_before_read_symbol:
+  0000  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+  0010  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
+  ....
+  03e0
+
+  symbol_coefficients_before_read_symbol:
+  C: 1 0
+
+  decoding_status_tracker:
+  Update symbol index = 1 status from ? to S
+
+  decoding_status_tracker:
+  Update symbol index = 0 status from S to U
+
+  decoding_status_tracker:
+  Update symbol index = 1 status from S to U
 
   decoder_state:
-  000 C:  1 1 1
-  001 ?:  0 0 0
-  002 ?:  0 0 0
+  000 U:  1 0
+  001 U:  0 1
 
-  symbol_storage:
-  0 I:
-  0000  78 78 78 78 78 78 78 78 78 78 78 78 78 78 78 78  xxxxxxxxxxxxxxxx
-  0010  78 78 78 78 78 78 78 78 78 78 78 78 78 78 78 78  xxxxxxxxxxxxxxxx
-  ....
-  03e0
-  1 A:
-  0000  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
-  0010  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
-  ....
-  03e0
-  2 A:
+  symbol_data_after_read_symbol:
   0000  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
   0010  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
   ....
   03e0
 
-  +---------------------+
-  |Sending a combination|
-  +---------------------+
-  Received a packet at decoder 1
-  Trace on decoder 1 is:
-  input_symbol_coefficients:
-  C: 1 0 1
+  symbol_coefficients_after_read_symbol:
+  C: 0 1
 
-  decoder_state:
-  000 C:  1 0 1
-  001 C:  0 1 0
-  002 ?:  0 0 0
+  rank_after_decode:
+  Rank = 2
 
-  symbol_storage:
-  0 I:
-  0000  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
-  0010  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
-  ....
-  03e0
-  1 I:
-  0000  78 78 78 78 78 78 78 78 78 78 78 78 78 78 78 78  xxxxxxxxxxxxxxxx
-  0010  78 78 78 78 78 78 78 78 78 78 78 78 78 78 78 78  xxxxxxxxxxxxxxxx
-  ....
-  03e0
-  2 A:
-  0000  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
-  0010  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
-  ....
-  03e0
+  Decoding completed! Total transmissions: 2
 
-  +---------------------+
-  |Sending a combination|
-  +---------------------+
-  Received a packet at decoder 1
-  Trace on decoder 1 is:
-  input_symbol_coefficients:
-  C: 1 0 0
-
-  decoder_state:
-  000 U:  1 0 0
-  001 U:  0 1 0
-  002 U:  0 0 1
-
-  symbol_storage:
-  0 I:
-  0000  78 78 78 78 78 78 78 78 78 78 78 78 78 78 78 78  xxxxxxxxxxxxxxxx
-  0010  78 78 78 78 78 78 78 78 78 78 78 78 78 78 78 78  xxxxxxxxxxxxxxxx
-  ....
-  03e0
-  1 I:
-  0000  78 78 78 78 78 78 78 78 78 78 78 78 78 78 78 78  xxxxxxxxxxxxxxxx
-  0010  78 78 78 78 78 78 78 78 78 78 78 78 78 78 78 78  xxxxxxxxxxxxxxxx
-  ....
-  03e0
-  2 I:
-  0000  78 78 78 78 78 78 78 78 78 78 78 78 78 78 78 78  xxxxxxxxxxxxxxxx
-  0010  78 78 78 78 78 78 78 78 78 78 78 78 78 78 78 78  xxxxxxxxxxxxxxxx
-  ....
-  03e0
-
-  Decoding completed! Total transmissions: 4
-
-Now, we see the data in rows of 16 bytes. If you look at the constructor in
-``main.cpp``, you can confirm that we constantly fill the buffer with ``x``,
+Now, we see the data in rows of 16 bytes. To the right of the
+packets, you can see the converted ASCII character. In this way, you
+can observe that we constantly fill the buffer with empty data,
 since the example is just for showing purposes.
 
-The symbol storage can be mainly in 3 states depending on how the memory is
-assigned in Kodo. In the library we have 2 types of memory assignment for object
+We first store our two raw symbols in a mutable symbol storage meaning
+that its content may vary since we will perform elementary row
+operations on them. The memory handling of a given symbol storage can
+be in different states depending on how the memory is assigned in Kodo.
+In the library we have 2 types of memory assignment for object
 creation, i.e. we can create a `shallow copy or a deep copy <http://stackover
-flow.com/a/184745>`_. For this implementation, we use a deep copy by default
-and we will only have 2 of them, namely ``A:`` (available) and ``I:``
-(initialized) meaning that the memory is ready and initialized to be used,
-respectively. Notice that whenever we still have coded packets, we only print
-zeros. In the case of a shallow copy, we might see the ``?:`` indicator that
-will tell us that the storage has not been assigned. This trace feature is
-useful particularly we you want to debug the decoding process with some
-known data.
+flow.com/a/184745>`_. For this implementation, we use a shallow copy by
+default since it is the one that expenses the less amount of memory
+by keeping to a minimum the amount of duplications.
+
+As you can see, the process in this mode is quite verbose. We
+can each detail of the decoding when a coded symbol (packet)
+is read in every step. Also, we can see the state of the coding matrix
+before and after each read. Similarly, we can check how is the
+variation of eah pivot from one reception to another.
 
 Finally, try disabling the decoder trace and enable the encoder trace. This
-trace only has the symbol storage feature. Simply switch the structs in the
-main function, save, rebuild your project and rerun the example
-with the previous setting, you will only see your data in the encoder.
+trace only has the symbol storage feature. Simply add
+``m_encoder.set_trace_stdout ()`` the creation of the encoder, save,
+rebuild your project and rerun the example with the previous setting,
+you will only see your data in the encoder. Go back to the filters settings
+and try to also add or remove some of the parameters in the filters.
+For example add "symbol_data_after_read_symbol" in the filters
+and verify that the output matches your expectations.
 
 Review pcap Traces
 ^^^^^^^^^^^^^^^^^^
 
 As we described earlier, the simulation leaves pcap format files
-(``wifi-broadcast-rlnc-*-*.pcap``) in your ``~/dev/kodo-ns3-examples`` folder.
+(``wifi-broadcast-rlnc-*-*.pcap``) in your
+``~/dev/kodo-ns3-examples/build/[OS]/src/wifi_broadcast`` folder.
 You can read these files with different programs like tcpdump or Wireshark.
 tcpdump is standard on most Unix-like systems and is based on the libpcap
 library. `Wireshark <https://www.wireshark.org/>`_ is another free, open-source
 packet analyzer which you can get online. Just for showing purposes we will use
-tcpdump, but you can choose the one you prefer the most. For reading both files,
-simply type: ::
+tcpdump, but you can choose the one you prefer the most. For reading
+both files, simply type in the respective folder: ::
 
   tcpdump -r wifi-broadcast-rlnc-0-0.pcap -nn -tt
   tcpdump -r wifi-broadcast-rlnc-1-0.pcap -nn -tt

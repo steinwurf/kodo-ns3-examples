@@ -65,7 +65,7 @@ public:
       {
         kodocpp::decoder decoder = decoder_factory.build ();
 
-        // Add custom trace callback to each decoder
+        Add custom trace callback to each decoder
         auto callback = [](const std::string& zone, const std::string& data)
           {
             std::set<std::string> filters =
