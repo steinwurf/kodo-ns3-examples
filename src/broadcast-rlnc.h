@@ -58,7 +58,6 @@ public:
       m_encoder.block_size ());
     m_payload.resize (m_encoder.payload_size ());
 
-
     // Create decoders
     m_decoder_buffers.resize (m_users);
     for (uint32_t n = 0; n < m_users; n++)
