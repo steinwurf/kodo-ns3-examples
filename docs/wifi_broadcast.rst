@@ -698,27 +698,30 @@ echelon form. Given that we have received :math:`p_2 + p_3 + p_4 + p_5`,
 we put them in the second row because the pivot for :math:`p_2` is
 there. Also, we can argue that the pivot for :math:`p_3` is in the
 third row and so on. The second received coded packet is
-:math:`CP_2 = p_2 + p_4`. Notice that when we print the decoder
-state again, we have changed the equation of the second row because with the
-current information we can calculate
-:math:`CP_{1,new} = CP_1 + CP_2 = p_1 + p_4` (remember we are in modulo-2
-arithmetic). We keep these values as "coded" (``C:``), because we need to
-receive the complete generation to guarantee full decoding. Packet reception
+:math:`CP_2 = p_2 + p_3`. Notice that when we print the decoder
+state again, we have changed the equation of the second and fourth rows
+because with the current information we can calculate
+:math:`CP_{1,new} = CP_2 = p_2 + p_3` (remember we are in modulo-2
+arithmetic) and :math:`CP_{2,new} = CP_1 + CP_2 = p_4 + p_5`. Packet reception
 continues until we have :math:`g` linearly independent (l.i.) coded packets.
 
-You can also see two more types of symbols indicators. ``?:`` indicates
+You can also see two more types of symbols indicators. First, ``S:`` indicates
 that the corresponding pivot packet has not been *seen* by the decoder. Seeing
 packet :math:`k` means that we are able to compute :math:`p_k
 + \sum_{l > k} \alpha_l p_l`, i.e. to be able to compute :math:`p_k` plus a
 combinations of packets of indexes greater than :math:`k`. A seen packet helps
-to reduce the numbers of operations required for decoding. Finally, ``U:``
-indicates that the packet is uncoded, normally you will see this when the
-complete generation is decoded.
+to reduce the numbers of operations required for decoding. Second,
+``?:`` indicates that the pivot of the corresponding pivot has not been
+seen yet. Finally, ``U:`` indicates that the packet is uncoded, you will
+see this when the complete generation is decoded.
 
-At the end, we see that decoding was performed after 5 transmissions. There are
-two reasons for this to occur. First, no linearly dependent (l.d.)
-combinations occurred during the random process. Second, there were no packet
-erasures neither. We will make some changes to see these effects.
+At the end, we see that decoding was performed after 7 transmissions.
+There might be two reasons for this to occur:  (i) a linearly
+dependent (l.d.) coded packet was sent during the process or (ii) there
+were some packet erasures during the process. From the example, we see that
+during the fifth and sixth transmission, l.d. coded packets were sent, thus
+conveying no new information. We will make some changes to see
+more about these effects.
 
 Changing the Field and Generation Size
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
