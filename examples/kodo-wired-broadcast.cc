@@ -87,7 +87,7 @@
 #include <string>
 #include <ctime>
 
-#include "../broadcast-rlnc.h" // Contains the broadcast topology class
+#include "broadcast-rlnc.h" // Contains the broadcast topology class
 
 using namespace ns3;
 

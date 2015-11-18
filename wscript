@@ -50,45 +50,6 @@ def configure(conf):
         conf.fatal('The specified ns3 path "%s" is not a valid '
                    'directory' % ns3_path)
 
-    ns3_build = os.path.join(ns3_path, 'build')
-    if not os.path.isdir(ns3_build):
-        conf.fatal('Could not find the ns3 build directory '
-                   'in "%s"' % ns3_build)
-
-    ns3_lib_dir = conf.root.find_dir(ns3_build)
-
-    if conf.is_mkspec_platform('mac'):
-        ns3_libs = ns3_lib_dir.ant_glob('*.dylib')
-    elif conf.is_mkspec_platform('linux'):
-        ns3_libs = ns3_lib_dir.ant_glob('*.so')
-    else:
-        conf.fatal('We could not detect your platform, please send us a '
-                   'bug report')
-
-    if not ns3_libs:
-        conf.fatal('Could not find any of the ns3 shared libraries '
-                   '(.so files). Please build ns3 in the given folder!')
-
-    def get_libname(l):
-        # Get the file name only
-        l = os.path.basename(str(l))
-
-        # Remove the lib prefix
-        prefix = 'lib'
-
-        if l.startswith(prefix):
-            l = l[len(prefix):]
-
-        # Remove the .so
-        l = os.path.splitext(l)[0]
-
-        return l
-
-    ns3_lib_names = [get_libname(l) for l in ns3_libs]
-
-    conf.env['NS3_BUILD'] = [ns3_build]
-    conf.env['NS3_LIBS'] = ns3_lib_names
-
 
 def build(bld):
 
@@ -98,7 +59,6 @@ def build(bld):
     if '-pedantic' in bld.env['CXXFLAGS']:
         bld.env['CXXFLAGS'].remove('-pedantic')
 
-    if bld.is_toplevel():
-        bld.recurse('src/wired_broadcast')
-        bld.recurse('src/wifi_broadcast')
-        bld.recurse('src/encoder_recoder_decoder')
+    # Define a dummy task to force the compilation of the kodo-c shared library
+    bld(features='cxx',
+        use=['kodoc'])

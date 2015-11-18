@@ -107,7 +107,7 @@
 #include <string>
 #include <ctime>
 //! [2]
-#include "../encoder-recoders-decoder-rlnc.h"
+#include "encoder-recoders-decoder-rlnc.h"
 //! [3]
 using namespace ns3;
 
