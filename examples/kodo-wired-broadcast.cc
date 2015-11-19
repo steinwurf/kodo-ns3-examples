@@ -61,7 +61,7 @@
 // You can modify any default parameter, by running (for example with a
 // different error rate):
 
-// ./build/linux/src/wired_broadcast/wired_broadcast --errorRate=MY_ERROR_RATE
+// python waf --run kodo-wired-broadcast --command-template="%s --errorRate=MY_ERROR_RATE"
 
 // The parameters that can be modified are: generationSize, packetSize, ns-3
 // simulation interval (for controlling event ocurrences), errorRate in the

@@ -78,7 +78,8 @@
 
 // To see this effect, try by changing the rss parameter on the simulation
 // by typing:
-// ./build/linux/src/wifi_broadcast/wifi_broadcast --rss=-96
+
+// python waf --run kodo-wifi-broadcast --command-template="%s --rss=-96"
 
 // With this value (or lower), the erasure rate goes to 1 and the packets can
 // not be recovered. Higher rss power values ensure packet reception and
