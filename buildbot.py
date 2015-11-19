@@ -51,7 +51,7 @@ def configure(properties):
 
     run_command(command)
 
-    # Configure the ns-3-dev repository in the specified folder
+    # Clone and configure the ns-3-dev repository in the specified folder
     ns3_path = properties['ns3_path']
     ns3_path = os.path.abspath(os.path.expanduser(ns3_path))
 
@@ -75,24 +75,29 @@ def configure(properties):
 
 
 def build(properties):
+    # Build the kodo-c shared library with our waf
+    # Install the examples, the required headers and the compiled shared
+    # library to '{ns3_path}/examples/kodo'
     command = [sys.executable, 'waf', 'build', 'install', '-v']
     command += ['--ns3_path={}'.format(properties['ns3_path'])]
     run_command(command)
 
+    ns3_path = properties['ns3_path']
+    ns3_path = os.path.abspath(os.path.expanduser(ns3_path))
+    # Build the examples with the ns-3 waf
+    os.chdir(ns3_path)
+    run_command([sys.executable, 'waf', 'build'])
+
 
 def run_tests(properties):
-    command = [sys.executable, 'waf', '-v', '--run_tests']
-    run_cmd = None
+    ns3_path = properties['ns3_path']
+    ns3_path = os.path.abspath(os.path.expanduser(ns3_path))
 
-    if properties.get('valgrind_run'):
-        run_cmd = 'valgrind --error-exitcode=1 %s'
-
-    if run_cmd:
-        command += ["--run_cmd={}".format(run_cmd)]
-
-    command += get_tool_options(properties)
-
-    run_command(command)
+    # Run each example with the ns-3 waf
+    os.chdir(ns3_path)
+    run_command([sys.executable, 'waf', '--run', 'kodo-recoder'])
+    run_command([sys.executable, 'waf', '--run', 'kodo-wifi-broadcast'])
+    run_command([sys.executable, 'waf', '--run', 'kodo-wired-broadcast'])
 
 
 def install(properties):
