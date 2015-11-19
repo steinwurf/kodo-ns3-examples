@@ -51,14 +51,16 @@ def configure(properties):
 
     run_command(command)
 
+    # Configure the ns-3-dev repository in the specified folder
     ns3_path = properties['ns3_path']
+    ns3_path = os.path.abspath(os.path.expanduser(ns3_path))
 
     # Make sure that the previously installed examples are deleted
     examples_path = os.path.join(ns3_path, 'examples', 'kodo')
     if os.path.isdir(examples_path):
         shutil.rmtree(examples_path)
 
-    # Clone the ns-3 repo if it is not present
+    # Clone the ns-3 repo if needed
     if not os.path.exists(ns3_path):
         command = ['hg', 'clone', 'http://code.nsnam.org/ns-3-dev/', ns3_path]
         run_command(command)
