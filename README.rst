@@ -46,8 +46,8 @@ i.e. one cannot be the subfolder of the other.
 Installing ns-3
 ---------------
 
-First clone the ns-3 repository (we start from the home folder
-here so it will be cloned to ``~/ns-3-dev``)::
+First clone the ns-3 repository (we start from the home folder,
+so it will be cloned to ``~/ns-3-dev``)::
 
   cd ~
   hg clone http://code.nsnam.org/ns-3-dev/
@@ -61,17 +61,16 @@ Go to this freshly cloned folder::
 
 Our aim is to make the examples compatible with the ns-3 latest revision.
 If you experience any issues with the latest revision, then you can switch
-to the latest supported revision (this step is optional)::
+to the latest supported revision (this step is **optional**)::
 
   hg checkout 11767
 
-Configure the ns-3 project (it is important to also enable examples)::
+Configure the ns-3 project (it is important to also enable the examples)::
 
   python waf configure --enable-examples
 
-This will output a whole bunch of information about the modules
-enabled based on the availability of tools and libraries installed
-on your computer.
+This will output a whole bunch of information about the enabled modules
+based on the availability of tools and libraries installed on your computer.
 
 Now we build the ns-3 libraries and examples::
 
@@ -94,12 +93,12 @@ The ``waf configure`` command ensures that all dependencies are downloaded
 (by default, waf will create a folder called ``bundle_dependencies`` to
 store these libraries).
 
-You must have *a valid Steinwurf license* to download the ``fifi`` and
+You must have **a valid Steinwurf license** to download the ``fifi`` and
 ``kodo`` dependencies, otherwise you will get a git error when you execute
 the configure command!
 
 Now we build the kodo-c shared library and we install the examples and all
-the required files to the ``~/ns-3-dev/examples/kodo`` folder.
+the required files to the ``~/ns-3-dev/examples/kodo`` folder::
 
   python waf build install --ns3_path="~/ns-3-dev"
 
@@ -109,7 +108,7 @@ this if your ns-3 is located elsewhere).
 Building the Kodo examples in ns-3
 ----------------------------------
 
-After the install step, you can switch to your ns-3 folder::
+After the install step, you can switch back to your ns-3 folder::
 
   cd ~/ns-3-dev
 
@@ -135,7 +134,7 @@ You can find more details about each example in their respective source files.
 There you can also check how to change the simulation parameters like
 the packet-, field- and generation sizes.
 
-You can run the examples with the normal ns-3 run commands:
+You can run the examples with the usual ns-3 run commands::
 
   python waf --run kodo-wired-broadcast
   python waf --run kodo-wifi-broadcast
@@ -161,5 +160,7 @@ posted to our developer mailing list (hosted at Google Groups):
 * http://groups.google.com/group/steinwurf-dev
 
 If you make new examples or use the examples provided here for your
-research please let us know - we would be happy to add links to your
-work or potentially include them as new examples!
+research, please let us know!
+
+We would be happy to add links to your work or potentially include them
+as new examples!
