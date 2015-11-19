@@ -59,7 +59,7 @@ def configure(properties):
         shutil.rmtree(examples_path)
 
     # Clone the ns-3 repo if it is not present
-    if not os.path.isdir(ns3_path):
+    if not os.path.exists(ns3_path):
         command = ['hg', 'clone', 'http://code.nsnam.org/ns-3-dev/', ns3_path]
         run_command(command)
 
