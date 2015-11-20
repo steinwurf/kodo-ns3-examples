@@ -147,7 +147,7 @@ and how many transmissions were required.
 
 Adding your own simulation
 --------------------------
-At this point, you might want to add your own simulation that also uses kodo.
+At this point, you might want to add your own simulation that uses kodo.
 It is recommended to create a new program by copying one of the kodo examples.
 The examples are installed in ``~/ns-3-dev/examples/kodo``, so we will go to
 that folder and make a copy ``kodo-wifi-broadcast.cc`` to create a new
@@ -156,9 +156,10 @@ simulation called ``my-simulation.cc`` (you can choose any name here)::
   cd ~/ns-3-dev/examples/kodo
   cp kodo-wifi-broadcast.cc my-simulation.cc
 
-The new source file is created, so we just have to define a new program in
-``~/ns-3-dev/examples/kodo/wscript``. Open this file in your text editor,
-and add the following lines at the end::
+To build an executable from the ``my-simulation.cc`` source file, we have to
+define a new program in ``~/ns-3-dev/examples/kodo/wscript``.
+Open this file in your text editor, and add the following lines at the end
+(be careful with the indentation since this is a Python script)::
 
   obj = bld.create_ns3_program('my-simulation',
                                ['core', 'applications', 'point-to-point',
@@ -171,6 +172,24 @@ able to run it from the ``~/ns-3-dev`` folder as usual::
 
   cd ~/ns-3-dev
   python waf --run my-simulation
+
+Now you can expand your custom simulation as you like. If you use additional
+ns-3 modules, then you need to add them in the wscript (most likely, you will
+get a build error if you are missing a module).
+
+**Warning:** If you install the kodo ns-3 examples again with this command::
+
+  cd ~/kodo-ns3-examples
+  python waf build install --ns3_path="~/ns-3-dev"
+
+then the example source files and the wscript will be overwritten in
+the ``~/ns-3-dev/examples/kodo`` folder, so it is recommended to create a
+backup if you modified any of these files.
+
+You can also create a separate folder for your custom simulation to avoid this
+problem. For example, you can create the ``~/ns-3-dev/examples/my-simulation``
+folder and copy the ``include`` and ``lib`` folders from
+``~/ns-3-dev/examples/kodo``.
 
 Tutorial
 --------
