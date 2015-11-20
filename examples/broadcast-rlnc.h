@@ -16,7 +16,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-// This object implements RLNC (random linear network coding) in
+// This class implements RLNC (random linear network coding) in
 // the application layer for a broadcast topology.
 
 #pragma once
@@ -79,7 +79,7 @@ public:
 
         // Create data buffer for the decoder
         m_decoder_buffers[n].resize (decoder.block_size ());
-        decoder.set_mutable_symbols(m_decoder_buffers[n].data (),
+        decoder.set_mutable_symbols (m_decoder_buffers[n].data (),
           decoder.block_size ());
 
         m_decoders.emplace_back (decoder);

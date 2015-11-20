@@ -145,6 +145,33 @@ each combination packet. You will see if a received packet is linearly
 dependent or not. You will also see when the decoding process is completed
 and how many transmissions were required.
 
+Adding your own simulation
+--------------------------
+At this point, you might want to add your own simulation that also uses kodo.
+It is recommended to create a new program by copying one of the kodo examples.
+The examples are installed in ``~/ns-3-dev/examples/kodo``, so we will go to
+that folder and make a copy ``kodo-wifi-broadcast.cc`` to create a new
+simulation called ``my-simulation.cc`` (you can choose any name here)::
+
+  cd ~/ns-3-dev/examples/kodo
+  cp kodo-wifi-broadcast.cc my-simulation.cc
+
+The new source file is created, so we just have to define a new program in
+``~/ns-3-dev/examples/kodo/wscript``. Open this file in your text editor,
+and add the following lines at the end::
+
+  obj = bld.create_ns3_program('my-simulation',
+                               ['core', 'applications', 'point-to-point',
+                                'point-to-point-layout', 'internet', 'wifi'])
+  obj.source = 'my-simulation.cc'
+  set_properties(obj)
+
+After this change, the ns-3 waf will detect the new example and you will be
+able to run it from the ``~/ns-3-dev`` folder as usual::
+
+  cd ~/ns-3-dev
+  python waf --run my-simulation
+
 Tutorial
 --------
 Our `Kodo-ns3 tutorial <http://kodo-ns3-examples.readthedocs.org/en/latest/>`_

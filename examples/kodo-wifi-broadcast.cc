@@ -231,7 +231,7 @@ int main (int argc, char *argv[])
   BroadcastRlnc wifiBroadcast (kodo_full_vector, kodo_binary,
     users, generationSize, packetSize, source, sinks);
 
-  // //! [12]
+  //! [12]
   // Transmitter socket connections. Set transmitter for broadcasting
   uint16_t port = 80;
   InetSocketAddress remote = InetSocketAddress (
