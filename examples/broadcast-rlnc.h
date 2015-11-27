@@ -16,7 +16,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-// This object implements RLNC (random linear network coding) in
+// This class implements RLNC (random linear network coding) in
 // the application layer for a broadcast topology.
 
 #pragma once

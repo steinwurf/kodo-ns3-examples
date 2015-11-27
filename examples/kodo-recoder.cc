@@ -86,7 +86,8 @@
 
 // You can modify any default parameter, by running (for example with a
 // different number of recoders):
-// ./build/linux/src/encoder_recoder_decoder/encoder_recoder_decoder --recoders=MY_RECODERS_AMOUNT
+
+// python waf --run kodo-recoder --command-template="%s --recoders=MY_RECODER_COUNT"
 
 // When you are done, you will notice many pcap trace files in your directory.
 // You can review the files with Wireshark or tcpdump. If you have tcpdump
@@ -107,7 +108,7 @@
 #include <string>
 #include <ctime>
 //! [2]
-#include "../encoder-recoders-decoder-rlnc.h"
+#include "encoder-recoders-decoder-rlnc.h"
 //! [3]
 using namespace ns3;
 
