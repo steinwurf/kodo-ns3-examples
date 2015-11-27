@@ -9,6 +9,8 @@ Please request a license by **filling out the license request** form_.
 Kodo is available under a research- and education-friendly license,
 you can see the details here_.
 
+If you try to configure without a valid license, then you will get an error!
+
 .. _form: http://steinwurf.com/license/
 .. _here: http://steinwurf.com/research-license/
 
@@ -59,11 +61,16 @@ Go to this freshly cloned folder::
 
   cd ns-3-dev
 
-Our aim is to make the examples compatible with the ns-3 latest revision.
+Our aim is to make the examples compatible with the latest ns-3 revision.
 If you experience any issues with the latest revision, then you can switch
 to the latest supported revision (this step is **optional**)::
 
-  hg checkout 11767
+  hg checkout 11773
+
+Our build system automatically tests the examples with the latest supported
+revision of ns-3. This revision is specified in our buildbot.py_ script.
+
+.. _buildbot.py: https://github.com/steinwurf/kodo-ns3-examples/blob/master/buildbot.py#L73
 
 Configure the ns-3 project (it is important to also enable the examples)::
 
