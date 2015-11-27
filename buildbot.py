@@ -70,7 +70,7 @@ def configure(properties):
     # See revisions here: http://code.nsnam.org/ns-3-dev/log
     os.chdir(ns3_path)
     run_command(['hg', 'pull'])
-    run_command(['hg', 'checkout', '11767'])
+    run_command(['hg', 'checkout', '11773'])
     # Configure ns-3 with the examples enabled
     run_command([sys.executable, 'waf', 'configure', '--enable-examples'])
 
