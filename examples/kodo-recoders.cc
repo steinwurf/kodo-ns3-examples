@@ -17,8 +17,8 @@
  */
 
 // This example shows how to use the Kodo library for recoding at many
-// intermediate nodes in a network within a ns-3 EncoderRecodersDecoderRlnc. Recoding is
-// one of the characteristic features of network coding because it
+// intermediate nodes in a network within a ns-3 EncoderRecodersDecoderRlnc.
+// Recoding is one of the characteristic features of network coding because it
 // differentiates from end-to-end codes by allowing any intermediate node
 // to recode a coded packet, even if its data set has not been completely
 // decoded yet.
@@ -87,7 +87,7 @@
 // You can modify any default parameter, by running (for example with a
 // different number of recoders):
 
-// python waf --run kodo-recoder --command-template="%s --recoders=MY_RECODER_COUNT"
+// python waf --run kodo-recoders --command-template="%s --recoders=MY_RECODER_COUNT"
 
 // When you are done, you will notice many pcap trace files in your directory.
 // You can review the files with Wireshark or tcpdump. If you have tcpdump
@@ -108,7 +108,7 @@
 #include <string>
 #include <ctime>
 //! [2]
-#include "encoder-recoders-decoder-rlnc.h"
+#include "kodo-recoders.h"
 //! [3]
 using namespace ns3;
 

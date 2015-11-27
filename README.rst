@@ -132,7 +132,7 @@ We have the following examples:
 * ``kodo-wifi-broadcast``: This example demonstrates broadcasting packets
   with RLNC to N receivers over an IEEE 802.11b WiFi channel.
 
-* ``kodo-recoder``: This example shows the gain of RLNC with recoding
+* ``kodo-recoders``: This example shows the gain of RLNC with recoding
   in a 2-hop line network consisting of an encoder, N recoders and a decoder
   with different erasure rates. Recoding can be turned on or off and the
   erasure rates can be modified by command-line options.
@@ -145,7 +145,7 @@ You can run the examples with the usual ns-3 run commands::
 
   python waf --run kodo-wired-broadcast
   python waf --run kodo-wifi-broadcast
-  python waf --run kodo-recoder
+  python waf --run kodo-recoders
 
 Most of the examples will print out how the decoding matrix changes with
 each combination packet. You will see if a received packet is linearly

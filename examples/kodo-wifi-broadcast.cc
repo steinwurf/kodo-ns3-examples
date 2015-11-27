@@ -109,7 +109,7 @@
 #include <ctime>
 
 // Kodo includes
-#include "broadcast-rlnc.h" // Contains the broadcast topology class
+#include "kodo-broadcast.h" // Contains the broadcast topology class
 //! [3]
 using namespace ns3;
 
