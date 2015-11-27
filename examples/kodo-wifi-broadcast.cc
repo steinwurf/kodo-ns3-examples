@@ -78,7 +78,8 @@
 
 // To see this effect, try by changing the rss parameter on the simulation
 // by typing:
-// ./build/linux/src/wifi_broadcast/wifi_broadcast --rss=-96
+
+// python waf --run kodo-wifi-broadcast --command-template="%s --rss=-96"
 
 // With this value (or lower), the erasure rate goes to 1 and the packets can
 // not be recovered. Higher rss power values ensure packet reception and
@@ -108,7 +109,7 @@
 #include <ctime>
 
 // Kodo includes
-#include "../broadcast-rlnc.h" // Contains the broadcast topology class
+#include "broadcast-rlnc.h" // Contains the broadcast topology class
 //! [3]
 using namespace ns3;
 
@@ -230,7 +231,7 @@ int main (int argc, char *argv[])
   BroadcastRlnc wifiBroadcast (kodo_full_vector, kodo_binary,
     users, generationSize, packetSize, source, sinks);
 
-  // //! [12]
+  //! [12]
   // Transmitter socket connections. Set transmitter for broadcasting
   uint16_t port = 80;
   InetSocketAddress remote = InetSocketAddress (
