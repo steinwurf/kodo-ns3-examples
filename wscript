@@ -52,7 +52,7 @@ def build(bld):
     # Expand and validate the ns3_path option
     if not bld.has_tool_option('ns3_path'):
         conf.fatal('Please specify a path to ns-3 using the '
-                   '--ns3-path option, for example: --ns3-path="~/ns-3-dev"')
+                   '--ns3_path option, for example: --ns3_path="~/ns-3-dev"')
 
     ns3_path = bld.get_tool_option('ns3_path')
     ns3_path = os.path.abspath(os.path.expanduser(ns3_path))

@@ -184,6 +184,11 @@ Now you can expand your custom simulation as you like. If you use additional
 ns-3 modules, then you need to add them in the wscript (most likely, you will
 get a build error if you are missing a module).
 
+If your simulation has multiple source files (*.cc files), then you can add
+these in the wscript like this::
+
+  obj.source = ['my-simulation.cc', 'source2.cc', 'source3.cc']
+
 **Warning:** If you install the kodo ns-3 examples again with this command::
 
   cd ~/kodo-ns3-examples
