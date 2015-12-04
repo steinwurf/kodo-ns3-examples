@@ -402,9 +402,10 @@ As we mentioned earlier, we use the RLNC codec and binary for our encoder
 and decoders. Then, we call the object that handles
 the topology by doing ``Broadcast wifiBroadcast (kodo_full_vector,
 kodo_binary, users, generationSize, packetSize, sinks);`` to call
-the broadcast RLNC class constructor. This does not run the simulation as
-we will see, but it creates the objets called by ns-3 to perform the tasks
-of the transmitter and receiver.
+the broadcast class constructor. Notice also that we have separated the
+code type from the topology in case that you want to try another code.
+This does not run the simulation as we will see, but it creates the
+objets called by ns-3 to perform the tasks of the transmitter and receiver.
 
 Sockets Connections
 ^^^^^^^^^^^^^^^^^^^
@@ -437,9 +438,9 @@ Simulation Event Handler
    :end-before: //! [14]
    :linenos:
 
-Finally, ``wifiPhy.EnablePcap ("wifi-broadcast-rlnc", devices);`` allows the net
+Finally, ``wifiPhy.EnablePcap ("kodo-wifi-broadcast", devices);`` allows the net
 devices to create pcap files from the given devices. One file per net device.
-File naming will be: ``wifi-broadcast-rlnc-[NODE_ID]-[DEVICE_ID].pcap`` and the
+File naming will be: ``kodo-wifi-broadcast-[NODE_ID]-[DEVICE_ID].pcap`` and the
 format of these files should be the one of RadioTap and should be located on
 your ``~/kodo-ns3-examples/`` folder. Later, we will review how to read those
 files.
@@ -1028,7 +1029,7 @@ Review pcap Traces
 ^^^^^^^^^^^^^^^^^^
 
 As we described earlier, the simulation leaves pcap format files
-(``wifi-broadcast-rlnc-*-*.pcap``) in your
+(``kodo-wifi-broadcast-*-*.pcap``) in your
 ``~/dev/kodo-ns3-examples/build/[OS]/src/wifi_broadcast`` folder.
 You can read these files with different programs like tcpdump or Wireshark.
 tcpdump is standard on most Unix-like systems and is based on the libpcap
@@ -1037,8 +1038,8 @@ packet analyzer which you can get online. Just for showing purposes we will use
 tcpdump, but you can choose the one you prefer the most. For reading
 both files, simply type in the respective folder: ::
 
-  tcpdump -r wifi-broadcast-rlnc-0-0.pcap -nn -tt
-  tcpdump -r wifi-broadcast-rlnc-1-0.pcap -nn -tt
+  tcpdump -r kodo-wifi-broadcast-0-0.pcap -nn -tt
+  tcpdump -r kodo-wifi-broadcast-1-0.pcap -nn -tt
 
 You will get this output (it will look different on your terminal): ::
 
@@ -1053,7 +1054,7 @@ You will get this output (it will look different on your terminal): ::
   4.000000 4000000us tsft 1.0 Mb/s 2412 MHz 11b IP 10.1.1.1.49153 >
   10.1.1.255.80: UDP, length 1002
 
-  reading from file wifi-broadcast-rlnc-1-0.pcap, link-type IEEE802_11_RADIO
+  reading from file kodo-wifi-broadcast-1-0.pcap, link-type IEEE802_11_RADIO
   (802.11 plus radiotap header)
   1.008720 1008720us tsft 1.0 Mb/s 2412 MHz 11b -93dB signal -101dB noise
   IP 10.1.1.1.49153 > 10.1.1.255.80: UDP, length 1002
