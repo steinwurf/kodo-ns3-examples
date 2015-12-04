@@ -165,8 +165,8 @@ int main (int argc, char *argv[])
       sinks[n] = Socket::CreateSocket (star.GetSpokeNode (n), tid);
     }
 
-  // Creates the BroadcastRlnc helper for this broadcast topology
-  BroadcastRlnc wiredBroadcast (kodo_full_vector, kodo_binary,
+  // Creates the Broadcast helper for this broadcast topology
+  Broadcast wiredBroadcast (kodo_full_vector, kodo_binary,
     users, generationSize, packetSize, source, sinks);
 
   // Receiver socket connections
@@ -176,7 +176,7 @@ int main (int argc, char *argv[])
     {
       sink->Bind (local);
       sink->SetRecvCallback (MakeCallback (
-        &BroadcastRlnc::ReceivePacket, &wiredBroadcast));
+        &Broadcast::ReceivePacket, &wiredBroadcast));
     }
 
   // Turn on global static routing so we can be routed across the network
@@ -186,7 +186,7 @@ int main (int argc, char *argv[])
   pointToPoint.EnablePcapAll ("wired-broadcast-rlnc");
 
   Simulator::ScheduleWithContext (source->GetNode ()->GetId (), Seconds (1.0),
-    &BroadcastRlnc::SendPacket, &wiredBroadcast, source, interPacketInterval);
+    &Broadcast::SendPacket, &wiredBroadcast, source, interPacketInterval);
 
   Simulator::Run ();
   Simulator::Destroy ();

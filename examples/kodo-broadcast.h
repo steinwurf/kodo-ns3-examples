@@ -23,11 +23,11 @@
 
 #include <kodocpp/kodocpp.hpp>
 
-class BroadcastRlnc
+class Broadcast
 {
 public:
 
-  BroadcastRlnc (const kodo_code_type codeType, const kodo_finite_field field,
+  Broadcast (const kodo_code_type codeType, const kodo_finite_field field,
     const uint32_t users, const uint32_t generationSize,
     const uint32_t packetSize,
     const ns3::Ptr<ns3::Socket>& source,
@@ -108,8 +108,8 @@ public:
         socket->Send (packet);
         m_transmissionCount++;
 
-        ns3::Simulator::Schedule (pktInterval, &BroadcastRlnc::SendPacket,
-          this, socket, pktInterval);
+        ns3::Simulator::Schedule (pktInterval, &Broadcast::SendPacket, this,
+          socket, pktInterval);
       }
     else
       {

@@ -227,8 +227,8 @@ int main (int argc, char *argv[])
       sinks[n] = Socket::CreateSocket (nodes.Get (1 + n), tid);
     }
   //! [11]
-  // Creates the BroadcastRlnc helper for this broadcast topology
-  BroadcastRlnc wifiBroadcast (kodo_full_vector, kodo_binary,
+  // Creates the Broadcast helper for this broadcast topology
+  Broadcast wifiBroadcast (kodo_full_vector, kodo_binary,
     users, generationSize, packetSize, source, sinks);
   //! [12]
   // Transmitter socket connections. Set transmitter for broadcasting
@@ -243,7 +243,7 @@ int main (int argc, char *argv[])
   for (const auto sink : sinks)
     {
       sink->Bind (local);
-      sink->SetRecvCallback (MakeCallback (&BroadcastRlnc::ReceivePacket,
+      sink->SetRecvCallback (MakeCallback (&Broadcast::ReceivePacket,
         &wifiBroadcast));
     }
 
@@ -254,7 +254,7 @@ int main (int argc, char *argv[])
   wifiPhy.EnablePcap ("wifi-broadcast-rlnc", devices);
 
   Simulator::ScheduleWithContext (source->GetNode ()->GetId (), Seconds (1.0),
-    &BroadcastRlnc::SendPacket, &wifiBroadcast, source, interPacketInterval);
+    &Broadcast::SendPacket, &wifiBroadcast, source, interPacketInterval);
 
   Simulator::Run ();
   Simulator::Destroy ();

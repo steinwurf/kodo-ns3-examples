@@ -14,7 +14,7 @@ purpose of our example, we will start with :math:`g = 5`, :math:`q = 2`
 time in terms of transmissions through the WiFi channel under different
 situations. Topology is shown as follows:
 
-.. literalinclude:: ../src/wifi_broadcast/main.cc
+.. literalinclude:: ../examples/kodo-wifi-broadcast.cc
    :language: c++
    :start-after: //! [0]
    :end-before: //! [1]
@@ -42,15 +42,20 @@ Program Description
 -------------------
 
 After the project has been properly configured and built, you should have
-a folder named ``~/dev/kodo-ns3-examples/src/wifi_broadcast/`` where ``~/dev/``
-is the folder where you cloned the project repository. If you check the
-``wifi_broadcast`` folder, you will see the ``main.cc`` file which contains
-the source code of this simulation. You can open it with your preferred editor
+a folder named ``kodo`` in the examples folder of your local ns-3 repository
+(e.g. in ``~/ns-3-dev/examples``). If you check there, you will find two type
+of files. First,  the header files are the implementations for the
+considered topologies in our examples. You are free to add new
+topologies as well. Second, the source files are the actual applications
+of those topologies within ns-3. For our case here, we will first review
+the broadcast topology contained in ``kodo-broadcast.h`` and its application
+in ``kodo-wifi-broadcast.cc``, which contains the source code of this
+simulation. You can open them with your preferred editor
 to review the source code. We will briefly review some of its parts.
 
 Overview Comments and Includes
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-.. literalinclude:: ../src/wifi_broadcast/main.cc
+.. literalinclude:: ../examples/kodo-wifi-broadcast.cc
    :language: c++
    :start-after: //! [2]
    :end-before: //! [3]
@@ -84,7 +89,7 @@ functionalities within ns-3 and Kodo. From ns-3, the necessary modules are:
 * Internet module: For handling the IPv4 protocol at the network layer.
 
 Other includes are particular to this implementation and they can be found in
-standard C++ code. From Kodo, the header ``broadcast-rlnc.h`` contains the
+standard C++ code. From Kodo, the header ``kodo-broadcast.h`` contains the
 description of the encoder and decoder objects that we use.
 
 Default Namespace
@@ -100,7 +105,7 @@ this library. This is typical across ns-3 code.
 Simulation Class
 ^^^^^^^^^^^^^^^^
 
-Before starting, we describe a Kodo object created in ``broadcast-rlnc.h``
+Before starting, we describe the object created in ``kodo-broadcast.h``
 with the purpose to represent the RLNC broadcast topology. In this sense, we
 represent our Kodo simulation as a class with different functionalities.
 Of course, this is purely subjective. You may choose how you represent your
@@ -109,7 +114,7 @@ us to modularize all the simulation into a single object which is controlled
 by the network through the tasks of the net devices. Also, other ns-3 objects
 can extract information from it in an easy way.
 
-The ``BroadcastRlnc`` class can be roughly defined in the following way:
+The ``Broadcast`` class can be roughly defined in the following way:
 
 .. code-block:: c++
 
@@ -117,11 +122,11 @@ The ``BroadcastRlnc`` class can be roughly defined in the following way:
 
   #include <kodocpp/kodocpp.hpp>
 
-  class BroadcastRlnc
+  class Broadcast
   {
   public:
 
-    BroadcastRlnc (const kodo_code_type codeType, const kodo_finite_field field,
+    Broadcast (const kodo_code_type codeType, const kodo_finite_field field,
       const uint32_t users, const uint32_t generationSize,
       const uint32_t packetSize,
       const ns3::Ptr<ns3::Socket>& source,
@@ -158,9 +163,9 @@ The ``BroadcastRlnc`` class can be roughly defined in the following way:
     ns3::Ptr<ns3::Socket> m_source;
     std::vector<ns3::Ptr<ns3::Socket>> m_sinks;
     kodocpp::encoder m_encoder;
-    std::vector<uint8_t> m_encoder_buffer;
+    std::vector<uint8_t> m_encoderBuffer;
     std::vector<kodocpp::decoder> m_decoders;
-    std::vector<std::vector<uint8_t>> m_decoder_buffers;
+    std::vector<std::vector<uint8_t>> m_decoderBuffers;
 
     std::vector<uint8_t> m_payload;
     uint32_t m_transmissionCount;
@@ -225,7 +230,7 @@ nodes when packets are sent or received respectively.
 Default Parameters and Command-line Parsing
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. literalinclude:: ../src/wifi_broadcast/main.cc
+.. literalinclude:: ../examples/kodo-wifi-broadcast.cc
    :language: c++
    :start-after: //! [4]
    :end-before: //! [5]
@@ -244,7 +249,7 @@ duration is converted to the ns-3 ``Time`` format.
 Configuration defaults
 ^^^^^^^^^^^^^^^^^^^^^^
 
-.. literalinclude:: ../src/wifi_broadcast/main.cc
+.. literalinclude:: ../examples/kodo-wifi-broadcast.cc
    :language: c++
    :start-after: //! [5]
    :end-before: //! [6]
@@ -266,7 +271,7 @@ with the WiFi MAC.
 WiFi PHY and Channel Helpers for Nodes
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. literalinclude:: ../src/wifi_broadcast/main.cc
+.. literalinclude:: ../examples/kodo-wifi-broadcast.cc
    :language: c++
    :start-after: //! [6]
    :end-before: //! [7]
@@ -275,16 +280,17 @@ WiFi PHY and Channel Helpers for Nodes
 In this part we start to build the topology for our simulation following
 a typical ns-3 workflow. By typical we mean that this can be done in different
 ways, but this one you might see regularly within ns-3 simulations. We start by
-creating the nodes that we need with the ``NodeContainer`` class. You can create
-the nodes separately but this way offers the possibility to easily assign
-common properties to the nodes.
+creating the nodes that we need with the ``NodeContainer`` class.
+You can create the nodes separately but this way offers the possibility to
+easily assign common properties to the nodes.
 
 We aid ourselves by using the ``WiFiHelper`` class to set the standard to use.
 Since we are working with DSSS, this means we need to use IEEE 802.11b. For the
-physical layer, we use the ``YansWifiPhyHelper::Default()`` constructor and from
-it, we disable any gains in the receiver and set the pcap (packet capture)
-tracing format at the data link layer. ns-3 supports different formats, here
-we picked the `RadioTap <http://www.radiotap.org/>`_ format but you can choose
+physical layer, we use the ``YansWifiPhyHelper::Default()`` constructor
+and from it, we disable any gains in the receiver and set the pcap
+(packet capture) tracing format at the data link layer.
+ns-3 supports different formats, here we picked the
+`RadioTap <http://www.radiotap.org/>`_ format but you can choose
 other format available in the helper description in its Doxygen documentation.
 In a similar way, we use the ``YansWifiChannelHelper`` to create our WiFi
 channel, where we have set the class property named ``SetPropagationDelay`` to
@@ -304,7 +310,7 @@ details.
 WiFi MAC and Net Device Helpers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. literalinclude:: ../src/wifi_broadcast/main.cc
+.. literalinclude:: ../examples/kodo-wifi-broadcast.cc
    :language: c++
    :start-after: //! [7]
    :end-before: //! [8]
@@ -324,12 +330,12 @@ property to ``ConstantRateWifiManager`` for data and control packets using the
 given ``phyMode``. This implies that we a fixed data rate for data and control
 packet transmissions. With all the previous settings we create our (2) WiFi
 cards and put them in a container by doing
-``NetDeviceContainer devices = wifi.Install (wifiPhy, wifiMac, c);``.
+``NetDeviceContainer devices = wifi.Install (wifiPhy, wifiMac, nodes);``.
 
 Mobility Model and Helper
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. literalinclude:: ../src/wifi_broadcast/main.cc
+.. literalinclude:: ../examples/kodo-wifi-broadcast.cc
    :language: c++
    :start-after: //! [8]
    :end-before: //! [9]
@@ -345,7 +351,7 @@ transmitter and receiver in a 3D grid. Then, we put them in the helper with a
 Internet and Application Protocol Helpers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. literalinclude:: ../src/wifi_broadcast/main.cc
+.. literalinclude:: ../examples/kodo-wifi-broadcast.cc
    :language: c++
    :start-after: //! [9]
    :end-before: //! [10]
@@ -364,7 +370,7 @@ assignment. We use the address range ``10.1.1.0`` with the subnet mask
 Sockets Construction
 ^^^^^^^^^^^^^^^^^^^^
 
-.. literalinclude:: ../src/wifi_broadcast/main.cc
+.. literalinclude:: ../examples/kodo-wifi-broadcast.cc
    :language: c++
    :start-after: //! [10]
    :end-before: //! [11]
@@ -376,8 +382,8 @@ communication (besides of course, the socket itself). ns-3 supports two sockets
 APIs for user space applications. The first is ns-3 native, while the second
 (which is based on the first) resembles more a real system POSIX-like socket
 API. For further information about the differences, please refer to ns-3's
-`socket implementation <http://www.nsnam.org/docs/release/3.20/models/singlehtml
-/index.html#document-network>`_. We will focus on the ns-3 socket API variant.
+`socket implementation <http://www.nsnam.org/docs/release/3.20/models/singlehtml/index.html#document-network>`_.
+We will focus on the ns-3 socket API variant.
 The first line is meant to create the socket type from a lookup search given by
 the name ``UdpSocketFactory``. It creates this type of socket on the receivers
 and the transmitter. We have chosen the previous socket type in order to
@@ -386,7 +392,7 @@ represent a UDP connection that sends RLNC coded packets.
 Simulation Calls
 ^^^^^^^^^^^^^^^^
 
-.. literalinclude:: ../src/wifi_broadcast/main.cc
+.. literalinclude:: ../examples/kodo-wifi-broadcast.cc
    :language: c++
    :start-after: //! [11]
    :end-before: //! [12]
@@ -394,7 +400,7 @@ Simulation Calls
 
 As we mentioned earlier, we use the RLNC codec and binary for our encoder
 and decoders. Then, we call the object that handles
-the topology by doing ``BroadcastRlnc wifiBroadcast (kodo_full_vector,
+the topology by doing ``Broadcast wifiBroadcast (kodo_full_vector,
 kodo_binary, users, generationSize, packetSize, sinks);`` to call
 the broadcast RLNC class constructor. This does not run the simulation as
 we will see, but it creates the objets called by ns-3 to perform the tasks
@@ -403,7 +409,7 @@ of the transmitter and receiver.
 Sockets Connections
 ^^^^^^^^^^^^^^^^^^^
 
-.. literalinclude:: ../src/wifi_broadcast/main.cc
+.. literalinclude:: ../examples/kodo-wifi-broadcast.cc
    :language: c++
    :start-after: //! [12]
    :end-before: //! [13]
@@ -415,7 +421,7 @@ broadcasting with ``source->SetAllowBroadcast (true)`` and connect to the
 broadcast address. For the receivers, we choose the default ``0.0.0.0`` address
 obtained from ``Ipv4Address::GetAny ()`` and port 80 (to represent random HTTP
 traffic). The receiver binds to this address for socket listening. Every time
-a packet is received we trigger a callback to the reference ``&BroadcastRlnc::
+a packet is received we trigger a callback to the reference ``&Broadcast::
 ReceivePacket`` which takes the listening socket as an argument. This executes
 the respective member function of the reference ``&wifiBroadcast``. This
 completes our socket connection process and links the pieces for the simulation.
@@ -425,7 +431,7 @@ the topology.
 Simulation Event Handler
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. literalinclude:: ../src/wifi_broadcast/main.cc
+.. literalinclude:: ../examples/kodo-wifi-broadcast.cc
    :language: c++
    :start-after: //! [13]
    :end-before: //! [14]
@@ -441,7 +447,7 @@ files.
 After the pcap setting, we use one of the ns-3 core features, event scheduling.
 The ``Simulator`` class is inherent to ns-3 and defines how events are handled
 discretely. The ``ScheduleWithContext`` member function basically tells ns-3
-to schedule the ``BroadcastRlnc::SendPacket`` function every second from
+to schedule the ``Broadcast::SendPacket`` function every second from
 the transmitter instance of ``wifiBroadcast`` and provide its arguments, e.g.
 ns-3 socket pointer ``source`` and ``Time`` packet interval
 ``interPacketInterval``. Among the event schedulers, you will see ``Schedule``
@@ -471,7 +477,7 @@ repository. It is important that you run the example in this path,
 **otherwise it will not work** since the binary that the bindings rely on
 will not be located. Also remember that at this point,
 **you need to have configured and built the project with no errors**.
-If you review the constructor of the ``BroadcastRlnc`` class, you will
+If you review the constructor of the ``Broadcast`` class, you will
 observe that there is a local callback function made with a
 lambda expression.
 
@@ -684,7 +690,7 @@ is: :math:`CP_1 = p_2 + p_3 + p_4 + p_5`.
 
 .. note:: Normally the encoder (based on the ``kodo_full_vector``),
    would ve generated packets in a systematic way,
-   but here we set that feature off in the ``BroadcastRlnc`` class constructor,
+   but here we set that feature off in the ``Broadcast`` class constructor,
    through the encoder API ``m_encoder.set_systematic_off()``. Also, normally
    the encoder starts with the same seed in every run but we have also changed
    that too in the constructor with ``srand(static_cast<uint32_t>(time(0)))``.
@@ -894,7 +900,7 @@ Using Other Tracing Features
 
 So far we have seen only the decoder state in terms of rank and symbol
 coefficients. In the constructor, just after, we create the decoder
-instances in the ``broadcast-rlnc.h`` file, you can comment the callback
+instances in the ``kodo-broadcast.h`` file, you can comment the callback
 and its setting in each decoder and just add the line
 ``decoder.set_trace_stdout ();``. With this setting you will remove all
 the filters and see the full decoder trace in the simulation.
