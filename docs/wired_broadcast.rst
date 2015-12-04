@@ -14,7 +14,7 @@ transmissions. Although, now we include the erasure rate (in percentage),
 will assume that all links have the same erasure rate for simplicity,
 :math:`\epsilon = 0.3`, i.e. 30% packet losses. Topology is shown as follows:
 
-.. literalinclude:: ../src/wired_broadcast/main.cc
+.. literalinclude:: ../examples/kodo-wired-broadcast.cc
    :language: c++
    :start-after: //! [0]
    :end-before: //! [1]
@@ -38,10 +38,10 @@ What to Simulate
 Program Description
 -------------------
 
-In your local repository, you should have a folder named
-``src/wired_broadcast/``. If you check it, you will see the ``main.cc`` file
-which contains the source code of this simulation. Its structure is similar
-to the previous one, so now we will focus on the main differences.
+In the ``~/ns-3-dev/examples/kodo`` folder you should have a
+``kodo-wired-broadcast.cc`` file which contains the source code of this
+simulation. Its structure is similar to the previous one, so now we will focus
+on the main differences.
 
 Default Parameters and Command-line Parsing
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -70,7 +70,7 @@ After that, we create the error rate model for each net device in the topology,
 configure and set it to affect the packets and enable them. Finally, we set up
 the Internet stack and IP addresses to our topology.
 
-.. literalinclude:: ../src/wired_broadcast/main.cc
+.. literalinclude:: ../examples/kodo-wired-broadcast.cc
    :language: c++
    :start-after: //! [2]
    :end-before: //! [3]
@@ -89,9 +89,9 @@ Given that now we have an erasure rate different from zero and we can control
 it, packet reception will differ randomly. Then, as a default we disable
 the decoder tracing and keep the reception prints in order to check just
 when a packet has arrived to each receiver. After building the project, run
-the example by typing: ::
+the example just as before by typing: ::
 
-  ./build/linux/src/wired_broadcast/wired_broadcast
+  python waf --run kodo-wired-broadcast
 
 You will get an output like this: ::
 
@@ -129,16 +129,19 @@ You will get an output like this: ::
 Now we can see when a packet is received at each decoder. As expected, a packet
 is sent every time slot to both decoders and the process stops when both
 decoders have :math:`g` l.i. combinations. We can observe this behavior in the
-previous output. At the 4th transmission, receiver 1 did not get the combination
-although receiver 2 did. Nevertheless, this is compensated in the last
-transmission where receiver 1 gets its remaining combination. Besides,
-receiver 2 gets a non-innovative extra combination which occurs for the
-packet being sent to both decoders.
+previous output. At the 4th transmission, receiver 1 did not get the
+combination although receiver 2 did. Nevertheless, this is compensated
+in the last transmission where receiver 1 gets its remaining
+combination. Besides, receiver 2 gets a non-innovative extra combination
+which occurs for the packet being sent to both decoders.
 
 Again, we can verify for a broadcast with coding scenario that on average we
 need 9.4847 transmissions for :math:`q = 2, g = 5, \epsilon = 0.3` and 2 users.
-To verify it, save the following script as ``mean_packets.bash``. As you will
-notice, it is a modification of the script used in the first example.
+To verify it, save the following script as ``mean_packets.bash`` and follow
+the same procedure as before. As you will notice, it is a modification of the
+script used in the first example. Most likely you will not need to do
+``python waf shell`` if you already made it before. Just remember that
+the purpose of this command is to run the script many times without rebuilding.
 
 .. code-block:: bash
 
@@ -155,7 +158,7 @@ notice, it is a modification of the script used in the first example.
 
   for (( c=1; c<=${N}; c++ ))
   do
-      COMB=`./build/linux/wired_broadcast/wired_broadcast | \
+      COMB=`./build/examples/kodo/ns3-dev-kodo-wired-broadcast-debug | \
             grep "Total transmissions:" | cut -f5 -d\ `
       SUM=$(( ${SUM} + ${COMB} ))
   done
@@ -186,8 +189,8 @@ parameters to observe the difference in the total number of transmissions.
 Changing the Field Size
 ^^^^^^^^^^^^^^^^^^^^^^^
 
-Set ``fifi::binary8`` as the field size in the encoder and decoder templates,
-rebuild your project and rerun the previous script. You will get an output
+Set ``kodo_binary8`` as the field size in the encoder and decoder templates,
+rebuild your projects and rerun the previous script. You will get an output
 similar to this: ::
 
    ./mean_packets.bash 1
@@ -213,14 +216,14 @@ Changing the Packet Erasure Rate
 One interesting feature that we have added is a ``RateErrorModel`` which
 basically includes a packet error rate at each receiver. Currently we have set
 the error rates to be both the same and a 30% loss rate is set by default. Keep
-``fifi::binary8`` as a field size in order to exclude retransmissions due to
+``kodo_binary8`` as a field size in order to exclude retransmissions due to
 linear dependency and account them only for losses. As we saw, with 30% losses
-we see an average of 8.2335 transmissions (for 10000 example runs). Now, we will
-check that by adjusting the loss rate (with the same amount of runs). So, we
-just need to make some small modifications of our bash script.
+we see an average of 8.2335 transmissions (for 10000 example runs). Now, we
+will check that by adjusting the loss rate (with the same amount of runs). So,
+we just need to make some small modifications of our bash script.
 
-We will add a new input parameter to set the loss rate and call it in the script
-as follows:
+We will add a new input parameter to set the loss rate and call it in the
+script as follows:
 
 .. code-block:: bash
 
@@ -238,7 +241,7 @@ as follows:
 
   for (( c=1; c<=${N}; c++ ))
   do
-      COMB=`./build/linux/wired_broadcast/wired_broadcast \
+      COMB=`./build/examples/kodo/ns3-dev-kodo-wired-broadcast-debug \
             --errorRate=${LOSS_RATE} | grep "Total transmissions:" | \
             cut -f5 -d\ `
       SUM=$(( ${SUM} + ${COMB} ))
