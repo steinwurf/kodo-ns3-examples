@@ -93,7 +93,7 @@
 // You can review the files with Wireshark or tcpdump. If you have tcpdump
 // installed, you can try (for example) this:
 //
-// tcpdump -r multihop-0-0.pcap -nn -tt
+// tcpdump -r kodo-recoders-0-0.pcap -nn -tt
 
 
 #include <ns3/core-module.h>
@@ -267,8 +267,8 @@ int main (int argc, char *argv[])
   Ipv4GlobalRoutingHelper::PopulateRoutingTables ();
 
   // Do pcap tracing on all point-to-point devices on all nodes. File naming
-  // convention is: multihop-[NODE_NUMBER]-[DEVICE_NUMBER].pcap
-  ptp.EnablePcapAll ("multihop");
+  // convention is: kodo-recoders-[NODE_NUMBER]-[DEVICE_NUMBER].pcap
+  ptp.EnablePcapAll ("kodo-recoders");
 
   // Schedule processes
   // Encoder

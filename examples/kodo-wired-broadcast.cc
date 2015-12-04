@@ -73,7 +73,7 @@
 // directory. You can review the files with Wireshark or tcpdump. If
 // you have tcpdump installed, you can try (for example) this:
 
-// tcpdump -r wired-broadcast-rlnc-0-0.pcap -nn -tt
+// tcpdump -r kodo-wired-broadcast-0-0.pcap -nn -tt
 
 #include <ns3/point-to-point-star.h>
 #include <ns3/internet-module.h>
@@ -183,7 +183,7 @@ int main (int argc, char *argv[])
   Ipv4GlobalRoutingHelper::PopulateRoutingTables ();
 
   // Do pcap tracing on all point-to-point devices on all nodes
-  pointToPoint.EnablePcapAll ("wired-broadcast-rlnc");
+  pointToPoint.EnablePcapAll ("kodo-wired-broadcast");
 
   Simulator::ScheduleWithContext (source->GetNode ()->GetId (), Seconds (1.0),
     &Broadcast::SendPacket, &wiredBroadcast, source, interPacketInterval);

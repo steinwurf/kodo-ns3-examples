@@ -89,7 +89,7 @@
 // per device. You can review the files with Wireshark or tcpdump. If you have
 // tcpdump installed, you can try this:
 //
-// tcpdump -r wifi-broadcast-rlnc-0-0.pcap -nn -tt (source node)
+// tcpdump -r kodo-wifi-broadcast-0-0.pcap -nn -tt (source node)
 //! [2]
 // General comments: E-macs descriptor, ns-3 license and example description
 
@@ -251,7 +251,7 @@ int main (int argc, char *argv[])
   Ipv4GlobalRoutingHelper::PopulateRoutingTables ();
   //! [13]
   // Pcap tracing
-  wifiPhy.EnablePcap ("wifi-broadcast-rlnc", devices);
+  wifiPhy.EnablePcap ("kodo-wifi-broadcast", devices);
 
   Simulator::ScheduleWithContext (source->GetNode ()->GetId (), Seconds (1.0),
     &Broadcast::SendPacket, &wifiBroadcast, source, interPacketInterval);
