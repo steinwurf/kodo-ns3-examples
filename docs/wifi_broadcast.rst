@@ -472,11 +472,8 @@ change some parameters to check known results.
 Default Run
 ^^^^^^^^^^^
 
-First type ``cd ~/dev/kodo-ns3-examples/build/linux/src/wifi_broadcast/``
-in your terminal for you to be in the path of this example in your cloned
-repository. It is important that you run the example in this path,
-**otherwise it will not work** since the binary that the bindings rely on
-will not be located. Also remember that at this point,
+First type ``cd ~/ns-3-dev`` in your terminal for you to be in the
+path of your ns-3 cloned repository. Also remember that at this point,
 **you need to have configured and built the project with no errors**.
 If you review the constructor of the ``Broadcast`` class, you will
 observe that there is a local callback function made with a
@@ -500,7 +497,7 @@ and the previosuly tracing options defined.
 
 As a starter (once located in the path described earlier), type: ::
 
-  ./wifi_broadcast
+  python waf --run kodo-wifi-broadcast
 
 You should see an output similar to this: ::
 
@@ -690,7 +687,7 @@ In this output, the first given coded packet (CP)
 is: :math:`CP_1 = p_2 + p_3 + p_4 + p_5`.
 
 .. note:: Normally the encoder (based on the ``kodo_full_vector``),
-   would ve generated packets in a systematic way,
+   would have generated packets in a systematic way,
    but here we set that feature off in the ``Broadcast`` class constructor,
    through the encoder API ``m_encoder.set_systematic_off()``. Also, normally
    the encoder starts with the same seed in every run but we have also changed
@@ -737,32 +734,50 @@ Try to run the example again several times, you should see that the amount of
 transmissions vary between 5 and 7, maybe sometimes a little more, due to
 randomness. On average, for :math:`q = 2` you should expect that
 :math:`g + 1.6` transmissions are necessary to transmit :math:`g` l.i.
-packets. To verify this, you can save the following bash script as
-``extra_packet_per_generation.bash`` in your
-``~/dev/kodo-ns3-examples/build/[OS]/src/wifi_broadcast`` folder:
+packets. To verify this, we will run the examples many times to collect
+this statistic. In order to not build the examples every time by using
+``python waf --run kodo-wifi-broadcast``, we use a feature of ns-3
+for running scripts shown
+`here <https://www.nsnam.org/support/faq/running-scripts/>`_ where we
+set the required environment variables. To accomplish this, we just do: ::
+
+   python waf shell
+
+Later, we type for testing: ::
+
+   ./build/examples/kodo/ns3-dev-kodo-wifi-broadcast-debug
+
+Here, if you see the regular example output, everything should have
+worked fine.
+
+.. note:: The path for the built program may change depending on
+   the way ns-3 was compiled in your system. We show the resulting path
+   the way we compile it by following this tutorial.
+
+Later, you can save the following bash script as
+``extra_packet_per_generation.bash`` in your ``~/ns-3-dev/`` folder:
 
 .. code-block:: bash
 
-   #!/bin/bash
 
-   #Check the number of extra transmission per generation
+  #!/bin/bash
+  #Check the number of extra transmission per generation
 
-   SUM=0
-   N=$1  # Number of runs
-   GENERATION_SIZE=$2  #  Generation size
+  SUM=0
+  N=$1  # Number of runs
+  GENERATION_SIZE=$2  #  Generation size
+  #  For-loop with range for bash to run the experiment many times
+  #  and collect the total transmissions to get the average
 
-   #  For-loop with range for bash to run the experiment many times
-   #  and collect the total transmissions to get the average
+  for (( c=1; c<=${N}; c++ ))
+  do
+     COMB=`./build/examples/kodo/ns3-dev-kodo-wifi-broadcast-debug | \
+     grep "Total transmissions:" | cut -f5 -d\ `
+     SUM=$(( ${SUM} + ${COMB} ))
+  done
 
-   for (( c=1; c<=${N}; c++ ))
-   do
-       COMB=`./wifi_broadcast | grep "Total transmissions:" | cut -f5 -d\ `
-       SUM=$(( ${SUM} + ${COMB} ))
-   done
-
-   EXTRA=`echo "scale= 4; (${SUM} / ${N}) - ${GENERATION_SIZE}" | bc`
-
-   echo "Extra packets per generation: ${EXTRA}"
+  EXTRA=`echo "scale= 4; (${SUM} / ${N}) - ${GENERATION_SIZE}" | bc`
+  echo "Extra packets per generation: ${EXTRA}"
 
 To set the permissions for this file, type in your terminal: ::
 
@@ -786,19 +801,26 @@ decoding. Try to running as follows: ::
 
 You can see that as we increase the amount of runs, we approach to 1.6 extra
 packets per generation. This is due to the linear dependency process of the
-coded packets. However, this happens because we are using the binary field.
+coded packets. The numbers that you get might be different, but the tendency
+should be the same.
+
+The previous result happens because we are using the binary field.
 Set the field to :math:`q = 2^8` by setting ``kodo_binary8`` in the
-constructor arguments in ``main.cc``, rebuild the project (by typing again
-``python waf build`` in your ``~/dev/kodo-ns3-examples`` folder) and rerun
-the script even with 100 samples, to see that the amount of extra packets
-is zero (at least with 4 decimal places). This is because it is
-very unlikely to receive linearly dependent packets, even when the
-last coded packet is being sent.
+constructor arguments in ``kodo-wifi-broadcast.cc``, rebuild the projects
+(remember that you will reinstall the source code), follow the
+previous procedure and rerun the script even with 100 samples,
+to see that the amount of extra packets is zero (at least with 4
+decimal places). This is because it is very unlikely to receive
+linearly dependent packets, even when the last coded packet is being sent.
 
 To see the new coding coefficients for :math:`q = 2^8`, but for only a
-generation size of 3 packets, type now (in the respective folder): ::
+generation size of 3 packets, type now: ::
 
-  ./wifi_broadcast --generationSize=3
+  ./build/examples/kodo/ns3-dev-kodo-wifi-broadcast-debug --generationSize=3
+
+.. note:: If you just want to run it in the common way, you can also do it
+   but for command-line parsing to change the generation size, just
+   type: ``python waf --run kodo-wifi-broadcast --command-template="%s --generationSize=3"``
 
 You should see something similar to: ::
 
@@ -886,14 +908,15 @@ have no packet recovery. This goes a little further from a typical erasure
 channel where we may or may not have packet losses regularly, the reason being
 that receiver position and power are both fixed.
 
-To change the ``rss`` value , simply type: ::
+To change the ``rss`` value , we can do it in the regular way as ::
 
-  ./wifi_broadcast --rss=-96
+  python waf --run kodo-wifi-broadcast --command-template="%s --rss=-96"
 
 You will see no output because the program gets into an infinite loop.
 To finish the program type ``Ctrl+C`` in your terminal.
 To verify that the running program ended, verify that a ``^C`` sign
-appears in your terminal. The program enters a loop because we receive no
+appears in your terminal (also ``Interrupted`` may appear as well).
+The program enters a loop because we receive no
 packets at all and the decoder will never be full rank.
 
 Using Other Tracing Features
@@ -907,9 +930,10 @@ and its setting in each decoder and just add the line
 the filters and see the full decoder trace in the simulation.
 To avoid a many prints, we will use a low generation and field size with
 1 user in the binary field. To do so, set the field again to ``kodo_binary``
-in ``main.cc`` for the field type, save your files, rebuild and type: ::
+in ``kodo-wifi-broadcast.cc`` for the field type, save your files, rebuild
+and type: ::
 
-  ./wifi_broadcast --generationSize=2 --users=1
+  python waf --run kodo-wifi-broadcast --command-template="%s --generationSize=2 --users=1"
 
 Then, you will get an output like the following: ::
 
@@ -1029,8 +1053,7 @@ Review pcap Traces
 ^^^^^^^^^^^^^^^^^^
 
 As we described earlier, the simulation leaves pcap format files
-(``kodo-wifi-broadcast-*-*.pcap``) in your
-``~/dev/kodo-ns3-examples/build/[OS]/src/wifi_broadcast`` folder.
+(``kodo-wifi-broadcast-*-*.pcap``) in your ``~/ns-3-dev/`` folder.
 You can read these files with different programs like tcpdump or Wireshark.
 tcpdump is standard on most Unix-like systems and is based on the libpcap
 library. `Wireshark <https://www.wireshark.org/>`_ is another free, open-source
