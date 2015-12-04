@@ -151,8 +151,8 @@ int main (int argc, char *argv[])
     StringValue (phyMode));
   //! [6]
   // Source and destination
-  NodeContainer c;
-  c.Create (1 + users); // Sender + receivers
+  NodeContainer nodes;
+  nodes.Create (1 + users); // Sender + receivers
 
   // The below set of helpers will help us to put together the wifi NICs we
   // want
@@ -188,7 +188,7 @@ int main (int argc, char *argv[])
   wifiMac.SetType ("ns3::AdhocWifiMac");
 
   // Create the net devices
-  NetDeviceContainer devices = wifi.Install (wifiPhy, wifiMac, c);
+  NetDeviceContainer devices = wifi.Install (wifiPhy, wifiMac, nodes);
   //! [8]
   // Note that with FixedRssLossModel, the positions below are not
   // used for received signal strength. However, they are required for the
@@ -205,10 +205,10 @@ int main (int argc, char *argv[])
 
   mobility.SetPositionAllocator (positionAlloc);
   mobility.SetMobilityModel ("ns3::ConstantPositionMobilityModel");
-  mobility.Install (c);
+  mobility.Install (nodes);
   //! [9]
   InternetStackHelper internet;
-  internet.Install (c);
+  internet.Install (nodes);
 
   Ipv4AddressHelper ipv4;
   ipv4.SetBase ("10.1.1.0", "255.255.255.0");
@@ -217,14 +217,14 @@ int main (int argc, char *argv[])
   TypeId tid = TypeId::LookupByName ("ns3::UdpSocketFactory");
 
   // Transmitter socket
-  Ptr<Socket> source = Socket::CreateSocket (c.Get (0), tid);
+  Ptr<Socket> source = Socket::CreateSocket (nodes.Get (0), tid);
 
   // Receiver sockets
   std::vector<Ptr<Socket>> sinks (users);
 
   for (uint32_t n = 0; n < users; n++)
     {
-      sinks[n] = Socket::CreateSocket (c.Get (1+n), tid);
+      sinks[n] = Socket::CreateSocket (nodes.Get (1 + n), tid);
     }
   //! [11]
   // Creates the BroadcastRlnc helper for this broadcast topology
