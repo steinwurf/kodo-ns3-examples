@@ -18,7 +18,7 @@ in its main path regarding how to use the library with ns-3, namely:
   channel.
 * ``wired_broadcast``: This example consists on broadcasting packets
   with RLNC from a transmitter to N receivers with the same erasure channel.
-* ``encoder_recoder_decoder``: This example shows the gain of RLNC
+* ``recoders``: This example shows the gain of RLNC
   with recoding in a 2-hop line network consisting of an encoder, N recoders and
   a decoder with different erasure rates. Recoding can be set on or off and
   erasure rates modified by command-line parsing.
@@ -54,8 +54,9 @@ Kodo
 ^^^^
 
 Kodo is a C++ library from `Steinwurf <http://www.steinwurf.com>`_ that
-implements Random Linear Network Coding. The links you should review first to
-get a clear idea of what the library does, are:
+implements Random Linear Network Coding and its variants, but also othe
+codes like Reed-Solomon. The links you should review first to get a
+clear idea of what the library does, are:
 
 * `Kodo documentation <http://kodo-docs.steinwurf.com/en/latest/>`_
 * `Kodo source code <https://github.com/steinwurf/kodo>`_
@@ -64,13 +65,12 @@ get a clear idea of what the library does, are:
 Kodo C++ bindings
 ^^^^^^^^^^^^^^^^^
 
-To ease the development process, we use a C++
+To ease the development process, we use C++
 `bindings <https://github.com/steinwurf/kodo-cpp>`_ that are high level
 wrappers. Besides making the process easier, they provide encapsulation
 and abstraction from the library. If you want to get more details, please
 refer to the previous link. There you will find documentation and examples
 regading on how to use the bindings.
-
 
 ns-3
 ^^^^
