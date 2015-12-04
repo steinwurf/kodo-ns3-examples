@@ -171,10 +171,11 @@ public:
           {
             auto packet = m_previousPackets[id];
 
-            // Remove all packet tags in order to the callback retag them to avoid
-            // ~/ns-3-dev/src/common/packet-tag-list.cc, line=139 assert failure.
-            // Tag removal is shown in ~/ns-3-dev/src/applications/udp-echo/
-            // udp-echo-server.cc for packet forwarding
+            // Remove all packet tags in order to the callback retag
+            // them to avoid ~/ns-3-dev/src/common/packet-tag-list.cc,
+            // line=139 assert failure. Tag removal is shown in
+            // ~/ns-3-dev/src/applications/udp-echo/udp-echo-server.cc
+            // for packet forwarding
 
             packet->RemoveAllPacketTags ();
             socket->Send (packet);
