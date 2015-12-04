@@ -17,8 +17,8 @@
  */
 
 // This example shows how to use the Kodo library in a broadcast rlnc scenario
-// within a ns-3 simulation. The code below is inspired in the wifi_broadcast
-// example, which can be found in the ns-3-dev repository.
+// within a ns-3 simulation. The code below is inspired in the
+// kodo-wifi-broadcast example, which can be found in the ns-3-dev repository.
 
 // In this example, the sender transmits encoded packets from a block of
 // data to N receivers with the same packet erasure rate (errorRate).

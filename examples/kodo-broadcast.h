@@ -43,26 +43,26 @@ public:
     srand(static_cast<uint32_t>(time(0)));
 
     // Create factories using the supplied parameters
-    kodocpp::encoder_factory encoder_factory (m_codeType, m_field,
+    kodocpp::encoder_factory encoderFactory (m_codeType, m_field,
       m_generationSize, m_packetSize);
-    kodocpp::decoder_factory decoder_factory (m_codeType, m_field,
+    kodocpp::decoder_factory decoderFactory (m_codeType, m_field,
       m_generationSize, m_packetSize);
 
     // Create encoder and disable systematic mode
-    m_encoder = encoder_factory.build ();
+    m_encoder = encoderFactory.build ();
     m_encoder.set_systematic_off ();
 
     // Initialize the encoder data buffer
-    m_encoder_buffer.resize (m_encoder.block_size ());
-    m_encoder.set_const_symbols (m_encoder_buffer.data (),
+    m_encoderBuffer.resize (m_encoder.block_size ());
+    m_encoder.set_const_symbols (m_encoderBuffer.data (),
       m_encoder.block_size ());
     m_payload.resize (m_encoder.payload_size ());
 
     // Create decoders
-    m_decoder_buffers.resize (m_users);
+    m_decoderBuffers.resize (m_users);
     for (uint32_t n = 0; n < m_users; n++)
       {
-        kodocpp::decoder decoder = decoder_factory.build ();
+        kodocpp::decoder decoder = decoderFactory.build ();
 
         // Add custom trace callback to each decoder
         auto callback = [](const std::string& zone, const std::string& data)
@@ -78,8 +78,8 @@ public:
         decoder.set_trace_callback (callback);
 
         // Create data buffer for the decoder
-        m_decoder_buffers[n].resize (decoder.block_size ());
-        decoder.set_mutable_symbols (m_decoder_buffers[n].data (),
+        m_decoderBuffers[n].resize (decoder.block_size ());
+        decoder.set_mutable_symbols (m_decoderBuffers[n].data (),
           decoder.block_size ());
 
         m_decoders.emplace_back (decoder);
@@ -91,20 +91,20 @@ public:
 
   void SendPacket (ns3::Ptr<ns3::Socket> socket, ns3::Time pktInterval)
   {
-    bool all_decoded = true;
+    bool allDecoded = true;
 
     for (uint32_t n = 0; n < m_users; n++)
       {
-        all_decoded = all_decoded && m_decoders[n].is_complete ();
+        allDecoded = allDecoded && m_decoders[n].is_complete ();
       }
 
-    if (!all_decoded)
+    if (!allDecoded)
       {
         std::cout << "+----------------------+" << std::endl;
         std::cout << "|Sending a coded packet|" << std::endl;
         std::cout << "+----------------------+" << std::endl;
-        uint32_t bytes_used = m_encoder.write_payload (&m_payload[0]);
-        auto packet = ns3::Create<ns3::Packet> (&m_payload[0], bytes_used);
+        uint32_t bytesUsed = m_encoder.write_payload (&m_payload[0]);
+        auto packet = ns3::Create<ns3::Packet> (&m_payload[0], bytesUsed);
         socket->Send (packet);
         m_transmissionCount++;
 
@@ -146,9 +146,9 @@ private:
   ns3::Ptr<ns3::Socket> m_source;
   std::vector<ns3::Ptr<ns3::Socket>> m_sinks;
   kodocpp::encoder m_encoder;
-  std::vector<uint8_t> m_encoder_buffer;
+  std::vector<uint8_t> m_encoderBuffer;
   std::vector<kodocpp::decoder> m_decoders;
-  std::vector<std::vector<uint8_t>> m_decoder_buffers;
+  std::vector<std::vector<uint8_t>> m_decoderBuffers;
 
   std::vector<uint8_t> m_payload;
   uint32_t m_transmissionCount;
