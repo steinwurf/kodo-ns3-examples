@@ -17,7 +17,7 @@
  */
 
 // This example shows how to use the Kodo library for recoding at many
-// intermediate nodes in a network within a ns-3 EncoderRecodersDecoderRlnc.
+// intermediate nodes in a network within a ns-3 EncoderRecodersDecoder.
 // Recoding is one of the characteristic features of network coding because it
 // differentiates from end-to-end codes by allowing any intermediate node
 // to recode a coded packet, even if its data set has not been completely
@@ -92,9 +92,8 @@
 // When you are done, you will notice many pcap trace files in your directory.
 // You can review the files with Wireshark or tcpdump. If you have tcpdump
 // installed, you can try (for example) this:
-//
-// tcpdump -r kodo-recoders-0-0.pcap -nn -tt
 
+// tcpdump -r kodo-recoders-0-0.pcap -nn -tt
 
 #include <ns3/core-module.h>
 #include <ns3/point-to-point-star.h>
@@ -156,7 +155,7 @@ int main (int argc, char *argv[])
   // Encoder to recoders
   PointToPointStarHelper toRecoders (recoders, ptp);
   NodeContainer decoder;
-  decoder.Create(1);
+  decoder.Create (1);
 
   // Recoders to decoder
   NetDeviceContainer recodersDecoderDev;
@@ -207,7 +206,7 @@ int main (int argc, char *argv[])
       errorRecodersDecoder[n] = CreateObject<RateErrorModel> ();
       errorRecodersDecoder[n]->SetAttribute ("ErrorRate", DoubleValue (
         errorRateRecoderDecoder));
-      recodersDecoderDev.Get (2*n+1)->SetAttribute ("ReceiveErrorModel",
+      recodersDecoderDev.Get (2*n + 1)->SetAttribute ("ReceiveErrorModel",
         PointerValue (errorRecodersDecoder[n]));
 
       // Activate models
@@ -220,7 +219,7 @@ int main (int argc, char *argv[])
   TypeId tid = TypeId::LookupByName ("ns3::UdpSocketFactory");
 
   Ipv4Address decoderAddress = decoder.Get (0)->GetObject<Ipv4> ()->
-    GetAddress (1,0).GetLocal ();
+    GetAddress (1, 0).GetLocal ();
 
   // Socket connection addresses
   InetSocketAddress decoderSocketAddress = InetSocketAddress (
@@ -247,21 +246,21 @@ int main (int argc, char *argv[])
       recodersSockets[n]->Connect (decoderSocketAddress);
     }
 
-  EncoderRecodersDecoderRlnc multihop (kodo_full_vector, kodo_binary8,
+  EncoderRecodersDecoder multihop (kodo_full_vector, kodo_binary8,
     recoders, generationSize, packetSize, recodersSockets, recodingFlag);
 
   // Recoders callbacks
   for (uint32_t n = 0; n < recoders; n++)
     {
       recodersSockets[n]-> SetRecvCallback (MakeCallback (
-        &EncoderRecodersDecoderRlnc::ReceivePacketRecoder, &multihop));
+        &EncoderRecodersDecoder::ReceivePacketRecoder, &multihop));
     }
 
   // Decoder
   Ptr<Socket> decoderSocket = Socket::CreateSocket (decoder.Get (0), tid);
   decoderSocket->Bind (local);
   decoderSocket->SetRecvCallback (MakeCallback (
-    &EncoderRecodersDecoderRlnc::ReceivePacketDecoder, &multihop));
+    &EncoderRecodersDecoder::ReceivePacketDecoder, &multihop));
 
   // Turn on global static routing so we can actually be routed across the hops
   Ipv4GlobalRoutingHelper::PopulateRoutingTables ();
@@ -273,7 +272,7 @@ int main (int argc, char *argv[])
   // Schedule processes
   // Encoder
   Simulator::ScheduleWithContext (encoderSocket->GetNode ()->GetId (),
-    Seconds (1.0), &EncoderRecodersDecoderRlnc::SendPacketEncoder,
+    Seconds (1.0), &EncoderRecodersDecoder::SendPacketEncoder,
     &multihop, encoderSocket, interPacketInterval);
 
   //! [6]
@@ -281,8 +280,8 @@ int main (int argc, char *argv[])
   for (auto recoderSocket : recodersSockets)
     {
       Simulator::ScheduleWithContext (recoderSocket->GetNode ()->GetId (),
-        Seconds (1.5), &EncoderRecodersDecoderRlnc::SendPacketRecoder,
-        &multihop, recoderSocket,interPacketInterval);
+        Seconds (1.5), &EncoderRecodersDecoder::SendPacketRecoder,
+        &multihop, recoderSocket, interPacketInterval);
     }
   //! [7]
   Simulator::Run ();

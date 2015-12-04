@@ -16,18 +16,18 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-// This object implements RLNC (random linear network coding) in
-// the application layer for a encoder - N recoders - decoders topology.
+// This object implements network coding in the application layer for
+// a encoder - N recoders - decoders topology.
 
 #pragma once
 
 #include <kodocpp/kodocpp.hpp>
 
-class EncoderRecodersDecoderRlnc
+class EncoderRecodersDecoder
 {
 public:
 
-  EncoderRecodersDecoderRlnc (const kodo_code_type codeType,
+  EncoderRecodersDecoder (const kodo_code_type codeType,
     const kodo_finite_field field, const uint32_t users,
     const uint32_t generationSize, const uint32_t packetSize,
     const std::vector<ns3::Ptr<ns3::Socket>>& recodersSockets,
@@ -107,7 +107,7 @@ public:
         m_encoderTransmissionCount++;
 
         ns3::Simulator::Schedule (pktInterval,
-          &EncoderRecodersDecoderRlnc::SendPacketEncoder, this,
+          &EncoderRecodersDecoder::SendPacketEncoder, this,
           socket, pktInterval);
       }
     else
@@ -185,7 +185,7 @@ public:
          }
 
         ns3::Simulator::Schedule (pktInterval,
-          &EncoderRecodersDecoderRlnc::SendPacketRecoder, this,
+          &EncoderRecodersDecoder::SendPacketRecoder, this,
           socket, pktInterval);
       }
   }
