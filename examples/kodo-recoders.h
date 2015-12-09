@@ -161,7 +161,7 @@ public:
                       << "|" << std::endl;
             std::cout << "+-------------------------------------+" << std::endl;
 
-            // Recode a new packet and send
+            // Recode a new packet and send it
             uint32_t bytesUsed = recoder.write_payload (&m_payload[0]);
             auto packet = ns3::Create<ns3::Packet> (&m_payload[0], bytesUsed);
             socket->Send (packet);
@@ -169,6 +169,12 @@ public:
           }
         else
           {
+            std::cout << "+-------------------------------------+" << std::endl;
+            std::cout << "|Forwarding a previous packet from RECODER "
+                      << id + 1 << "|" << std::endl;
+            std::cout << "+-------------------------------------+" << std::endl;
+
+            // Get the previously received packet and forward it
             auto packet = m_previousPackets[id];
 
             // Remove all packet tags in order to the callback retag
@@ -180,10 +186,12 @@ public:
             packet->RemoveAllPacketTags ();
             socket->Send (packet);
             m_recodersTransmissionCount++;
-            std::cout << "Forwarding a previous packet from RECODER...\n"
-                      << std::endl;
          }
+      }
 
+    // Schedule the next packet
+    if (!m_decoder.is_complete ())
+      {
         ns3::Simulator::Schedule (pktInterval,
           &EncoderRecodersDecoder::SendPacketRecoder, this,
           socket, pktInterval);
