@@ -6,6 +6,7 @@ Before You Start
 The project description, licensing, source code and how to compile
 are available `here <https://github.com/steinwurf/kodo-ns3-examples>`_.
 **Once you have built the project**, you can follow this tutorial.
+Otherwise, please be sure to have the project up and running first.
 
 Overview
 --------
@@ -54,7 +55,7 @@ Kodo
 ^^^^
 
 Kodo is a C++ library from `Steinwurf <http://www.steinwurf.com>`_ that
-implements Random Linear Network Coding and its variants, but also othe
+implements Random Linear Network Coding and its variants, but also other
 codes like Reed-Solomon. The links you should review first to get a
 clear idea of what the library does, are:
 

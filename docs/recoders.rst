@@ -221,64 +221,53 @@ You will see an output similar to this: ::
   +-----------------------------------+
   |Sending a coded packet from ENCODER|
   +-----------------------------------+
-  Received a coded packet at RECODER 2
-  +-------------------------------------+
-  |Sending a coded packet from RECODER 1|
-  +-------------------------------------+
-
+  Received a packet at RECODER 2
   +-------------------------------------+
   |Sending a coded packet from RECODER 2|
   +-------------------------------------+
-
   Received an innovative packet at DECODER!
   Decoder rank: 1
 
   +-----------------------------------+
   |Sending a coded packet from ENCODER|
   +-----------------------------------+
-  Received a coded packet at RECODER 1
-
+  Received a packet at RECODER 1
   +-------------------------------------+
   |Sending a coded packet from RECODER 1|
   +-------------------------------------+
-
   +-------------------------------------+
   |Sending a coded packet from RECODER 2|
   +-------------------------------------+
-
-  Received a coded packet at DECODER!
+  Received an innovative packet at DECODER!
   Decoder rank: 2
 
   +-----------------------------------+
   |Sending a coded packet from ENCODER|
   +-----------------------------------+
-  Received a coded packet at RECODER 1
-
+  Received a packet at RECODER 1
   +-------------------------------------+
   |Sending a coded packet from RECODER 1|
   +-------------------------------------+
-
   +-------------------------------------+
   |Sending a coded packet from RECODER 2|
   +-------------------------------------+
-
-  Received a coded packet at DECODER!
+  Received an innovative packet at DECODER!
   Decoder rank: 3
 
   *** Decoding completed! ***
   Encoder transmissions: 3
-  Recoders transmissions: 6
-  Total transmissions: 9
-  *** Decoding completed! ***
-  Encoder transmissions: 3
-  Recoders transmissions: 6
-  Total transmissions: 9
+  Recoders transmissions: 5
+  Total transmissions: 8
 
 From the simulation output, it can be seen that in the first transmission only
 recoder 2 got the coded packet from the source and it conveyed properly to
-the decoder. Also notice that we have forced recoder 1 to make a transmission.
-However, this transmission is useless since recoder 1 has no innovative
-packets to transmit. For the second and third transmission, recoder 1 got the
-packet and conveyed properly to the decoder. You can modify the number of
-recoders and erasure rates in the hops to check the effects in the number of
-transmissions. Also, you may verify the pcap traces as well.
+the decoder. Here recoder 1 does not make any transmissions since it does
+not have any possible information to convey. For the second and third
+transmission, recoder 1 got the packet and conveyed properly
+to the decoder. Observe that for the second and third transmissions, recoder
+2 did not get any coded packets but it still tries to send them. However,
+it will only be possible to send only one degree of freedom given that its set
+of packets only allow this. Whenever it receives more combinations, it will be
+possible for it to send more. You can modify the number of recoders and erasure
+rates in the hops to check the effects in the number of transmissions. Also,
+you may verify the pcap traces as well.

@@ -4,3 +4,4 @@ build
 bundle_dependencies
 .waf*
 *.pcap
+docs/_build
