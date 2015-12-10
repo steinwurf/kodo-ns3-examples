@@ -78,7 +78,8 @@
 
 // To see this effect, try by changing the rss parameter on the simulation
 // by typing:
-// ./build/linux/src/wifi_broadcast/wifi_broadcast --rss=-96
+
+// python waf --run kodo-wifi-broadcast --command-template="%s --rss=-96"
 
 // With this value (or lower), the erasure rate goes to 1 and the packets can
 // not be recovered. Higher rss power values ensure packet reception and
@@ -88,7 +89,7 @@
 // per device. You can review the files with Wireshark or tcpdump. If you have
 // tcpdump installed, you can try this:
 //
-// tcpdump -r wifi-broadcast-rlnc-0-0.pcap -nn -tt (source node)
+// tcpdump -r kodo-wifi-broadcast-0-0.pcap -nn -tt (source node)
 //! [2]
 // General comments: E-macs descriptor, ns-3 license and example description
 
@@ -108,7 +109,7 @@
 #include <ctime>
 
 // Kodo includes
-#include "../broadcast-rlnc.h" // Contains the broadcast topology class
+#include "kodo-broadcast.h" // Contains the broadcast topology class
 //! [3]
 using namespace ns3;
 
@@ -150,8 +151,8 @@ int main (int argc, char *argv[])
     StringValue (phyMode));
   //! [6]
   // Source and destination
-  NodeContainer c;
-  c.Create (1 + users); // Sender + receivers
+  NodeContainer nodes;
+  nodes.Create (1 + users); // Sender + receivers
 
   // The below set of helpers will help us to put together the wifi NICs we
   // want
@@ -187,7 +188,7 @@ int main (int argc, char *argv[])
   wifiMac.SetType ("ns3::AdhocWifiMac");
 
   // Create the net devices
-  NetDeviceContainer devices = wifi.Install (wifiPhy, wifiMac, c);
+  NetDeviceContainer devices = wifi.Install (wifiPhy, wifiMac, nodes);
   //! [8]
   // Note that with FixedRssLossModel, the positions below are not
   // used for received signal strength. However, they are required for the
@@ -204,10 +205,10 @@ int main (int argc, char *argv[])
 
   mobility.SetPositionAllocator (positionAlloc);
   mobility.SetMobilityModel ("ns3::ConstantPositionMobilityModel");
-  mobility.Install (c);
+  mobility.Install (nodes);
   //! [9]
   InternetStackHelper internet;
-  internet.Install (c);
+  internet.Install (nodes);
 
   Ipv4AddressHelper ipv4;
   ipv4.SetBase ("10.1.1.0", "255.255.255.0");
@@ -216,21 +217,20 @@ int main (int argc, char *argv[])
   TypeId tid = TypeId::LookupByName ("ns3::UdpSocketFactory");
 
   // Transmitter socket
-  Ptr<Socket> source = Socket::CreateSocket (c.Get (0), tid);
+  Ptr<Socket> source = Socket::CreateSocket (nodes.Get (0), tid);
 
   // Receiver sockets
   std::vector<Ptr<Socket>> sinks (users);
 
   for (uint32_t n = 0; n < users; n++)
     {
-      sinks[n] = Socket::CreateSocket (c.Get (1+n), tid);
+      sinks[n] = Socket::CreateSocket (nodes.Get (1 + n), tid);
     }
   //! [11]
-  // Creates the BroadcastRlnc helper for this broadcast topology
-  BroadcastRlnc wifiBroadcast (kodo_full_vector, kodo_binary,
+  // Creates the Broadcast helper for this broadcast topology
+  Broadcast wifiBroadcast (kodo_full_vector, kodo_binary,
     users, generationSize, packetSize, source, sinks);
-
-  // //! [12]
+  //! [12]
   // Transmitter socket connections. Set transmitter for broadcasting
   uint16_t port = 80;
   InetSocketAddress remote = InetSocketAddress (
@@ -243,7 +243,7 @@ int main (int argc, char *argv[])
   for (const auto sink : sinks)
     {
       sink->Bind (local);
-      sink->SetRecvCallback (MakeCallback (&BroadcastRlnc::ReceivePacket,
+      sink->SetRecvCallback (MakeCallback (&Broadcast::ReceivePacket,
         &wifiBroadcast));
     }
 
@@ -251,10 +251,10 @@ int main (int argc, char *argv[])
   Ipv4GlobalRoutingHelper::PopulateRoutingTables ();
   //! [13]
   // Pcap tracing
-  wifiPhy.EnablePcap ("wifi-broadcast-rlnc", devices);
+  wifiPhy.EnablePcap ("kodo-wifi-broadcast", devices);
 
   Simulator::ScheduleWithContext (source->GetNode ()->GetId (), Seconds (1.0),
-    &BroadcastRlnc::SendPacket, &wifiBroadcast, source, interPacketInterval);
+    &Broadcast::SendPacket, &wifiBroadcast, source, interPacketInterval);
 
   Simulator::Run ();
   Simulator::Destroy ();

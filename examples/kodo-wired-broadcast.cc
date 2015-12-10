@@ -17,16 +17,16 @@
  */
 
 // This example shows how to use the Kodo library in a broadcast rlnc scenario
-// within a ns-3 simulation. The code below is inspired in the wifi_broadcast
-// example, which can be found in the ns-3-dev repository.
+// within a ns-3 simulation. The code below is inspired in the
+// kodo-wifi-broadcast example, which can be found in the ns-3-dev repository.
 
 // In this example, the sender transmits encoded packets from a block of
 // data to N receivers with the same packet erasure rate (errorRate).
 // The sender continues until all receivers have decoded all packets. By
 // default, the packets are sent using the binary field, GF(2) with a
 // generation of 5 packets and 1000 (application) bytes and an erasure rate
-// of 30% (0.3) for all the nodes. Here we have set the number of receivers to 2
-// by default but it can changed.
+// of 30% (0.3) for all the nodes. Here we have set the number of
+// receivers to 2 by default but it can changed.
 
 // The considered topology is the following:
 //! [0]
@@ -61,7 +61,7 @@
 // You can modify any default parameter, by running (for example with a
 // different error rate):
 
-// ./build/linux/src/wired_broadcast/wired_broadcast --errorRate=MY_ERROR_RATE
+// python waf --run kodo-wired-broadcast --command-template="%s --errorRate=MY_ERROR_RATE"
 
 // The parameters that can be modified are: generationSize, packetSize, ns-3
 // simulation interval (for controlling event ocurrences), errorRate in the
@@ -73,7 +73,7 @@
 // directory. You can review the files with Wireshark or tcpdump. If
 // you have tcpdump installed, you can try (for example) this:
 
-// tcpdump -r wired-broadcast-rlnc-0-0.pcap -nn -tt
+// tcpdump -r kodo-wired-broadcast-0-0.pcap -nn -tt
 
 #include <ns3/point-to-point-star.h>
 #include <ns3/internet-module.h>
@@ -87,7 +87,7 @@
 #include <string>
 #include <ctime>
 
-#include "../broadcast-rlnc.h" // Contains the broadcast topology class
+#include "kodo-broadcast.h" // Contains the broadcast topology class
 
 using namespace ns3;
 
@@ -165,8 +165,8 @@ int main (int argc, char *argv[])
       sinks[n] = Socket::CreateSocket (star.GetSpokeNode (n), tid);
     }
 
-  // Creates the BroadcastRlnc helper for this broadcast topology
-  BroadcastRlnc wiredBroadcast (kodo_full_vector, kodo_binary,
+  // Creates the Broadcast helper for this broadcast topology
+  Broadcast wiredBroadcast (kodo_full_vector, kodo_binary,
     users, generationSize, packetSize, source, sinks);
 
   // Receiver socket connections
@@ -176,17 +176,17 @@ int main (int argc, char *argv[])
     {
       sink->Bind (local);
       sink->SetRecvCallback (MakeCallback (
-        &BroadcastRlnc::ReceivePacket, &wiredBroadcast));
+        &Broadcast::ReceivePacket, &wiredBroadcast));
     }
 
   // Turn on global static routing so we can be routed across the network
   Ipv4GlobalRoutingHelper::PopulateRoutingTables ();
 
   // Do pcap tracing on all point-to-point devices on all nodes
-  pointToPoint.EnablePcapAll ("wired-broadcast-rlnc");
+  pointToPoint.EnablePcapAll ("kodo-wired-broadcast");
 
   Simulator::ScheduleWithContext (source->GetNode ()->GetId (), Seconds (1.0),
-    &BroadcastRlnc::SendPacket, &wiredBroadcast, source, interPacketInterval);
+    &Broadcast::SendPacket, &wiredBroadcast, source, interPacketInterval);
 
   Simulator::Run ();
   Simulator::Destroy ();

@@ -1,7 +1,7 @@
-Encoder, Recoders, Decoder with Erasure Channels
-================================================
+Recoders with Erasure Channels
+==============================
 
-.. _encoder_recoder_decoder:
+.. _recoders:
 
 This example considers a transmitter sending coded packets with RLNC from a
 generation size :math:`g` and field size :math:`q` to a decoder. Packets are
@@ -12,7 +12,7 @@ common erasure rate :math:`\epsilon_{R-D}`. By default, we consider:
 :math:`g = 5`, :math:`q = 2^{8}`, :math:`N = 2`, :math:`\epsilon_{E-R} = 0.4`
 and :math:`\epsilon_{R-D} = 0.2`. Topology is shown as follows:
 
-.. literalinclude:: ../src/encoder_recoder_decoder/main.cc
+.. literalinclude:: ../examples/kodo-recoders.cc
    :language: c++
    :start-after: //! [0]
    :end-before: //! [1]
@@ -41,56 +41,47 @@ What to Simulate
 Program Description
 -------------------
 
-In your local repository, you should have a folder named
-``src/encoder_recoder_decoder/``. If you check it, you will see the ``main.cc``
-file which contains the source code of this simulation. Its structure is similar
-to previous simulations, so now we will focus on the main differences.
+In your ``~/ns-3-dev`` folder, you will see the ``kodo-recoders.cc``
+file which contains the source code of this simulation. Its structure is
+similar to previous simulations, so again we will focus on the main
+differences.
 
 Header Includes
 ^^^^^^^^^^^^^^^
 
-.. literalinclude:: ../src/encoder_recoder_decoder/main.cc
+.. literalinclude:: ../examples/kodo-recoders.cc
    :language: c++
    :start-after: //! [2]
    :end-before: //! [3]
    :linenos:
 
-The ``EncoderRecodersDecoderRlnc`` class in ``encoder-recoders-decoder.h``
+The ``EncoderRecodersDecoder`` class in ``encoder-recoders-decoder.h``
 is used to model the expected behavior of the nodes in our simulation.
 
 Simulation Class
 ^^^^^^^^^^^^^^^^
 
-The ``EncoderRecodersDecoderRlnc`` class can be roughly defined in the
+The ``EncoderRecodersDecoder`` class can be roughly defined in the
 following way:
 
 .. code-block:: c++
 
-  template<class field, class encoderTrace, class decoderTrace>
-  class EncoderRecodersDecoderRlnc
+  class EncoderRecodersDecoder
   {
   public:
 
-    using rlnc_encoder = typename kodo::full_rlnc_encoder<field, encoderTrace>;
-    using rlnc_decoder = typename kodo::full_rlnc_decoder<field, decoderTrace>;
-
-    using rlnc_recoder = typename kodo::wrap_copy_payload_decoder<rlnc_decoder>;
-
-    using encoder_pointer = typename rlnc_encoder::factory::pointer;
-    using recoder_pointer = typename rlnc_recoder::factory::pointer;
-    using decoder_pointer = typename rlnc_decoder::factory::pointer;
-
-    EncoderRecodersDecoderRlnc (
-      const uint32_t users,
-      const uint32_t generationSize,
-      const uint32_t packetSize,
+    EncoderRecodersDecoder (const kodo_code_type codeType,
+      const kodo_finite_field field, const uint32_t users,
+      const uint32_t generationSize, const uint32_t packetSize,
       const std::vector<ns3::Ptr<ns3::Socket>>& recodersSockets,
       const bool recodingFlag)
-      : m_users (users),
+      : m_codeType (codeType),
+        m_field (field),
+        m_users (users),
         m_generationSize (generationSize),
         m_packetSize (packetSize),
-        m_recodersSockets (recodersSockets),
-        m_recodingFlag (recodingFlag)
+        m_recodingFlag (recodingFlag),
+        m_recodersSockets (recodersSockets)
     {
       // Constructor
     }
@@ -117,38 +108,42 @@ following way:
 
   private:
 
+    const kodo_code_type m_codeType;
+    const kodo_finite_field m_field;
     const uint32_t m_users;
     const uint32_t m_generationSize;
     const uint32_t m_packetSize;
     const bool m_recodingFlag;
 
-    encoder_pointer m_encoder;
-    std::vector<recoder_pointer> m_recoders;
-    decoder_pointer m_decoder;
+    kodocpp::encoder m_encoder;
+    std::vector<uint8_t> m_encoderBuffer;
+    std::vector<kodocpp::decoder> m_recoders;
+    std::vector<std::vector<uint8_t>> m_recoderBuffers;
+    kodocpp::decoder m_decoder;
+    std::vector<uint8_t> m_decoderBuffers;
     std::vector<ns3::Ptr<ns3::Socket>> m_recodersSockets;
-    std::map<ns3::Ptr<ns3::Socket>,recoder_pointer> m_socketMap;
 
-    std::vector<uint8_t> m_payload_buffer;
-    uint32_t m_encoder_transmission_count;
-    uint32_t m_recoders_transmission_count;
-    uint32_t m_decoder_rank;
-    ns3::Ptr<ns3::Packet> m_previous_packet;
+    std::vector<uint8_t> m_payload;
+    uint32_t m_encoderTransmissionCount;
+    uint32_t m_recodersTransmissionCount;
+    uint32_t m_decoderRank;
+    std::vector<ns3::Ptr<ns3::Packet>> m_previousPackets;
   };
 
-The ``EncoderRecodersDecoderRlnc`` design is similar as the one for
-``BroadcastRlnc``. Still, some differences exist. For this case
-``rlnc_decoder`` is the default type since we just have one decoder. However,
-for the recoders we will have many and then, we need the copy payload API.
+The ``EncoderRecodersDecoder`` design is similar as the one for
+``Broadcast``. Still, some differences exist. For this case
+``kodocpp::decoder`` is the type of the recoders since it behaves
+in the same way.
 
-Also, now we add different functions for the functionalities that a recoder can
+Also, now we add different functions for what a recoder can
 perform. Hereby, we include ``SendPacketRecoder`` and ``ReceivePacketRecoder``
 to split the functionality of recoding (or forwarding) and receiving with
-decoding. The recoding functionality is performed with ``recoder->recode ()``,
-where ``recoder`` is a pointer to a ``rlnc_recoder``.
+decoding. The recoding functionality is performed again with
+``recoder.write_payload ()``.
 
 For control variables, for the recoding or forwarding behavior, we included a
 boolean as a construction argument. Also we keep track of the decoder rank
-with a counter, in order to notify when a l.i. combination is received at the
+with a counter, in order to notify when a coded packet is received at the
 decoder. Finally, we include a counter for the total number of transmissions
 from all the recoders for counting total transmissions in general.
 
@@ -179,7 +174,7 @@ For the default parameters, we show what has been added for this example:
 Topology and Net Helpers
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. literalinclude:: ../src/encoder_recoder_decoder/main.cc
+.. literalinclude:: ../examples/kodo-recoders.cc
    :language: c++
    :start-after: //! [4]
    :end-before: //! [5]
@@ -199,7 +194,7 @@ subnet.
 Simulation Event Handler
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. literalinclude:: ../src/encoder_recoder_decoder/main.cc
+.. literalinclude:: ../examples/kodo-recoders.cc
    :language: c++
    :start-after: //! [6]
    :end-before: //! [7]
@@ -208,7 +203,7 @@ Simulation Event Handler
 Now we aggregate the generation of coded packets from the recoders to the
 scheduling process. We send packets from each recoder independently from
 previously having received a packet. However, the recoder will only send
-combinations from the coded packets that it has. All recoders send their
+coded packets from the coded packets that it has. All recoders send their
 coded packet at the same time.
 
 Simulation Runs
@@ -219,70 +214,60 @@ Default Run
 
 To run the default simulation, just type: ::
 
-  ./build/linux/src/encoder_recoder_decoder/encoder_recoder_decoder
+  python waf --run kodo-recoders
 
 You will see an output similar to this: ::
 
-  +----------------------------------+
-  |Sending a combination from ENCODER|
-  +----------------------------------+
-  Received a coded packet at RECODER 2
-
-  +------------------------------------+
-  |Sending a combination from RECODER 1|
-  +------------------------------------+
-
-  +------------------------------------+
-  |Sending a combination from RECODER 2|
-  +------------------------------------+
-
-  Received a l.i. packet at DECODER! (I)
+  +-----------------------------------+
+  |Sending a coded packet from ENCODER|
+  +-----------------------------------+
+  Received a packet at RECODER 2
+  +-------------------------------------+
+  |Sending a coded packet from RECODER 2|
+  +-------------------------------------+
+  Received an innovative packet at DECODER!
   Decoder rank: 1
 
-  +----------------------------------+
-  |Sending a combination from ENCODER|
-  +----------------------------------+
-  Received a coded packet at RECODER 1
-
-  +------------------------------------+
-  |Sending a combination from RECODER 1|
-  +------------------------------------+
-
-  +------------------------------------+
-  |Sending a combination from RECODER 2|
-  +------------------------------------+
-
-  Received a l.i. packet at DECODER! (I)
+  +-----------------------------------+
+  |Sending a coded packet from ENCODER|
+  +-----------------------------------+
+  Received a packet at RECODER 1
+  +-------------------------------------+
+  |Sending a coded packet from RECODER 1|
+  +-------------------------------------+
+  +-------------------------------------+
+  |Sending a coded packet from RECODER 2|
+  +-------------------------------------+
+  Received an innovative packet at DECODER!
   Decoder rank: 2
 
-  +----------------------------------+
-  |Sending a combination from ENCODER|
-  +----------------------------------+
-  Received a coded packet at RECODER 1
-
-  +------------------------------------+
-  |Sending a combination from RECODER 1|
-  +------------------------------------+
-
-  +------------------------------------+
-  |Sending a combination from RECODER 2|
-  +------------------------------------+
-
-  Received a l.i. packet at DECODER! (I)
+  +-----------------------------------+
+  |Sending a coded packet from ENCODER|
+  +-----------------------------------+
+  Received a packet at RECODER 1
+  +-------------------------------------+
+  |Sending a coded packet from RECODER 1|
+  +-------------------------------------+
+  +-------------------------------------+
+  |Sending a coded packet from RECODER 2|
+  +-------------------------------------+
+  Received an innovative packet at DECODER!
   Decoder rank: 3
 
   *** Decoding completed! ***
   Encoder transmissions: 3
-  Recoders transmissions: 6
-  Total transmissions: 9
-  *** Decoding completed! ***
-  Encoder transmissions: 3
-  Recoders transmissions: 6
-  Total transmissions: 9
+  Recoders transmissions: 5
+  Total transmissions: 8
 
 From the simulation output, it can be seen that in the first transmission only
 recoder 2 got the coded packet from the source and it conveyed properly to
-the decoder. For the second and third transmission, recoder 1 got the packet
-and conveyed properly to the decoder. You can modify the number of recoders
-and erasure rates in the hops to check the effects in the number of
-transmissions.
+the decoder. Here recoder 1 does not make any transmissions since it does
+not have any possible information to convey. For the second and third
+transmission, recoder 1 got the packet and conveyed properly
+to the decoder. Observe that for the second and third transmissions, recoder
+2 did not get any coded packets but it still tries to send them. However,
+it will only be possible to send only one degree of freedom given that its set
+of packets only allow this. Whenever it receives more combinations, it will be
+possible for it to send more. You can modify the number of recoders and erasure
+rates in the hops to check the effects in the number of transmissions. Also,
+you may verify the pcap traces as well.
