@@ -87,17 +87,5 @@ Waf
 Our main building tool is ``waf`` in the same way it is for ns-3. So, if you
 have used ns-3 before this should be transparent to you. If you have not used
 ``waf`` , you can review a description of the tool with some examples in the
-`waf documentation <http://docs.waf.googlecode.com/git/apidocs_17/index.html>`_.
-Nevertheless, we differ from ns-3's waf implementation and ``wscripts`` to fit
-our particular needs. For this reason, we highly recommend you to follow the
+`waf project <https://waf.io/>`_. For this reason, we highly recommend you to follow the
 instructions in the repository link mentioned at the beginning of this document.
-
-Comments and Questions
-----------------------
-
-If for some reason your project does not build or you have any other issues or
-questions related to the project, please feel free to contact us through our
-`developers mailing list <http://groups.google.com/group/steinwurf-dev>`_.
-Also, ns-3 users have their
-`mailing list <https://groups.google.com/d/forum/ns-3-users>`_ so you can ask
-questions strictly related to ns-3 there.
