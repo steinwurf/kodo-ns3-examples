@@ -210,10 +210,14 @@ provides a more comprehensive description of these examples.
 For each example, we verify known results to validate our model and provide
 parameters to the user for modifying them.
 
-Comments, Feedback & Bugs
--------------------------
-All comments, questions and feedback regarding the examples should be
-posted to our developer mailing list (hosted at Google Groups):
+Comments, Feedback, Bugs & Questions
+------------------------------------
+
+If for some reason your project does not build or you have any other issues or
+questions related to the project *after* precisely following the build instructions,
+please feel free to contact us through our
+`developers mailing list <http://groups.google.com/group/steinwurf-dev>`_ hosted
+at Google Groups.
 
 * http://groups.google.com/group/steinwurf-dev
 
@@ -222,3 +226,25 @@ research, please let us know!
 
 We would be happy to add links to your work or potentially include them
 as new examples!
+
+We only point out a few guidelines for posting to make your work and ours simpler:
+
+* Before submitting your question, please check the mailing list to see if it has
+been already answered, most of the basic questions tend to be the same
+
+* Do not reply to previously opened threads if they are not related
+to your question
+
+* If your question is completely new, you may open a new mail
+thread
+
+* When stating your question, just be sure about what do you want to
+simulate in terms of system model, assumptions, parameters and the limitations of
+ns-3 and Kodo. Please tell the idea in a simple way and later add details that you
+might think are relevant
+
+Also, feel free to tell us what could we add to improve the tutorial!
+
+Finally, ns-3 users have their
+`mailing list <https://groups.google.com/d/forum/ns-3-users>`_ so you can ask
+questions strictly related to ns-3 there following their mail posting rules.
