@@ -215,9 +215,8 @@ Comments, Feedback, Bugs & Questions
 
 If for some reason your project does not build or you have any other issues or
 questions related to the project **after** precisely following the build instructions,
-please feel free to contact us through our
-`developers mailing list <http://groups.google.com/group/steinwurf-dev>`_ hosted
-at Google Groups.
+please feel free to contact us through our developers mailing list hosted
+at Google Groups:
 
 * http://groups.google.com/group/steinwurf-dev
 
