@@ -214,7 +214,7 @@ Comments, Feedback, Bugs & Questions
 ------------------------------------
 
 If for some reason your project does not build or you have any other issues or
-questions related to the project *after* precisely following the build instructions,
+questions related to the project **after** precisely following the build instructions,
 please feel free to contact us through our
 `developers mailing list <http://groups.google.com/group/steinwurf-dev>`_ hosted
 at Google Groups.
@@ -227,22 +227,23 @@ research, please let us know!
 We would be happy to add links to your work or potentially include them
 as new examples!
 
-We only point out a few guidelines for posting to make your work and ours simpler:
+We only point out some **guidelines for posting in the mailing list** to make the workflow useful and simple:
 
-* Before submitting your question, please check the mailing list to see if it has
-been already answered, most of the basic questions tend to be the same
+* Before submitting questions about building the project, please be sure that you have followed the procedure
+  described earlier
 
-* Do not reply to previously opened threads if they are not related
-to your question
+* Before submitting your question, please check the mailing list to see if it has been already answered,
+  most of the basic questions tend to be the same
 
-* If your question is completely new, you may open a new mail
-thread
+* Do not reply to previously opened threads if they are not related to your question
 
-* When stating your question, just be sure about what do you want to
-simulate in terms of system model, assumptions, parameters and the limitations of
-ns-3 and Kodo. Please tell the idea in a simple way and later add details that you
-might think are relevant
+* If your question is new, you may open a new mail thread
 
+* When stating your question, just be sure about what do you to achieve. For simulations, please
+  tell us what do you want to simulate in terms of system model, assumptions, parameters and the
+  limitations of ns-3 and/or Kodo. Please tell what you want to achieve in an easy way and later
+  add details that you might think are relevant
+  
 Also, feel free to tell us what could we add to improve the tutorial!
 
 Finally, ns-3 users have their
