@@ -23,11 +23,11 @@
 
 #include <kodocpp/kodocpp.hpp>
 
-class EncoderRecodersDecoder
+class Recoders
 {
 public:
 
-  EncoderRecodersDecoder (const kodo_code_type codeType,
+  Recoders (const kodo_code_type codeType,
     const kodo_finite_field field, const uint32_t users,
     const uint32_t generationSize, const uint32_t packetSize,
     const std::vector<ns3::Ptr<ns3::Socket>>& recodersSockets,
@@ -107,7 +107,7 @@ public:
         m_encoderTransmissionCount++;
 
         ns3::Simulator::Schedule (pktInterval,
-          &EncoderRecodersDecoder::SendPacketEncoder, this,
+          &Recoders::SendPacketEncoder, this,
           socket, pktInterval);
       }
     else
@@ -193,7 +193,7 @@ public:
     if (!m_decoder.is_complete ())
       {
         ns3::Simulator::Schedule (pktInterval,
-          &EncoderRecodersDecoder::SendPacketRecoder, this,
+          &Recoders::SendPacketRecoder, this,
           socket, pktInterval);
       }
   }
