@@ -17,7 +17,7 @@
  */
 
 // This example shows how to use the Kodo library for recoding at many
-// intermediate nodes in a network within a ns-3 EncoderRecodersDecoder.
+// intermediate nodes in a network within a ns-3 Recoders topology.
 // Recoding is one of the characteristic features of network coding because it
 // differentiates from end-to-end codes by allowing any intermediate node
 // to recode a coded packet, even if its data set has not been completely
@@ -246,21 +246,21 @@ int main (int argc, char *argv[])
       recodersSockets[n]->Connect (decoderSocketAddress);
     }
 
-  EncoderRecodersDecoder multihop (kodo_full_vector, kodo_binary8,
+  Recoders multihop (kodocpp::codec::full_vector, kodocpp::field::binary8,
     recoders, generationSize, packetSize, recodersSockets, recodingFlag);
 
   // Recoders callbacks
   for (uint32_t n = 0; n < recoders; n++)
     {
       recodersSockets[n]-> SetRecvCallback (MakeCallback (
-        &EncoderRecodersDecoder::ReceivePacketRecoder, &multihop));
+        &Recoders::ReceivePacketRecoder, &multihop));
     }
 
   // Decoder
   Ptr<Socket> decoderSocket = Socket::CreateSocket (decoder.Get (0), tid);
   decoderSocket->Bind (local);
   decoderSocket->SetRecvCallback (MakeCallback (
-    &EncoderRecodersDecoder::ReceivePacketDecoder, &multihop));
+    &Recoders::ReceivePacketDecoder, &multihop));
 
   // Turn on global static routing so we can actually be routed across the hops
   Ipv4GlobalRoutingHelper::PopulateRoutingTables ();
@@ -272,7 +272,7 @@ int main (int argc, char *argv[])
   // Schedule processes
   // Encoder
   Simulator::ScheduleWithContext (encoderSocket->GetNode ()->GetId (),
-    Seconds (1.0), &EncoderRecodersDecoder::SendPacketEncoder,
+    Seconds (1.0), &Recoders::SendPacketEncoder,
     &multihop, encoderSocket, interPacketInterval);
 
   //! [6]
@@ -280,7 +280,7 @@ int main (int argc, char *argv[])
   for (auto recoderSocket : recodersSockets)
     {
       Simulator::ScheduleWithContext (recoderSocket->GetNode ()->GetId (),
-        Seconds (1.5), &EncoderRecodersDecoder::SendPacketRecoder,
+        Seconds (1.5), &Recoders::SendPacketRecoder,
         &multihop, recoderSocket, interPacketInterval);
     }
   //! [7]

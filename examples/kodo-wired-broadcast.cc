@@ -166,8 +166,8 @@ int main (int argc, char *argv[])
     }
 
   // Creates the Broadcast helper for this broadcast topology
-  Broadcast wiredBroadcast (kodo_full_vector, kodo_binary,
-    users, generationSize, packetSize, source, sinks);
+  Broadcast wiredBroadcast (kodocpp::codec::full_vector,
+    kodocpp::field::binary, users, generationSize, packetSize, source, sinks);
 
   // Receiver socket connections
   InetSocketAddress local = InetSocketAddress (Ipv4Address::GetAny (), port);
