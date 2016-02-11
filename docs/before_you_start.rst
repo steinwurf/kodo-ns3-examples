@@ -14,12 +14,12 @@ Overview
 Currently the repository ``kodo-ns3-examples`` contains 3 basic examples
 in its main path regarding how to use the library with ns-3, namely:
 
-* ``wifi_broadcast``: This example consists on broadcasting packets
+* ``kodo-wifi-broadcast``: This example consists on broadcasting packets
   with RLNC from a transmitter to N receivers with an IEEE 802.11b WiFi
   channel.
-* ``wired_broadcast``: This example consists on broadcasting packets
+* ``kodo-wired-broadcast``: This example consists on broadcasting packets
   with RLNC from a transmitter to N receivers with the same erasure channel.
-* ``recoders``: This example shows the gain of RLNC
+* ``kodo-recoders``: This example shows the gain of RLNC
   with recoding in a 2-hop line network consisting of an encoder, N recoders and
   a decoder with different erasure rates. Recoding can be set on or off and
   erasure rates modified by command-line parsing.
