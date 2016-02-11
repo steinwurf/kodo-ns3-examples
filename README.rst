@@ -65,7 +65,7 @@ Our aim is to make the examples compatible with the latest ns-3 revision.
 If you experience any issues with the latest revision, then you can switch
 to the latest supported revision (this step is **optional**)::
 
-  hg checkout 11773
+  hg checkout 11875
 
 Our build system automatically tests the examples with the latest supported
 revision of ns-3. This revision is specified in our buildbot.py_ script.
