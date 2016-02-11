@@ -99,7 +99,13 @@ int main (int argc, char *argv[])
   uint32_t generationSize = 5; // RLNC generation size
   double errorRate = 0.3; // Error rate for all the links
   uint32_t users = 2; // Number of users
-  std::string field = "binary"; // Finite field employed
+  uint32_t fieldSize = 2; // Size of the finite field
+
+  // Create a map for the field values
+  std::map<uint32_t,kodocpp::field> fieldMap;
+  fieldMap[2] = kodocpp::field::binary;
+  fieldMap[16] = kodocpp::field::binary4;
+  fieldMap[256] = kodocpp::field::binary8;
 
   Time interPacketInterval = Seconds (interval);
 
@@ -111,7 +117,7 @@ int main (int argc, char *argv[])
     generationSize);
   cmd.AddValue ("errorRate", "Packet erasure rate for the links", errorRate);
   cmd.AddValue ("users", "Number of receivers", users);
-  cmd.AddValue ("field", "Finite field employed", field);
+  cmd.AddValue ("fieldSize", "Size of the finite field", fieldSize);
 
   cmd.Parse (argc, argv);
 
@@ -167,19 +173,11 @@ int main (int argc, char *argv[])
       sinks[n] = Socket::CreateSocket (star.GetSpokeNode (n), tid);
     }
 
-  // Check for finite field employed
-
-  switch(field)
-    {
-      case "binary" : kodocpp::field finiteField = kodocpp::field::binary;
-      case "binary4" : kodocpp::field finiteField = kodocpp::field::binary4;
-      case "binary8" : kodocpp::field finiteField = kodocpp::field::binary8;
-      default : kodocpp::field finiteField = kodocpp::field::binary;
-    }
-
+  // Check for finite field employed and
   // Creates the Broadcast helper for this broadcast topology
-  Broadcast wiredBroadcast (kodocpp::codec::full_vector,
-    finiteField, users, generationSize, packetSize, source, sinks);
+
+  Broadcast wiredBroadcast (kodocpp::codec::full_vector, fieldMap[fieldSize],
+    users, generationSize, packetSize, source, sinks);
 
   // Receiver socket connections
   InetSocketAddress local = InetSocketAddress (Ipv4Address::GetAny (), port);
