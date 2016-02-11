@@ -27,8 +27,8 @@ class Recoders
 {
 public:
 
-  Recoders (const kodo_code_type codeType,
-    const kodo_finite_field field, const uint32_t users,
+  Recoders (const kodocpp::codec codeType,
+    const kodocpp::field field, const uint32_t users,
     const uint32_t generationSize, const uint32_t packetSize,
     const std::vector<ns3::Ptr<ns3::Socket>>& recodersSockets,
     const bool recodingFlag)
@@ -228,8 +228,8 @@ public:
 
 private:
 
-  const kodo_code_type m_codeType;
-  const kodo_finite_field m_field;
+  const kodocpp::codec m_codeType;
+  const kodocpp::field m_field;
   const uint32_t m_users;
   const uint32_t m_generationSize;
   const uint32_t m_packetSize;

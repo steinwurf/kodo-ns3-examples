@@ -27,7 +27,7 @@ class Broadcast
 {
 public:
 
-  Broadcast (const kodo_code_type codeType, const kodo_finite_field field,
+  Broadcast (const kodocpp::codec codeType, const kodocpp::field field,
     const uint32_t users, const uint32_t generationSize,
     const uint32_t packetSize,
     const ns3::Ptr<ns3::Socket>& source,
@@ -137,8 +137,8 @@ public:
 
 private:
 
-  const kodo_code_type m_codeType;
-  const kodo_finite_field m_field;
+  const kodocpp::codec m_codeType;
+  const kodocpp::field m_field;
   const uint32_t m_users;
   const uint32_t m_generationSize;
   const uint32_t m_packetSize;

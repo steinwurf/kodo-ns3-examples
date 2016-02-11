@@ -228,7 +228,7 @@ int main (int argc, char *argv[])
     }
   //! [11]
   // Creates the Broadcast helper for this broadcast topology
-  Broadcast wifiBroadcast (kodo_full_vector, kodo_binary,
+  Broadcast wifiBroadcast (kodocpp::codec::full_vector, kodocpp::field::binary,
     users, generationSize, packetSize, source, sinks);
   //! [12]
   // Transmitter socket connections. Set transmitter for broadcasting

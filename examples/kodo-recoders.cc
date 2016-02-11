@@ -246,7 +246,7 @@ int main (int argc, char *argv[])
       recodersSockets[n]->Connect (decoderSocketAddress);
     }
 
-  Recoders multihop (kodo_full_vector, kodo_binary8,
+  Recoders multihop (kodocpp::codec::full_vector, kodocpp::field::binary8,
     recoders, generationSize, packetSize, recodersSockets, recodingFlag);
 
   // Recoders callbacks
