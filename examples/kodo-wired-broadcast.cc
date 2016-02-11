@@ -99,7 +99,7 @@ int main (int argc, char *argv[])
   uint32_t generationSize = 5; // RLNC generation size
   double errorRate = 0.3; // Error rate for all the links
   uint32_t users = 2; // Number of users
-  kodocpp::field field = kodocpp::field::binary; // Finite field employed
+  std::string field = "binary"; // Finite field employed
 
   Time interPacketInterval = Seconds (interval);
 
@@ -167,9 +167,19 @@ int main (int argc, char *argv[])
       sinks[n] = Socket::CreateSocket (star.GetSpokeNode (n), tid);
     }
 
+  // Check for finite field employed
+
+  switch(field)
+    {
+      case "binary" : kodocpp::field finiteField = kodocpp::field::binary;
+      case "binary4" : kodocpp::field finiteField = kodocpp::field::binary4;
+      case "binary8" : kodocpp::field finiteField = kodocpp::field::binary8;
+      default : kodocpp::field finiteField = kodocpp::field::binary;
+    }
+
   // Creates the Broadcast helper for this broadcast topology
   Broadcast wiredBroadcast (kodocpp::codec::full_vector,
-    field, users, generationSize, packetSize, source, sinks);
+    finiteField, users, generationSize, packetSize, source, sinks);
 
   // Receiver socket connections
   InetSocketAddress local = InetSocketAddress (Ipv4Address::GetAny (), port);
