@@ -99,6 +99,7 @@ int main (int argc, char *argv[])
   uint32_t generationSize = 5; // RLNC generation size
   double errorRate = 0.3; // Error rate for all the links
   uint32_t users = 2; // Number of users
+  kodocpp::field field = kodocpp::field::binary; // Finite field employed
 
   Time interPacketInterval = Seconds (interval);
 
@@ -110,6 +111,7 @@ int main (int argc, char *argv[])
     generationSize);
   cmd.AddValue ("errorRate", "Packet erasure rate for the links", errorRate);
   cmd.AddValue ("users", "Number of receivers", users);
+  cmd.AddValue ("field", "Finite field employed", field);
 
   cmd.Parse (argc, argv);
 
@@ -167,7 +169,7 @@ int main (int argc, char *argv[])
 
   // Creates the Broadcast helper for this broadcast topology
   Broadcast wiredBroadcast (kodocpp::codec::full_vector,
-    kodocpp::field::binary, users, generationSize, packetSize, source, sinks);
+    field, users, generationSize, packetSize, source, sinks);
 
   // Receiver socket connections
   InetSocketAddress local = InetSocketAddress (Ipv4Address::GetAny (), port);
