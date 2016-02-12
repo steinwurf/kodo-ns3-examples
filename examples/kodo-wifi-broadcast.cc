@@ -122,6 +122,13 @@ int main (int argc, char *argv[])
   double interval = 1.0; // seconds
   uint32_t generationSize = 5;
   uint32_t users = 2; // Number of users
+  std::string field = "binary"; // Finite field used
+
+  // Create a map for the field values
+  std::map<std::string,kodocpp::field> fieldMap;
+  fieldMap["binary"] = kodocpp::field::binary;
+  fieldMap["binary4"] = kodocpp::field::binary4;
+  fieldMap["binary8"] = kodocpp::field::binary8;
 
   CommandLine cmd;
 
@@ -132,8 +139,15 @@ int main (int argc, char *argv[])
   cmd.AddValue ("generationSize", "Set the generation size to use",
                 generationSize);
   cmd.AddValue ("users", "Number of receivers", users);
+  cmd.AddValue ("field", "Finite field used", field);
 
   cmd.Parse (argc, argv);
+
+  // Use the binary field in case of errors
+  if (fieldMap.find (field) == fieldMap.end ())
+    {
+      field = "binary";
+    }
 
   // Convert to time object
   Time interPacketInterval = Seconds (interval);
@@ -228,7 +242,7 @@ int main (int argc, char *argv[])
     }
   //! [11]
   // Creates the Broadcast helper for this broadcast topology
-  Broadcast wifiBroadcast (kodocpp::codec::full_vector, kodocpp::field::binary,
+  Broadcast wifiBroadcast (kodocpp::codec::full_vector, fieldMap[field],
     users, generationSize, packetSize, source, sinks);
   //! [12]
   // Transmitter socket connections. Set transmitter for broadcasting

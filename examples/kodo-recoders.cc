@@ -120,6 +120,13 @@ int main (int argc, char *argv[])
   double errorRateRecoderDecoder = 0.2; // Error rate for recoder-decoder link
   bool recodingFlag = true; // Flag to control recoding
   uint32_t recoders = 2; // Number of recoders
+  std::string field = "binary"; // Finite field used
+
+  // Create a map for the field values
+  std::map<std::string,kodocpp::field> fieldMap;
+  fieldMap["binary"] = kodocpp::field::binary;
+  fieldMap["binary4"] = kodocpp::field::binary4;
+  fieldMap["binary8"] = kodocpp::field::binary8;
 
   Time interPacketInterval = Seconds (interval);
 
@@ -137,7 +144,15 @@ int main (int argc, char *argv[])
                 errorRateRecoderDecoder);
   cmd.AddValue ("recodingFlag", "Enable packet recoding", recodingFlag);
   cmd.AddValue ("recoders", "Amount of recoders", recoders);
+  cmd.AddValue ("field", "Finite field used", field);
+
   cmd.Parse (argc, argv);
+
+  // Use the binary8 field in case of errors
+  if (fieldMap.find (field) == fieldMap.end ())
+    {
+      field = "binary8";
+    }
 
   Time::SetResolution (Time::NS);
 
