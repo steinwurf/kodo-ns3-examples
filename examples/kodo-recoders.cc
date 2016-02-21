@@ -285,7 +285,7 @@ int main (int argc, char *argv[])
 
   // Do pcap tracing on all point-to-point devices on all nodes. File naming
   // convention is: kodo-recoders-[NODE_NUMBER]-[DEVICE_NUMBER].pcap
-  ptp.EnablePcapAll ("kodo-recoders");
+  // ptp.EnablePcapAll ("kodo-recoders");
 
   // Schedule processes
   // Encoder
