@@ -121,6 +121,7 @@ int main (int argc, char *argv[])
   bool recodingFlag = true; // Flag to control recoding
   uint32_t recoders = 2; // Number of recoders
   std::string field = "binary"; // Finite field used
+  double transmitProbability = 0.5; // Transmit probabilitu for the recoders
 
   // Create a map for the field values
   std::map<std::string,kodocpp::field> fieldMap;
@@ -145,6 +146,8 @@ int main (int argc, char *argv[])
   cmd.AddValue ("recodingFlag", "Enable packet recoding", recodingFlag);
   cmd.AddValue ("recoders", "Amount of recoders", recoders);
   cmd.AddValue ("field", "Finite field used", field);
+  cmd.AddValue ("transmitProbability", "Transmit probability from recoder",
+                transmitProbability);
 
   cmd.Parse (argc, argv);
 
@@ -262,7 +265,7 @@ int main (int argc, char *argv[])
     }
 
   Recoders multihop (kodocpp::codec::full_vector, fieldMap[field], recoders,
-    generationSize, packetSize, recodersSockets, recodingFlag);
+    generationSize, packetSize, recodersSockets, recodingFlag, transmitProbability);
 
   // Recoders callbacks
   for (uint32_t n = 0; n < recoders; n++)

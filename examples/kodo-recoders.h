@@ -31,14 +31,15 @@ public:
     const kodocpp::field field, const uint32_t users,
     const uint32_t generationSize, const uint32_t packetSize,
     const std::vector<ns3::Ptr<ns3::Socket>>& recodersSockets,
-    const bool recodingFlag)
+    const bool recodingFlag, const double transmitProbability)
     : m_codeType (codeType),
       m_field (field),
       m_users (users),
       m_generationSize (generationSize),
       m_packetSize (packetSize),
       m_recodingFlag (recodingFlag),
-      m_recodersSockets (recodersSockets)
+      m_recodersSockets (recodersSockets),
+      m_transmitProbability (transmitProbability)
   {
     srand(static_cast<uint32_t>(time(0)));
 
@@ -83,7 +84,12 @@ public:
     m_recodersTransmissionCount = 0;
     m_decoderRank = 0;
 
+    // Initialize previous packets buffer
     m_previousPackets = std::vector<ns3::Ptr<ns3::Packet>> (m_users);
+
+    m_uniformRandomVariable = ns3::CreateObject<ns3::UniformRandomVariable> ();
+    m_uniformRandomVariable->SetAttribute ("Min", ns3::DoubleValue (0.0));
+    m_uniformRandomVariable->SetAttribute ("Max", ns3::DoubleValue (1.0));
   }
 
   void SendPacketEncoder (ns3::Ptr<ns3::Socket> socket, ns3::Time pktInterval)
@@ -152,7 +158,21 @@ public:
 
     kodocpp::decoder recoder = m_recoders[id];
 
-    if (!m_decoder.is_complete () && recoder.rank () > 0)
+    // A node wil transmit at random with probability
+    // m_transmitProbability. Thus, we throw a coin
+    // (RBernoulli Random Variable) with this probability
+    // and check it. ns-3 does not has Bernoulli but has
+    // Uniform. So, we convert this random variable through
+    // the inverse transform method.
+
+    bool transmit = false;
+
+    if(m_uniformRandomVariable->GetValue () <= m_transmitProbability)
+      {
+        transmit = true;
+      }
+
+    if (!m_decoder.is_complete () && recoder.rank () > 0 && transmit)
       {
         if (m_recodingFlag)
           {
@@ -167,7 +187,7 @@ public:
             socket->Send (packet);
             m_recodersTransmissionCount++;
           }
-        else
+        else   
           {
             std::cout << "+-------------------------------------+" << std::endl;
             std::cout << "|Forwarding a previous packet from RECODER "
@@ -248,4 +268,7 @@ private:
   uint32_t m_recodersTransmissionCount;
   uint32_t m_decoderRank;
   std::vector<ns3::Ptr<ns3::Packet>> m_previousPackets;
+
+  const double m_transmitProbability;
+  ns3::Ptr<ns3::UniformRandomVariable> m_uniformRandomVariable;
 };
