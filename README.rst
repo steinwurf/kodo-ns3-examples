@@ -254,7 +254,7 @@ the workflow efficient and simple:
      segmentation fault or something else). Also include your OS, compiler
      waf ns-3 version.
   2. Attach a complete printscreen or a ``.txt`` log file posting the error.
-  3. If your error is related with a Kodo , please include it as well.
+  3. If your error is related with a source file, please include it as well.
 
 * **Disclaimer**: We will not correct your source code or homework, but just
   provide you guidelines to do so! ;)
