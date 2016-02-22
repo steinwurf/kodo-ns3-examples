@@ -246,18 +246,20 @@ the workflow efficient and simple:
   first, try to provide a concise general description. Later, you can add
   details if you think that those are relevant to your question.
 
-* If you have follow the previous steps and still want to report an error,
+* If you have followed the previous steps and still want to report an error,
   please do the following:
 
   1. In your e-mail, indicate us the failure problem and when does it occur.
      Indicate the type of problem (e.g. if it is compiler error or a
      segmentation fault or something else). Also include your OS, compiler
-     waf ns-3 version.
-  2. Attach a complete printscreen or a ``.txt`` log file posting the error.
-  3. If your error is related with a source file, please include it as well.
+     waf, python and  ns-3 version.
+  2. Attach a printscreen or a ``.txt`` log file posting the complete
+     output of the command of procedure that gives the error.     .
+  3. If your error is related with a source file, please include it as well
+     in your report.
 
-* **Disclaimer**: We will not correct your source code or homework, but just
-  provide you guidelines to do so! ;)
+* **Disclaimer**: We will not correct your source code, but just provide
+  you guidelines to do so :)
 
 Also, feel free to tell us what we should add to improve the examples and the
 tutorial!
