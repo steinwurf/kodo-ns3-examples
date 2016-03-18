@@ -187,7 +187,7 @@ public:
             socket->Send (packet);
             m_recodersTransmissionCount++;
           }
-        else   
+        else
           {
             std::cout << "+-------------------------------------+" << std::endl;
             std::cout << "|Forwarding a previous packet from RECODER "
