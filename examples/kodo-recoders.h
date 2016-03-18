@@ -101,7 +101,7 @@ public:
          allRecodersDecoded &= recoder.is_complete ();
       }
 
-    if (!(m_decoder.is_complete () || (m_recodingFlag && allRecodersDecoded)))
+    if (!allRecodersDecoded)
       {
         std::cout << "+-----------------------------------+" << std::endl;
         std::cout << "|Sending a coded packet from ENCODER|" << std::endl;
