@@ -138,37 +138,20 @@ public:
 
     recoder.read_payload (&m_payload[0]);
 
+    // Keep track of the received packets for each recoder
+    // when no recoding is employed to forward one of them
+    // uniformly at random
     if (!m_recodingFlag)
       {
-        uint32_t i = m_previousPackets[id].size ();
-        uint32_t index;
+        uint32_t index = m_previousPackets[id].size ();
 
-        std::cout << "Basic index: " << i << "\n" << std::endl;
-
-        // if (i >= m_generationSize)
-        //   {
-        //     index = i - m_generationSize;
-        //   }
-        // else
-        //   {
-        //     index = i;
-        //   }
-        index = i;
-        std::cout << "Final index: " << index << "\n" << std::endl;
         auto relay_it = m_previousPackets[id].find (index);
+
         if (relay_it == m_previousPackets[id].end())
           {
-            std::cout << "Inserting packet..." << std::endl;
             m_previousPackets[id][index] = packet;
-            std::cout << "Packet inserted" << std::endl;
           }
         
-      }
-    for(auto elem : m_previousPackets[id])
-      {
-        std::cout << "Recoder: " << id << " " << "\n"
-                  << "Index: " << elem.first << "\n"
-                  << "Packet: " << elem.second << "\n" << std::endl;
       }
 
     if (recoder.is_complete ())
@@ -222,13 +205,10 @@ public:
                       << id + 1 << "|" << std::endl;
             std::cout << "+-------------------------------------------+" << std::endl;
 
-            // Get the previously received packet and forward it
+            // Get a previously received packet uniformly at random and forward it
             uint32_t max = m_previousPackets[id].size ();
-            std::cout << "Picking integer from 0 and " << max << std::endl;
             uint32_t randomIndex = m_uniformRandomVariable->GetInteger (0, max - 1);
-            std::cout << "Picking packet in index: " << randomIndex << std::endl;
             auto packet = m_previousPackets[id][randomIndex];
-            std::cout << "Packet is: " << packet << std::endl;
 
             // Remove all packet tags in order to the callback retag
             // them to avoid ~/ns-3-dev/src/common/packet-tag-list.cc,
