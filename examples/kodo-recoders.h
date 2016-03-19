@@ -85,7 +85,7 @@ public:
     m_decoderRank = 0;
 
     // Initialize previous packets buffer
-    m_previousPackets = std::vector<ns3::Ptr<ns3::Packet>> (m_users);
+    // m_previousPackets = std::vector<ns3::Ptr<ns3::Packet>> (m_users);
 
     m_uniformRandomVariable = ns3::CreateObject<ns3::UniformRandomVariable> ();
     m_uniformRandomVariable->SetAttribute ("Min", ns3::DoubleValue (0.0));
@@ -140,7 +140,35 @@ public:
 
     if (!m_recodingFlag)
       {
-        m_previousPackets[id] = packet;
+        uint32_t i = m_previousPackets[id].size ();
+        uint32_t index;
+
+        std::cout << "Basic index: " << i << "\n" << std::endl;
+
+        // if (i >= m_generationSize)
+        //   {
+        //     index = i - m_generationSize;
+        //   }
+        // else
+        //   {
+        //     index = i;
+        //   }
+        index = i;
+        std::cout << "Final index: " << index << "\n" << std::endl;
+        auto relay_it = m_previousPackets[id].find (index);
+        if (relay_it == m_previousPackets[id].end())
+          {
+            std::cout << "Inserting packet..." << std::endl;
+            m_previousPackets[id][index] = packet;
+            std::cout << "Packet inserted" << std::endl;
+          }
+        
+      }
+    for(auto elem : m_previousPackets[id])
+      {
+        std::cout << "Recoder: " << id << " " << "\n"
+                  << "Index: " << elem.first << "\n"
+                  << "Packet: " << elem.second << "\n" << std::endl;
       }
 
     if (recoder.is_complete ())
@@ -189,13 +217,18 @@ public:
           }
         else
           {
-            std::cout << "+-------------------------------------+" << std::endl;
+            std::cout << "+-------------------------------------------+" << std::endl;
             std::cout << "|Forwarding a previous packet from RECODER "
                       << id + 1 << "|" << std::endl;
-            std::cout << "+-------------------------------------+" << std::endl;
+            std::cout << "+-------------------------------------------+" << std::endl;
 
             // Get the previously received packet and forward it
-            auto packet = m_previousPackets[id];
+            uint32_t max = m_previousPackets[id].size ();
+            std::cout << "Picking integer from 0 and " << max << std::endl;
+            uint32_t randomIndex = m_uniformRandomVariable->GetInteger (0, max - 1);
+            std::cout << "Picking packet in index: " << randomIndex << std::endl;
+            auto packet = m_previousPackets[id][randomIndex];
+            std::cout << "Packet is: " << packet << std::endl;
 
             // Remove all packet tags in order to the callback retag
             // them to avoid ~/ns-3-dev/src/common/packet-tag-list.cc,
@@ -267,7 +300,8 @@ private:
   uint32_t m_encoderTransmissionCount;
   uint32_t m_recodersTransmissionCount;
   uint32_t m_decoderRank;
-  std::vector<ns3::Ptr<ns3::Packet>> m_previousPackets;
+  std::map<uint32_t, std::map<uint32_t, ns3::Ptr<ns3::Packet>>> m_previousPackets;
+  // std::vector<ns3::Ptr<ns3::Packet>> m_previousPackets;
 
   const double m_transmitProbability;
   ns3::Ptr<ns3::UniformRandomVariable> m_uniformRandomVariable;
