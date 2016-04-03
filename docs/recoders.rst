@@ -5,9 +5,9 @@ Recoders with Erasure Channels
 
 This example considers a transmitter sending coded packets with RLNC from a
 generation size :math:`g` and field size :math:`q` to a decoder. Packets are
-set through N recoders in a broadcast erasure channel. Each link from the
-encoder to the recoders has the same erasure rate :math:`\epsilon_{E-R}`.
-In the second hop, all the links from the recoders to the decoder have a
+set through :math:`N` relays in a broadcast erasure channel. Each link from the
+encoder to the relays has the same erasure rate :math:`\epsilon_{E-R}`.
+In the second hop, all the links from the relays to the decoder have a
 common erasure rate :math:`\epsilon_{R-D}`. By default, we consider:
 :math:`g = 5`, :math:`q = 2^{8}`, :math:`N = 2`, :math:`\epsilon_{E-R} = 0.4`
 and :math:`\epsilon_{R-D} = 0.2`. Topology is shown as follows:
@@ -22,15 +22,21 @@ What to Simulate
 ----------------
 
 * Behavior: The sender keeps transmitting the generation until the
-  decoder or all the recoders have :math:`g` linearly independent (l.i.) coded
-  packets. As with previous examples, packets might or might not be loss at the
-  given rates in the respective links. Additionally, we have 2 operation
+  all the relays have :math:`g` linearly independent (l.i.) coded
+  packets. The relays keep sending packets until the decoder has received
+  this data. As with previous examples, packets might or might not be loss at the
+  given erasure rates in the respective links. Additionally, we have 2 transmission
   policies depending if recoding is enabled or not. If recoding is enabled
   (default), received packets in each recoder are recoded to create new
   coded packets which are sent to the decoder. If recoding is disabled,
-  only the last received packet is forwarded to the decoder.
+  any previously received packet is forwarded to the decoder. The packet
+  to be forwarded is selected at random. To avoid collisions from the
+  relays, all the relays access the medium to transmit with probability
+  :math:`p`. If two or more relays access the medium at the same time,
+  then event simulator schedules them to transmit in a non-colliding
+  order.
 * Inputs: Main parameters will be generation size, field size, number of
-  recoders and packet losses in each hop.
+  relays, packet losses in each hop and a flag for the recoding policy
 * Outputs: Two counters to indicate how much transmissions did
   the process required and some prints to indicate when decoding is completed.
   The number of transmissions should change as we vary the input parameters.
@@ -41,7 +47,7 @@ What to Simulate
 Program Description
 -------------------
 
-In your ``~/ns-3-dev`` folder, you will see the ``kodo-recoders.cc``
+In your ``~/ns-3-dev/examples/kodo`` folder, you will see the ``kodo-recoders.cc``
 file which contains the source code of this simulation. Its structure is
 similar to previous simulations, so again we will focus on the main
 differences.
@@ -55,22 +61,21 @@ Header Includes
    :end-before: //! [3]
    :linenos:
 
-The ``EncoderRecodersDecoder`` class in ``encoder-recoders-decoder.h``
-is used to model the expected behavior of the nodes in our simulation.
+The ``Recoders`` class in ``kodo-recoders.h`` is used to model the expected
+behavior of the nodes in our simulation.
 
 Simulation Class
 ^^^^^^^^^^^^^^^^
 
-The ``EncoderRecodersDecoder`` class can be roughly defined in the
-following way:
+The ``Recoders`` class can be roughly defined in the following way:
 
 .. code-block:: c++
 
-  class EncoderRecodersDecoder
+  class Recoders
   {
   public:
 
-    EncoderRecodersDecoder (const kodo_code_type codeType,
+    Recoders (const kodo_code_type codeType,
       const kodo_finite_field field, const uint32_t users,
       const uint32_t generationSize, const uint32_t packetSize,
       const std::vector<ns3::Ptr<ns3::Socket>>& recodersSockets,
@@ -130,9 +135,9 @@ following way:
     std::vector<ns3::Ptr<ns3::Packet>> m_previousPackets;
   };
 
-The ``EncoderRecodersDecoder`` design is similar as the one for
+The ``Recoders`` design is similar as the one for
 ``Broadcast``. Still, some differences exist. For this case
-``kodocpp::decoder`` is the type of the recoders since it behaves
+``kodocpp::decoder`` is the type of the relays since it behaves
 in the same way.
 
 Also, now we add different functions for what a recoder can
@@ -145,7 +150,7 @@ For control variables, for the recoding or forwarding behavior, we included a
 boolean as a construction argument. Also we keep track of the decoder rank
 with a counter, in order to notify when a coded packet is received at the
 decoder. Finally, we include a counter for the total number of transmissions
-from all the recoders for counting total transmissions in general.
+from all the relays for counting total transmissions in general.
 
 Default Parameters and Command-line Parsing
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -180,10 +185,10 @@ Topology and Net Helpers
    :end-before: //! [5]
    :linenos:
 
-In order to be able to construct various net devices in the recoders from the
-helpers, we separate the recoders in 2 subnets: a one-to-many subnet which
-covers the encoder and the recoders, and a many-to-one subnet which covers
-the recoders and the decoder. For the one-to-many (broadcast) subnet, we use
+In order to be able to construct various net devices in the relays from the
+helpers, we separate the relays in 2 subnets: a one-to-many subnet which
+covers the encoder and the relays, and a many-to-one subnet which covers
+the relays and the decoder. For the one-to-many (broadcast) subnet, we use
 the ``PointToPointStarHelper`` and for the many-to-one we create the net
 devices with the ``Install`` member function of the ``PointToPointHelper``
 and store it in a container for easy IP address assignment. Then, we assign
@@ -200,10 +205,10 @@ Simulation Event Handler
    :end-before: //! [7]
    :linenos:
 
-Now we aggregate the generation of coded packets from the recoders to the
+Now we aggregate the generation of coded packets from the relays to the
 scheduling process. We send packets from each recoder independently from
 previously having received a packet. However, the recoder will only send
-coded packets from the coded packets that it has. All recoders send their
+coded packets from the coded packets that it has. All relays send their
 coded packet at the same time.
 
 Simulation Runs
@@ -268,6 +273,6 @@ to the decoder. Observe that for the second and third transmissions, recoder
 2 did not get any coded packets but it still tries to send them. However,
 it will only be possible to send only one degree of freedom given that its set
 of packets only allow this. Whenever it receives more combinations, it will be
-possible for it to send more. You can modify the number of recoders and erasure
+possible for it to send more. You can modify the number of relays and erasure
 rates in the hops to check the effects in the number of transmissions. Also,
 you may verify the pcap traces as well.
