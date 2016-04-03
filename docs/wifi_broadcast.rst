@@ -126,7 +126,7 @@ The ``Broadcast`` class can be roughly defined in the following way:
   {
   public:
 
-    Broadcast (const kodo_code_type codeType, const kodo_finite_field field,
+    Broadcast (const kodocpp::codec codeType, const kodocpp::field field,
       const uint32_t users, const uint32_t generationSize,
       const uint32_t packetSize,
       const ns3::Ptr<ns3::Socket>& source,
@@ -154,8 +154,8 @@ The ``Broadcast`` class can be roughly defined in the following way:
 
   private:
 
-    const kodo_code_type m_codeType;
-    const kodo_finite_field m_field;
+    const kodocpp::codec codeType;
+    const kodocpp::field field
     const uint32_t m_users;
     const uint32_t m_generationSize;
     const uint32_t m_packetSize;
@@ -180,18 +180,19 @@ the C++ bindings to work.
 First, we need to define our encoder and decoders. For this purpose,
 we have to specify the coding scheme that we are going to employ and
 the field type in which the finite field arithmetics are going to be
-carried. This is done by employing the data types ``kodo_code_type``
-and ``kodo_finite_field`` which are defined in the bindings.
+carried. This is done by employing the data types ``kodocpp::codec``
+and ``kodocpp::field`` which are defined in the bindings.
 To avoid using templated classes, we pass the required code type
 and field type as constructor arguments.
 
 Given that we want to perform our basic simulation with RLNC, the
-type in the bindings is ``kodo_full_vector``. You can look at it as
+type in the bindings is ``kodocpp::codec::full_vector``. You can look at it as
 a wrapper for the codecs in the
 `Kodo  <https://github.com/steinwurf/kodo>`_ library. Similarly,
-``kodo_binary`` is the field type in the bindings for the binary
+``kodocpp::field::binary`` is the field type in the bindings for the binary
 field implementation (since we are interested in :math:`q = 2`)
-which is defined in the
+which is defined in the bindings repository. Think of it as a wrapper
+for the fields described in the 
 `Fifi  <https://github.com/steinwurf/fifi>`_ library. However, other
 field types from Fifi might be chosen too from their bindings
 according to your application. Current available field sizes are:
@@ -240,7 +241,9 @@ The first part of the ``main`` function introduces us to the basic simulation
 parameters regarding physical layer mode for WiFi (Direct Sequence Spread
 Spectrum of 1 Mbps rate), receiver signal strength of -93 dBm, 1 KB for packet
 size, 1 second interval duration between ns-3 events (we will use it later),
-a generation size of 5 packets and 2 users (receivers). After that, the
+a generation size of 5 packets, 2 users (receivers) and a string for the
+finite field to be employed. The string name will be searched in a ``std::map``
+container that has the proper ``kodocpp::field`` instance. After that, the
 ``CommandLine`` class is ns-3's command line parser used to modify those
 values (if required) with ``AddValue`` and ``Parse``. Then, the interval
 duration is converted to the ns-3 ``Time`` format.
@@ -400,8 +403,8 @@ Simulation Calls
 
 As we mentioned earlier, we use the RLNC codec and binary for our encoder
 and decoders. Then, we call the object that handles
-the topology by doing ``Broadcast wifiBroadcast (kodo_full_vector,
-kodo_binary, users, generationSize, packetSize, sinks);`` to call
+the topology by doing ``Broadcast wifiBroadcast (kodocpp::codec::full_vector,
+fieldMap[field], users, generationSize, packetSize, sinks);`` to call
 the broadcast class constructor. Notice also that we have separated the
 code type from the topology in case that you want to try another code.
 This does not run the simulation as we will see, but it creates the
@@ -805,22 +808,22 @@ coded packets. The numbers that you get might be different, but the tendency
 should be the same.
 
 The previous result happens because we are using the binary field.
-Set the field to :math:`q = 2^8` by setting ``kodo_binary8`` in the
-constructor arguments in ``kodo-wifi-broadcast.cc``, rebuild the projects
-(remember that you will reinstall the source code), follow the
-previous procedure and rerun the script even with 100 samples,
-to see that the amount of extra packets is zero (at least with 4
+Set the field to :math:`q = 2^8` by parsing ``binary8`` in the
+commandline arguments when calling ``kodo-wifi-broadcast``. To do it so,
+in the line that says ``COMB`` in the bash script, include: ``--field=binary8``
+after the simulation filename and rerun the script even with 100 samples.
+You will see that the amount of extra packets is zero (at least with 4
 decimal places). This is because it is very unlikely to receive
 linearly dependent packets, even when the last coded packet is being sent.
 
 To see the new coding coefficients for :math:`q = 2^8`, but for only a
 generation size of 3 packets, type now: ::
 
-  ./build/examples/kodo/ns3-dev-kodo-wifi-broadcast-debug --generationSize=3
+  ./build/examples/kodo/ns3-dev-kodo-wifi-broadcast-debug --generationSize=3 --field=binary8
 
 .. note:: If you just want to run it in the common way, you can also do it
    but for command-line parsing to change the generation size, just
-   type: ``python waf --run kodo-wifi-broadcast --command-template="%s --generationSize=3"``
+   type: ``python waf --run kodo-wifi-broadcast --command-template="%s --generationSize=3 --field=binary8"``
 
 You should see something similar to: ::
 

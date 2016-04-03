@@ -189,9 +189,8 @@ parameters to observe the difference in the total number of transmissions.
 Changing the Field Size
 ^^^^^^^^^^^^^^^^^^^^^^^
 
-Set ``kodo_binary8`` as the field size in the encoder and decoder templates,
-rebuild your projects and rerun the previous script. You will get an output
-similar to this: ::
+Set ``binary8`` as the field size in the string parsing as described previously
+and rerun the previous script. You will get an output similar to this: ::
 
    ./mean_packets.bash 1
    Wired broadcast example mean: 8.0000
@@ -216,7 +215,7 @@ Changing the Packet Erasure Rate
 One interesting feature that we have added is a ``RateErrorModel`` which
 basically includes a packet error rate at each receiver. Currently we have set
 the error rates to be both the same and a 30% loss rate is set by default. Keep
-``kodo_binary8`` as a field size in order to exclude retransmissions due to
+``binary8`` as a field size in order to exclude retransmissions due to
 linear dependency and account them only for losses. As we saw, with 30% losses
 we see an average of 8.2335 transmissions (for 10000 example runs). Now, we
 will check that by adjusting the loss rate (with the same amount of runs). So,
