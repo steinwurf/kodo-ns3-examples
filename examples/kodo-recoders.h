@@ -281,7 +281,6 @@ private:
   uint32_t m_recodersTransmissionCount;
   uint32_t m_decoderRank;
   std::map<uint32_t, std::map<uint32_t, ns3::Ptr<ns3::Packet>>> m_previousPackets;
-  // std::vector<ns3::Ptr<ns3::Packet>> m_previousPackets;
 
   const double m_transmitProbability;
   ns3::Ptr<ns3::UniformRandomVariable> m_uniformRandomVariable;
