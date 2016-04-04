@@ -29,7 +29,7 @@ Automated Builds
 
 You can check the build status of the repository master branch on our
 `buildbot <http://buildbot.steinwurf.dk/stats?projects=kodo-ns3-examples>`_
-page. Our buildbot display the supported combinations of platforms,
+page. Our buildbot displays the supported combinations of platforms,
 operating systems, and compilers. At the link, you can check
 build status and build statistics for them in the respective waterfall link.
 This information is provided also for other Steinwurf projects such as Kodo
@@ -45,7 +45,7 @@ In order for the tutorial to be easy to read, some basic knowledge of C++ is
 recommended. If you are also a C++ beginner, you can refer to this
 `tutorial <http://www.cplusplus.com/doc/tutorial/>`_ as a guide from the basics
 to more advanced features of the language. Given that both ns-3 and Kodo are
-highly based object oriented projects, we strongly recommend you to spend some
+highly object-oriented projects, we strongly recommend you to spend some
 time on class related topics, particularly object properties (polymorphism,
 inheritance) and templates (generic classes or functions based on abstract
 types). In the mentioned C++ tutorial you may find plenty examples for this.
@@ -59,7 +59,7 @@ implements Random Linear Network Coding and its variants, but also other
 codes like Reed-Solomon. The links you should review first to get a
 clear idea of what the library does, are:
 
-* `Kodo documentation <http://kodo-docs.steinwurf.com/en/latest/>`_
+* `Kodo documentation <http://docs.steinwurf.com/>`_
 * `Kodo source code <https://github.com/steinwurf/kodo>`_
 
 
@@ -68,10 +68,11 @@ Kodo C++ bindings
 
 To ease the development process, we use C++
 `bindings <https://github.com/steinwurf/kodo-cpp>`_ that are high level
-wrappers. Besides making the process easier, they provide encapsulation
+wrappers of the basic core application programming interfaces of Kodo.
+Besides making the process easier, the bindings provide encapsulation
 and abstraction from the library. If you want to get more details, please
 refer to the previous link. There you will find documentation and examples
-regading on how to use the bindings.
+regading on how to use the bindings on their own.
 
 ns-3
 ^^^^

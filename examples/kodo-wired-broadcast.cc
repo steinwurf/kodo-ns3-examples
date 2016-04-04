@@ -99,6 +99,13 @@ int main (int argc, char *argv[])
   uint32_t generationSize = 5; // RLNC generation size
   double errorRate = 0.3; // Error rate for all the links
   uint32_t users = 2; // Number of users
+  std::string field = "binary"; // Finite field used
+
+  // Create a map for the field values
+  std::map<std::string,kodocpp::field> fieldMap;
+  fieldMap["binary"] = kodocpp::field::binary;
+  fieldMap["binary4"] = kodocpp::field::binary4;
+  fieldMap["binary8"] = kodocpp::field::binary8;
 
   Time interPacketInterval = Seconds (interval);
 
@@ -110,8 +117,15 @@ int main (int argc, char *argv[])
     generationSize);
   cmd.AddValue ("errorRate", "Packet erasure rate for the links", errorRate);
   cmd.AddValue ("users", "Number of receivers", users);
+  cmd.AddValue ("field", "Finite field used", field);
 
   cmd.Parse (argc, argv);
+
+  // Use the binary field in case of errors
+  if (fieldMap.find (field) == fieldMap.end ())
+    {
+      field = "binary";
+    }
 
   Time::SetResolution (Time::NS);
   //! [2]
@@ -165,9 +179,11 @@ int main (int argc, char *argv[])
       sinks[n] = Socket::CreateSocket (star.GetSpokeNode (n), tid);
     }
 
+  // Check for finite field employed and
   // Creates the Broadcast helper for this broadcast topology
-  Broadcast wiredBroadcast (kodocpp::codec::full_vector,
-    kodocpp::field::binary, users, generationSize, packetSize, source, sinks);
+
+  Broadcast wiredBroadcast (kodocpp::codec::full_vector, fieldMap[field],
+    users, generationSize, packetSize, source, sinks);
 
   // Receiver socket connections
   InetSocketAddress local = InetSocketAddress (Ipv4Address::GetAny (), port);
@@ -183,7 +199,7 @@ int main (int argc, char *argv[])
   Ipv4GlobalRoutingHelper::PopulateRoutingTables ();
 
   // Do pcap tracing on all point-to-point devices on all nodes
-  pointToPoint.EnablePcapAll ("kodo-wired-broadcast");
+  // pointToPoint.EnablePcapAll ("kodo-wired-broadcast");
 
   Simulator::ScheduleWithContext (source->GetNode ()->GetId (), Seconds (1.0),
     &Broadcast::SendPacket, &wiredBroadcast, source, interPacketInterval);

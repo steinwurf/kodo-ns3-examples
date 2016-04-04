@@ -214,8 +214,8 @@ Comments, Feedback, Bugs & Questions
 ------------------------------------
 
 If for some reason your project does not build or you have any other issues or
-questions related to the project **after** precisely following the build 
-instructions, please feel free to contact us through our developers mailing 
+questions related to the project **after** precisely following the build
+instructions, please feel free to contact us through our developers mailing
 list hosted at Google Groups:
 
 * http://groups.google.com/group/steinwurf-dev
@@ -226,26 +226,43 @@ research, please let us know!
 We would be happy to add links to your work or potentially include them
 as new examples!
 
-Please follow **these guidelines for posting on the mailing list** to make 
+Please follow **these guidelines for posting on the mailing list** to make
 the workflow efficient and simple:
 
-* Before submitting questions about building the project, please make sure that 
+* Before submitting questions about building the project, please make sure that
   you have followed the procedure described above
 
-* Before submitting your question, please check the mailing list to see if it has 
-  been already answered, most of the basic questions tend to be the same
+* Before submitting your question, please check the mailing list to see if it
+  has been already answered, most of the basic questions tend to be the same
 
-* Do not reply to previously opened threads if they are not related to your question
+* Do not reply to previously opened threads if they are not related to your
+  question
 
 * If your question is new, you may open a new mail thread
 
-* When stating your question, be clear about your objectives. For simulations, 
-  please tell us what you want to simulate in terms of system model, assumptions, 
-  parameters and consider the limitations of ns-3 and/or Kodo. At first, try to 
-  provide a concise and general description. Later, you can add details if you 
-  think that those are relevant to your question.
-  
-Also, feel free to tell us what we should add to improve the tutorial!
+* When stating your question, be clear about your objectives. For simulations,
+  please tell us what you want to simulate in terms of system model,
+  assumptions, parameters and consider the limitations of ns-3 and/or Kodo. At
+  first, try to provide a concise general description. Later, you can add
+  details if you think that those are relevant to your question.
+
+* If you have followed the previous steps and still want to report an error,
+  please do the following:
+
+  1. In your e-mail, indicate us the failure problem and when does it occur.
+     Indicate the type of problem (e.g. if it is compiler error or a
+     segmentation fault or something else). Also include your OS, compiler
+     waf, python and  ns-3 version.
+  2. Attach a printscreen or a ``.txt`` log file posting the complete
+     output of the command of procedure that gives the error.     .
+  3. If your error is related with a source file, please include it as well
+     in your report.
+
+* **Disclaimer**: We will not correct your source code, but just provide
+  you guidelines to do so :)
+
+Also, feel free to tell us what we should add to improve the examples and the
+tutorial!
 
 Finally, ns-3 users have their
 `mailing list <https://groups.google.com/d/forum/ns-3-users>`_ so you can ask
