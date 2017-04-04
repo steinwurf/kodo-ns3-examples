@@ -83,7 +83,7 @@ def build(bld):
     start_dir = os.path.join(bld.dependency_path('kodo-c'), 'src')
     start_dir = bld.root.find_dir(start_dir)
     bld.install_files('${NS3_EXAMPLES_PATH}/include',
-                      ['kodoc/kodoc.h'],
+                      start_dir.ant_glob('**/*.h'),
                       cwd=start_dir, relative_trick=True)
 
 
