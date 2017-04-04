@@ -2,7 +2,7 @@
 # encoding: utf-8
 
 import os
-import waflib.extras.wurf_options
+
 from waflib.TaskGen import feature, before_method
 
 APPNAME = 'kodo-ns3-examples'
@@ -11,39 +11,13 @@ VERSION = '2.0.0'
 
 def options(opt):
 
-    opt.load('wurf_common_tools')
-
     # The options needed to find the ns-3 libraries
     opt.add_option(
         '--ns3_path', default=None, dest='ns3_path',
          help='Path to the cloned ns-3 repository')
 
 
-def resolve(ctx):
-
-    import waflib.extras.wurf_dependency_resolve as resolve
-
-    ctx.load('wurf_common_tools')
-
-    ctx.add_dependency(resolve.ResolveVersion(
-        name='waf-tools',
-        git_repository='github.com/steinwurf/waf-tools.git',
-        major=3))
-
-    ctx.add_dependency(resolve.ResolveVersion(
-        name='kodo-cpp',
-        git_repository='github.com/steinwurf/kodo-cpp.git',
-        major=6))
-
-
-def configure(conf):
-
-    conf.load("wurf_common_tools")
-
-
 def build(bld):
-
-    bld.load("wurf_common_tools")
 
     # Define a dummy task to force the compilation of the kodo-c shared library
     bld(features='cxx',

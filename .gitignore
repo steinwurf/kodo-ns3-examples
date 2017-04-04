@@ -1,7 +1,60 @@
-.dependency_config
-.lock*
+# Compiled Object files
+*.slo
+*.lo
+*.o
+
+# Compiled Dynamic libraries
+*.so
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+
+# Python
+*.pyc
+
+# Compiled Doxygen documentation
+/doxygen/html
+
+# Waf files
+waf-*
+waf3-*
+.waf-*
+.waf3-*
+.lock-*
 build
-bundle_dependencies
-.waf*
-*.pcap
-docs/_build
+resolve_symlinks
+resolved_dependencies
+
+# Gnu Global tag files
+GPATH
+GRTAGS
+GSYMS
+GTAGS
+
+# Emacs temp / auto save
+\#*#
+*.#*
+*~
+
+#Eclipse ignore
+.cproject
+*.project
+.metadata
+local.properties
+.classpath
+.settings/
+
+# Visual Studio ignore
+*.bat
+*.sln
+*.suo
+*.user
+*.ncb
+*.sdf
+*.opensdf
+*.log
+*.txt
+*.vcxproj*
+VSProjects
