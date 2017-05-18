@@ -4,13 +4,17 @@
         "resolver": "git",
         "method": "semver",
         "major": 4,
-        "sources": ["github.com/steinwurf/waf-tools.git"]
+        "sources": [
+            "github.com/steinwurf/waf-tools.git"
+        ]
     },
     {
         "name": "kodo-cpp",
         "resolver": "git",
         "method": "semver",
-        "major": 7,
-        "sources": ["github.com/steinwurf/kodo-cpp.git"]
+        "major": 8,
+        "sources": [
+            "github.com/steinwurf/kodo-cpp.git"
+        ]
     }
 ]
