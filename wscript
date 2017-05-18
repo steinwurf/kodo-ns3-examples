@@ -6,7 +6,7 @@ import os
 from waflib.TaskGen import feature, before_method
 
 APPNAME = 'kodo-ns3-examples'
-VERSION = '2.0.0'
+VERSION = '1.0.0'
 
 
 def options(opt):
