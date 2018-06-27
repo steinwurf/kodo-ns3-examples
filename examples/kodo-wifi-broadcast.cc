@@ -192,13 +192,12 @@ int main (int argc, char *argv[])
     DoubleValue (rss));
   wifiPhy.SetChannel (wifiChannel.Create ());
   //! [7]
-  // Add a non-QoS upper mac, and disable rate control
-  NqosWifiMacHelper wifiMac = NqosWifiMacHelper::Default ();
+  // Disable rate control
   wifi.SetRemoteStationManager ("ns3::ConstantRateWifiManager",
-    "DataMode",StringValue (phyMode), "ControlMode",StringValue (phyMode));
+    "DataMode", StringValue (phyMode), "ControlMode", StringValue (phyMode));
 
-  // Set WiFi type and configuration parameters for MAC
-  // Set it to adhoc mode
+  // Set WiFi Mac type to adhoc mode
+  WifiMacHelper wifiMac;
   wifiMac.SetType ("ns3::AdhocWifiMac");
 
   // Create the net devices
