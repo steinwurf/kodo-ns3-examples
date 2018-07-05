@@ -102,10 +102,10 @@ int main (int argc, char *argv[])
   std::string field = "binary"; // Finite field used
 
   // Create a map for the field values
-  std::map<std::string,kodocpp::field> fieldMap;
-  fieldMap["binary"] = kodocpp::field::binary;
-  fieldMap["binary4"] = kodocpp::field::binary4;
-  fieldMap["binary8"] = kodocpp::field::binary8;
+  std::map<std::string, fifi::api::field> fieldMap;
+  fieldMap["binary"] = fifi::api::field::binary;
+  fieldMap["binary4"] = fifi::api::field::binary4;
+  fieldMap["binary8"] = fifi::api::field::binary8;
 
   Time interPacketInterval = Seconds (interval);
 
@@ -182,8 +182,8 @@ int main (int argc, char *argv[])
   // Check for finite field employed and
   // Creates the Broadcast helper for this broadcast topology
 
-  Broadcast wiredBroadcast (kodocpp::codec::full_vector, fieldMap[field],
-    users, generationSize, packetSize, source, sinks);
+  Broadcast wiredBroadcast (fieldMap[field], users, generationSize, packetSize,
+      source, sinks);
 
   // Receiver socket connections
   InetSocketAddress local = InetSocketAddress (Ipv4Address::GetAny (), port);
