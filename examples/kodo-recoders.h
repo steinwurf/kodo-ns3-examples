@@ -22,6 +22,7 @@
 #pragma once
 
 #include <cstdint>
+#include <memory>
 #include <vector>
 
 #include <kodo_rlnc/coders.hpp>
@@ -47,9 +48,9 @@ public:
 
     // Call factories from basic parameters
 
-    kodo_rlnc::encoder_factory encoderFactory (m_field,
+    kodo_rlnc::encoder::factory encoderFactory (m_field,
       m_generationSize, m_packetSize);
-    kodo_rlnc::decoder_factory decoderFactory (m_field,
+    kodo_rlnc::decoder::factory decoderFactory (m_field,
       m_generationSize, m_packetSize);
 
     // Create encoder and disable systematic mode
@@ -58,28 +59,25 @@ public:
 
     // Initialize the encoder data buffer
     m_encoderBuffer.resize (m_encoder->block_size ());
-    m_encoder->set_const_symbols (m_encoderBuffer.data (),
-        m_encoder->block_size ());
+    m_encoder->set_const_symbols (storage::storage (m_encoderBuffer));
     m_payload.resize (m_encoder->payload_size ());
 
     // Create recoders and place them in a vector
     m_recoderBuffers.resize (m_users);
     for (uint32_t n = 0; n < m_users; n++)
      {
-       kodo_rlnc::decoder recoder = decoderFactory.build ();
+       auto recoder = decoderFactory.build ();
 
        // Create data buffer for the decoder
        m_recoderBuffers[n].resize (recoder->block_size ());
-       recoder->set_mutable_symbols(m_recoderBuffers[n].data (),
-         recoder->block_size ());
+       recoder->set_mutable_symbols(storage::storage (m_recoderBuffers[n]));
        m_recoders.emplace_back (recoder);
      }
 
     // Create decoder and its data buffer
     m_decoder = decoderFactory.build ();
     m_decoderBuffers.resize (m_decoder->block_size ());
-    m_decoder->set_mutable_symbols (m_decoderBuffers.data (),
-        m_decoder->block_size ());
+    m_decoder->set_mutable_symbols (storage::storage (m_decoderBuffers));
 
     // Initialize transmission counts
     m_encoderTransmissionCount = 0;
@@ -133,7 +131,7 @@ public:
 
     std::cout << "Received a packet at RECODER " << id + 1 << std::endl;
 
-    kodo_rlnc::decoder recoder = m_recoders[id];
+    auto& recoder = m_recoders[id];
 
     auto packet = socket->Recv ();
     packet->CopyData (&m_payload[0], recoder->payload_size ());
@@ -161,7 +159,7 @@ public:
       std::find(m_recodersSockets.begin (), m_recodersSockets.end (), socket);
     auto id = std::distance (m_recodersSockets.begin (), it);
 
-    kodo_rlnc::decoder recoder = m_recoders[id];
+    auto& recoder = m_recoders[id];
 
     // A node wil transmit at random with probability
     // m_transmitProbability. Thus, we throw a coin
@@ -264,11 +262,11 @@ private:
   const uint32_t m_packetSize;
   const bool m_recodingFlag;
 
-  kodo_rlnc::encoder m_encoder;
+  std::shared_ptr<kodo_rlnc::encoder> m_encoder;
   std::vector<uint8_t> m_encoderBuffer;
-  std::vector<kodo_rlnc::decoder> m_recoders;
+  std::vector<std::shared_ptr<kodo_rlnc::decoder>> m_recoders;
   std::vector<std::vector<uint8_t>> m_recoderBuffers;
-  kodo_rlnc::decoder m_decoder;
+  std::shared_ptr<kodo_rlnc::decoder> m_decoder;
   std::vector<uint8_t> m_decoderBuffers;
   std::vector<ns3::Ptr<ns3::Socket>> m_recodersSockets;
 
@@ -276,7 +274,7 @@ private:
   uint32_t m_encoderTransmissionCount;
   uint32_t m_recodersTransmissionCount;
   uint32_t m_decoderRank;
-  std::map<uint32_t, std::map<uint32_t, ns3::Ptr<ns3::Packet>>> m_previousPackets;
+  std::map<uint32_t, std::vector<ns3::Ptr<ns3::Packet>>> m_previousPackets;
 
   const double m_transmitProbability;
   ns3::Ptr<ns3::UniformRandomVariable> m_uniformRandomVariable;

@@ -46,47 +46,22 @@ def build(bld):
                       start_dir.ant_glob('**/*'),
                       cwd=start_dir, relative_trick=True)
 
-#    def overwrite_symlink(from_path, to_path):
-#        if os.path.lexists(path=to_path):
-#            os.unlink(to_path)
-#        os.symlink(from_path, to_path)
-
     # Add symlinks to all dependency includes under NS3_EXAMPLES_PATH/include
-    if bld.cmd == 'install':
-        include_dir = os.path.join(bld.env['NS3_EXAMPLES_PATH'], 'include')
-        if not os.path.exists(include_dir):
-            os.makedirs(include_dir)
+    include_dir = os.path.join(bld.env['NS3_EXAMPLES_PATH'], 'include')
 
+    projects = ['kodo-rlnc', 'kodo-core', 'fifi', 'storage']
+    for project in projects:
+        subfolder = project.replace('-', '_')
         src_dir = os.path.join(
-            bld.dependency_path('kodo-rlnc'), 'src', 'kodo_rlnc')
-        dst_dir = os.path.join(include_dir, 'kodo_rlnc')
+            bld.dependency_path(project), 'src', subfolder)
+        dst_dir = os.path.join(include_dir, subfolder)
         bld.symlink_as(dst_dir, src_dir)
 
-        src_dir = os.path.join(
-            bld.dependency_path('fifi'), 'src', 'fifi')
-        dst_dir = os.path.join(include_dir, 'fifi')
-        bld.symlink_as(dst_dir, src_dir)
-
-        src_dir = os.path.join(
-            bld.dependency_path('storage'), 'src', 'storage')
-        dst_dir = os.path.join(include_dir, 'storage')
-        bld.symlink_as(dst_dir, src_dir)
-
-        src_dir = os.path.join(
-            bld.dependency_path('kodo-core'), 'src', 'kodo_core')
-        dst_dir = os.path.join(include_dir, 'kodo_core')
-        bld.symlink_as(dst_dir, src_dir)
-
-
-@feature('cxxstlib')
-@after_method('apply_incpaths')
-def kodo_ns3_examples_symlink_includes(self):
-    if self.name == 'kodo_rlnc':
-        includes = sorted(set(self.env.INCLUDES))
-        for inc in includes:
-            if not inc.is_child_of(self.bld.bldnode):
-                print(inc)
-        #print(includes)
+    # Boost is added separately, since it has a different include path
+    src_dir = os.path.join(
+        bld.dependency_path('boost'), 'boost')
+    dst_dir = os.path.join(include_dir, 'boost')
+    bld.symlink_as(dst_dir, src_dir)
 
 
 @feature('cxxstlib')

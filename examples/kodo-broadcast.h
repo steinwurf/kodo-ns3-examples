@@ -22,6 +22,7 @@
 #pragma once
 
 #include <cstdint>
+#include <memory>
 #include <vector>
 
 #include <kodo_rlnc/coders.hpp>
@@ -44,9 +45,9 @@ public:
     srand(static_cast<uint32_t>(time(0)));
 
     // Create factories using the supplied parameters
-    kodo_rlnc::encoder_factory encoderFactory (m_field,
+    kodo_rlnc::encoder::factory encoderFactory (m_field,
       m_generationSize, m_packetSize);
-    kodo_rlnc::decoder_factory decoderFactory (m_field,
+    kodo_rlnc::decoder::factory decoderFactory (m_field,
       m_generationSize, m_packetSize);
 
     // Create encoder and disable systematic mode
@@ -55,15 +56,14 @@ public:
 
     // Initialize the encoder data buffer
     m_encoderBuffer.resize (m_encoder->block_size ());
-    m_encoder->set_const_symbols (m_encoderBuffer.data (),
-      m_encoder->block_size ());
+    m_encoder->set_const_symbols (storage::storage (m_encoderBuffer));
     m_payload.resize (m_encoder->payload_size ());
 
     // Create decoders
     m_decoderBuffers.resize (m_users);
     for (uint32_t n = 0; n < m_users; n++)
       {
-        kodo_rlnc::decoder decoder = decoderFactory.build ();
+        auto decoder = decoderFactory.build ();
 
         // Add custom trace callback to each decoder
         auto callback = [](const std::string& zone, const std::string& data)
@@ -80,8 +80,7 @@ public:
 
         // Create data buffer for the decoder
         m_decoderBuffers[n].resize (decoder->block_size ());
-        decoder->set_mutable_symbols (m_decoderBuffers[n].data (),
-          decoder->block_size ());
+        decoder->set_mutable_symbols (storage::storage (m_decoderBuffers[n]));
 
         m_decoders.emplace_back (decoder);
       }
@@ -128,26 +127,26 @@ public:
 
     std::cout << "Received a packet at Decoder " << n + 1 << std::endl;
 
-    std::vector<uint8_t> payload (m_decoders[n].payload_size ());
+    std::vector<uint8_t> payload (m_decoders[n]->payload_size ());
 
     // Pass the packet payload to the appropriate decoder
     auto packet = socket->Recv ();
-    packet->CopyData (&payload[0], m_decoders[n].payload_size ());
-    m_decoders[n].read_payload (&payload[0]);
+    packet->CopyData (&payload[0], m_decoders[n]->payload_size ());
+    m_decoders[n]->read_payload (&payload[0]);
   }
 
 private:
 
-  const kodo_rlnc::field m_field;
+  const fifi::api::field m_field;
   const uint32_t m_users;
   const uint32_t m_generationSize;
   const uint32_t m_packetSize;
 
   ns3::Ptr<ns3::Socket> m_source;
   std::vector<ns3::Ptr<ns3::Socket>> m_sinks;
-  kodo_rlnc::encoder m_encoder;
+  std::shared_ptr<kodo_rlnc::encoder> m_encoder;
   std::vector<uint8_t> m_encoderBuffer;
-  std::vector<kodo_rlnc::decoder> m_decoders;
+  std::vector<std::shared_ptr<kodo_rlnc::decoder>> m_decoders;
   std::vector<std::vector<uint8_t>> m_decoderBuffers;
 
   std::vector<uint8_t> m_payload;
