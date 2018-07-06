@@ -76,9 +76,9 @@ def configure(properties):
 
 
 def build(properties):
-    # Build the kodo-c shared library with our waf
-    # Install the examples, the required headers and the compiled shared
-    # library to '{ns3_path}/examples/kodo'
+    # Build the kodo-rlnc static library and others with our waf
+    # Install the examples, the required headers and the compiled static
+    # libraries to '{ns3_path}/examples/kodo'
     command = [sys.executable, 'waf', 'build', 'install', '-v']
     command += ['--ns3_path={}'.format(properties['ns3_path'])]
     run_command(command)

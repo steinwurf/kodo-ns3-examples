@@ -25,9 +25,9 @@ GPLv2 license.
 Using Kodo in an ns-3 example
 -----------------------------
 The examples in this repository will be installed to the ``examples/kodo``
-subfolder of your ns-3 folder. We will also build the Kodo-C shared library
+subfolder of your ns-3 folder. We will also build the Kodo static libraries
 which will be installed in the same folder together with the required header
-files. The examples will dynamically link to the shared library.
+files. The examples will be linked with the required static libraries.
 
 Getting Started
 ---------------
@@ -104,7 +104,7 @@ You must have **a valid Steinwurf license** to download the ``fifi`` and
 ``kodo`` dependencies, otherwise you will get a git error when you execute
 the configure command!
 
-Now we build the kodo-c shared library and we install the examples and all
+Now we build the kodo-rlnc static library and we install the examples and all
 the required files to the ``~/ns-3-dev/examples/kodo`` folder::
 
   python waf build install --ns3_path="~/ns-3-dev"
