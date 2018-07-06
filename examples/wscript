@@ -4,21 +4,20 @@ import os
 
 def build(bld):
 
-    # Find the kodo-c shared library in the local "lib" folder
-    kodoc_path = os.path.join(bld.path.abspath(), 'lib')
-    bld.read_shlib('kodoc', paths=[kodoc_path])
+    # Find the required static libraries in the local "lib" folder
+    lib_path = os.path.join(bld.path.abspath(), 'lib')
+    bld.read_stlib('kodo_rlnc', paths=[lib_path])
+    bld.read_stlib('fifi', paths=[lib_path])
+    bld.read_stlib('cpuid', paths=[lib_path])
 
     def set_properties(obj):
         # Add the local 'include' folder to the normal ns-3 includes
-        # The kodo-cpp headers are installed in the 'include' folder
+        # The kodo dependency headers are available in the 'include' folder
         obj.includes = ['#', 'include']
-        # shared_ptr is used in kodo-cpp so we need to add the -std=c++11 flag
-        obj.cxxflags = ['-std=c++11']
-        # The example uses the specified ns-3 modules and the kodo-c shared lib
-        obj.use = obj.ns3_module_dependencies + ['kodoc']
-        # Set the rpath to the kodo-c shared lib, so the system can find it
-        # when running the example binary
-        obj.rpath = [kodoc_path]
+        # Set the required C++ flags
+        obj.cxxflags = ['-std=c++14']
+        # The example uses the specified ns-3 modules and the kodo libraries
+        obj.use = obj.ns3_module_dependencies + ['kodo_rlnc', 'fifi', 'cpuid']
         obj.install_path = None
 
     obj = bld.create_ns3_program('kodo-recoders',
@@ -38,5 +37,3 @@ def build(bld):
                                   'point-to-point-layout', 'internet'])
     obj.source = 'kodo-wired-broadcast.cc'
     set_properties(obj)
-
-

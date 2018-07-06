@@ -9,12 +9,12 @@
         ]
     },
     {
-        "name": "kodo-cpp",
+        "name": "kodo-rlnc",
         "resolver": "git",
         "method": "semver",
-        "major": 8,
+        "major": 13,
         "sources": [
-            "github.com/steinwurf/kodo-cpp.git"
+            "github.com/steinwurf/kodo-rlnc.git"
         ]
     }
 ]

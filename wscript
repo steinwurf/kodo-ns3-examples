@@ -3,7 +3,7 @@
 
 import os
 
-from waflib.TaskGen import feature, before_method
+from waflib.TaskGen import feature, after_method, before_method
 
 APPNAME = 'kodo-ns3-examples'
 VERSION = '1.0.0'
@@ -19,9 +19,17 @@ def options(opt):
 
 def build(bld):
 
-    # Define a dummy task to force the compilation of the kodo-c shared library
+    CXX = bld.env.get_flat("CXX")
+
+    # Matches both g++ and clang++
+    if 'g++' in CXX or 'clang' in CXX:
+        # The -fPIC flag is required for all underlying static libraries that
+        # will be included in a Position Independent Executable (PIE)
+        bld.env.append_value('CXXFLAGS', '-fPIC')
+
+    # Define a dummy task to force the compilation of the kodo-rlnc library
     bld(features='cxx',
-        use=['kodoc'])
+        use=['kodo_rlnc'])
 
     # Expand and validate the ns3_path option
     if not bld.has_tool_option('ns3_path'):
@@ -46,28 +54,28 @@ def build(bld):
                       start_dir.ant_glob('**/*'),
                       cwd=start_dir, relative_trick=True)
 
-    # Install all .hpp files from kodo-cpp to the 'include' folder
-    start_dir = os.path.join(bld.dependency_path('kodo-cpp'), 'src')
-    start_dir = bld.root.find_dir(start_dir)
-    bld.install_files('${NS3_EXAMPLES_PATH}/include',
-                      start_dir.ant_glob('**/*.hpp'),
-                      cwd=start_dir, relative_trick=True)
+    # Add symlinks to all dependency includes under NS3_EXAMPLES_PATH/include
+    include_dir = os.path.join(bld.env['NS3_EXAMPLES_PATH'], 'include')
 
-    # Install kodoc.h from kodo-c to the 'include' folder
-    start_dir = os.path.join(bld.dependency_path('kodo-c'), 'src')
-    start_dir = bld.root.find_dir(start_dir)
-    bld.install_files('${NS3_EXAMPLES_PATH}/include',
-                      start_dir.ant_glob('**/*.h'),
-                      cwd=start_dir, relative_trick=True)
+    projects = ['kodo-rlnc', 'kodo-core', 'fifi', 'storage']
+    for project in projects:
+        subfolder = project.replace('-', '_')
+        src_dir = os.path.join(
+            bld.dependency_path(project), 'src', subfolder)
+        dst_dir = os.path.join(include_dir, subfolder)
+        bld.symlink_as(dst_dir, src_dir)
+
+    # Boost is added separately, since it has a different include path
+    src_dir = os.path.join(
+        bld.dependency_path('boost'), 'boost')
+    dst_dir = os.path.join(include_dir, 'boost')
+    bld.symlink_as(dst_dir, src_dir)
 
 
-@feature('cshlib', 'cxxshlib')
+@feature('cxxstlib')
 @before_method('apply_link')
-def update_kodoc_install_path(self):
+def kodo_ns3_examples_override_stlib_install_path(self):
     """
-    Set the install_path of the kodo-c shared library to install it
-    in the '${NS3_EXAMPLES_PATH}/lib' folder
+    Install all static libraries to the NS3_EXAMPLES_PATH/lib folder
     """
-    if self.name == 'kodoc':
-        self.install_path = os.path.join(
-            self.bld.env['NS3_EXAMPLES_PATH'], 'lib')
+    self.install_path = os.path.join(self.bld.env['NS3_EXAMPLES_PATH'], 'lib')

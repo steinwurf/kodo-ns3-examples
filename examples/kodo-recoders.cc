@@ -124,10 +124,10 @@ int main (int argc, char *argv[])
   double transmitProbability = 0.5; // Transmit probability for the recoders
 
   // Create a map for the field values
-  std::map<std::string,kodocpp::field> fieldMap;
-  fieldMap["binary"] = kodocpp::field::binary;
-  fieldMap["binary4"] = kodocpp::field::binary4;
-  fieldMap["binary8"] = kodocpp::field::binary8;
+  std::map<std::string, fifi::api::field> fieldMap;
+  fieldMap["binary"] = fifi::api::field::binary;
+  fieldMap["binary4"] = fifi::api::field::binary4;
+  fieldMap["binary8"] = fifi::api::field::binary8;
 
   Time interPacketInterval = Seconds (interval);
 
@@ -264,8 +264,8 @@ int main (int argc, char *argv[])
       recodersSockets[n]->Connect (decoderSocketAddress);
     }
 
-  Recoders multihop (kodocpp::codec::full_vector, fieldMap[field], recoders,
-    generationSize, packetSize, recodersSockets, recodingFlag, transmitProbability);
+  Recoders multihop (fieldMap[field], recoders, generationSize, packetSize,
+      recodersSockets, recodingFlag, transmitProbability);
 
   // Recoders callbacks
   for (uint32_t n = 0; n < recoders; n++)

@@ -21,19 +21,22 @@
 
 #pragma once
 
-#include <kodocpp/kodocpp.hpp>
+#include <cstdint>
+#include <memory>
+#include <vector>
+
+#include <kodo_rlnc/coders.hpp>
 
 class Recoders
 {
 public:
 
-  Recoders (const kodocpp::codec codeType,
-    const kodocpp::field field, const uint32_t users,
+  Recoders (
+    const fifi::api::field field, const uint32_t users,
     const uint32_t generationSize, const uint32_t packetSize,
     const std::vector<ns3::Ptr<ns3::Socket>>& recodersSockets,
     const bool recodingFlag, const double transmitProbability)
-    : m_codeType (codeType),
-      m_field (field),
+    : m_field (field),
       m_users (users),
       m_generationSize (generationSize),
       m_packetSize (packetSize),
@@ -45,39 +48,36 @@ public:
 
     // Call factories from basic parameters
 
-    kodocpp::encoder_factory encoderFactory (m_codeType, m_field,
+    kodo_rlnc::encoder::factory encoderFactory (m_field,
       m_generationSize, m_packetSize);
-    kodocpp::decoder_factory decoderFactory (m_codeType, m_field,
+    kodo_rlnc::decoder::factory decoderFactory (m_field,
       m_generationSize, m_packetSize);
 
     // Create encoder and disable systematic mode
     m_encoder = encoderFactory.build ();
-    m_encoder.set_systematic_off ();
+    m_encoder->set_systematic_off ();
 
     // Initialize the encoder data buffer
-    m_encoderBuffer.resize (m_encoder.block_size ());
-    m_encoder.set_const_symbols (m_encoderBuffer.data (),
-        m_encoder.block_size ());
-    m_payload.resize (m_encoder.payload_size ());
+    m_encoderBuffer.resize (m_encoder->block_size ());
+    m_encoder->set_const_symbols (storage::storage (m_encoderBuffer));
+    m_payload.resize (m_encoder->payload_size ());
 
     // Create recoders and place them in a vector
     m_recoderBuffers.resize (m_users);
     for (uint32_t n = 0; n < m_users; n++)
      {
-       kodocpp::decoder recoder = decoderFactory.build ();
+       auto recoder = decoderFactory.build ();
 
        // Create data buffer for the decoder
-       m_recoderBuffers[n].resize (recoder.block_size ());
-       recoder.set_mutable_symbols(m_recoderBuffers[n].data (),
-         recoder.block_size ());
+       m_recoderBuffers[n].resize (recoder->block_size ());
+       recoder->set_mutable_symbols(storage::storage (m_recoderBuffers[n]));
        m_recoders.emplace_back (recoder);
      }
 
     // Create decoder and its data buffer
     m_decoder = decoderFactory.build ();
-    m_decoderBuffers.resize (m_decoder.block_size ());
-    m_decoder.set_mutable_symbols (m_decoderBuffers.data (),
-        m_decoder.block_size ());
+    m_decoderBuffers.resize (m_decoder->block_size ());
+    m_decoder->set_mutable_symbols (storage::storage (m_decoderBuffers));
 
     // Initialize transmission counts
     m_encoderTransmissionCount = 0;
@@ -98,7 +98,7 @@ public:
 
     for (auto recoder : m_recoders)
       {
-         allRecodersDecoded &= recoder.is_complete ();
+         allRecodersDecoded &= recoder->is_complete ();
       }
 
     if (!allRecodersDecoded)
@@ -107,7 +107,7 @@ public:
         std::cout << "|Sending a coded packet from ENCODER|" << std::endl;
         std::cout << "+-----------------------------------+" << std::endl;
 
-        uint32_t bytesUsed = m_encoder.write_payload (&m_payload[0]);
+        uint32_t bytesUsed = m_encoder->write_payload (&m_payload[0]);
         auto packet = ns3::Create<ns3::Packet> (&m_payload[0], bytesUsed);
         socket->Send (packet);
         m_encoderTransmissionCount++;
@@ -131,30 +131,22 @@ public:
 
     std::cout << "Received a packet at RECODER " << id + 1 << std::endl;
 
-    kodocpp::decoder recoder = m_recoders[id];
+    auto& recoder = m_recoders[id];
 
     auto packet = socket->Recv ();
-    packet->CopyData (&m_payload[0], recoder.payload_size ());
+    packet->CopyData (&m_payload[0], recoder->payload_size ());
 
-    recoder.read_payload (&m_payload[0]);
+    recoder->read_payload (&m_payload[0]);
 
     // Keep track of the received packets for each recoder
     // when no recoding is employed to forward one of them
     // uniformly at random
     if (!m_recodingFlag)
       {
-        uint32_t index = m_previousPackets[id].size ();
-
-        auto relay_it = m_previousPackets[id].find (index);
-
-        if (relay_it == m_previousPackets[id].end())
-          {
-            m_previousPackets[id][index] = packet;
-          }
-        
+        m_previousPackets[id].push_back(packet);
       }
 
-    if (recoder.is_complete ())
+    if (recoder->is_complete ())
       {
         std::cout << "RECODER " << id + 1 << " is complete!\n" << std::endl;
       }
@@ -167,12 +159,12 @@ public:
       std::find(m_recodersSockets.begin (), m_recodersSockets.end (), socket);
     auto id = std::distance (m_recodersSockets.begin (), it);
 
-    kodocpp::decoder recoder = m_recoders[id];
+    auto& recoder = m_recoders[id];
 
     // A node wil transmit at random with probability
     // m_transmitProbability. Thus, we throw a coin
-    // (RBernoulli Random Variable) with this probability
-    // and check it. ns-3 does not has Bernoulli but has
+    // (Bernoulli Random Variable) with this probability
+    // and check it. ns-3 does not have Bernoulli but has
     // Uniform. So, we convert this random variable through
     // the inverse transform method.
 
@@ -183,7 +175,7 @@ public:
         transmit = true;
       }
 
-    if (!m_decoder.is_complete () && recoder.rank () > 0 && transmit)
+    if (!m_decoder->is_complete () && recoder->rank () > 0 && transmit)
       {
         if (m_recodingFlag)
           {
@@ -193,21 +185,24 @@ public:
             std::cout << "+-------------------------------------+" << std::endl;
 
             // Recode a new packet and send it
-            uint32_t bytesUsed = recoder.write_payload (&m_payload[0]);
+            uint32_t bytesUsed = recoder->write_payload (&m_payload[0]);
             auto packet = ns3::Create<ns3::Packet> (&m_payload[0], bytesUsed);
             socket->Send (packet);
             m_recodersTransmissionCount++;
           }
         else
           {
-            std::cout << "+-------------------------------------------+" << std::endl;
+            std::cout << "+-------------------------------------------+"
+                      << std::endl;
             std::cout << "|Forwarding a previous packet from RECODER "
                       << id + 1 << "|" << std::endl;
-            std::cout << "+-------------------------------------------+" << std::endl;
+            std::cout << "+-------------------------------------------+"
+                      << std::endl;
 
             // Get a previously received packet uniformly at random and forward it
             uint32_t max = m_previousPackets[id].size ();
-            uint32_t randomIndex = m_uniformRandomVariable->GetInteger (0, max - 1);
+            uint32_t randomIndex =
+              m_uniformRandomVariable->GetInteger (0, max - 1);
             auto packet = m_previousPackets[id][randomIndex];
 
             // Remove all packet tags in order to the callback retag
@@ -223,7 +218,7 @@ public:
       }
 
     // Schedule the next packet
-    if (!m_decoder.is_complete ())
+    if (!m_decoder->is_complete ())
       {
         ns3::Simulator::Schedule (pktInterval,
           &Recoders::SendPacketRecoder, this,
@@ -234,17 +229,17 @@ public:
   void ReceivePacketDecoder (ns3::Ptr<ns3::Socket> socket)
   {
     auto packet = socket->Recv ();
-    packet->CopyData (&m_payload[0], m_decoder.payload_size ());
-    m_decoder.read_payload (&m_payload[0]);
+    packet->CopyData (&m_payload[0], m_decoder->payload_size ());
+    m_decoder->read_payload (&m_payload[0]);
 
-    if (m_decoder.rank () > m_decoderRank)
+    if (m_decoder->rank () > m_decoderRank)
       {
         std::cout << "Received an innovative packet at DECODER!" << std::endl;
-        std::cout << "Decoder rank: " << m_decoder.rank () << "\n"
+        std::cout << "Decoder rank: " << m_decoder->rank () << "\n"
           << std::endl;
-        m_decoderRank = m_decoder.rank ();
+        m_decoderRank = m_decoder->rank ();
 
-        if (m_decoder.is_complete ())
+        if (m_decoder->is_complete ())
           {
             socket->Close ();
             std::cout << "*** Decoding completed! ***" << std::endl;
@@ -261,18 +256,17 @@ public:
 
 private:
 
-  const kodocpp::codec m_codeType;
-  const kodocpp::field m_field;
+  const fifi::api::field m_field;
   const uint32_t m_users;
   const uint32_t m_generationSize;
   const uint32_t m_packetSize;
   const bool m_recodingFlag;
 
-  kodocpp::encoder m_encoder;
+  std::shared_ptr<kodo_rlnc::encoder> m_encoder;
   std::vector<uint8_t> m_encoderBuffer;
-  std::vector<kodocpp::decoder> m_recoders;
+  std::vector<std::shared_ptr<kodo_rlnc::decoder>> m_recoders;
   std::vector<std::vector<uint8_t>> m_recoderBuffers;
-  kodocpp::decoder m_decoder;
+  std::shared_ptr<kodo_rlnc::decoder> m_decoder;
   std::vector<uint8_t> m_decoderBuffers;
   std::vector<ns3::Ptr<ns3::Socket>> m_recodersSockets;
 
@@ -280,7 +274,7 @@ private:
   uint32_t m_encoderTransmissionCount;
   uint32_t m_recodersTransmissionCount;
   uint32_t m_decoderRank;
-  std::map<uint32_t, std::map<uint32_t, ns3::Ptr<ns3::Packet>>> m_previousPackets;
+  std::map<uint32_t, std::vector<ns3::Ptr<ns3::Packet>>> m_previousPackets;
 
   const double m_transmitProbability;
   ns3::Ptr<ns3::UniformRandomVariable> m_uniformRandomVariable;

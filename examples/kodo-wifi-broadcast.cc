@@ -125,10 +125,10 @@ int main (int argc, char *argv[])
   std::string field = "binary"; // Finite field used
 
   // Create a map for the field values
-  std::map<std::string,kodocpp::field> fieldMap;
-  fieldMap["binary"] = kodocpp::field::binary;
-  fieldMap["binary4"] = kodocpp::field::binary4;
-  fieldMap["binary8"] = kodocpp::field::binary8;
+  std::map<std::string, fifi::api::field> fieldMap;
+  fieldMap["binary"] = fifi::api::field::binary;
+  fieldMap["binary4"] = fifi::api::field::binary4;
+  fieldMap["binary8"] = fifi::api::field::binary8;
 
   CommandLine cmd;
 
@@ -241,8 +241,8 @@ int main (int argc, char *argv[])
     }
   //! [11]
   // Creates the Broadcast helper for this broadcast topology
-  Broadcast wifiBroadcast (kodocpp::codec::full_vector, fieldMap[field],
-    users, generationSize, packetSize, source, sinks);
+  Broadcast wifiBroadcast (fieldMap[field], users, generationSize, packetSize,
+      source, sinks);
   //! [12]
   // Transmitter socket connections. Set transmitter for broadcasting
   uint16_t port = 80;

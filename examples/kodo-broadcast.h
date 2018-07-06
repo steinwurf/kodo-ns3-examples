@@ -21,19 +21,21 @@
 
 #pragma once
 
-#include <kodocpp/kodocpp.hpp>
+#include <cstdint>
+#include <memory>
+#include <vector>
+
+#include <kodo_rlnc/coders.hpp>
 
 class Broadcast
 {
 public:
 
-  Broadcast (const kodocpp::codec codeType, const kodocpp::field field,
-    const uint32_t users, const uint32_t generationSize,
-    const uint32_t packetSize,
+  Broadcast (const fifi::api::field field, const uint32_t users,
+    const uint32_t generationSize, const uint32_t packetSize,
     const ns3::Ptr<ns3::Socket>& source,
     const std::vector<ns3::Ptr<ns3::Socket>>& sinks)
-    : m_codeType (codeType),
-      m_field (field),
+    : m_field (field),
       m_users (users),
       m_generationSize (generationSize),
       m_packetSize (packetSize),
@@ -43,26 +45,25 @@ public:
     srand(static_cast<uint32_t>(time(0)));
 
     // Create factories using the supplied parameters
-    kodocpp::encoder_factory encoderFactory (m_codeType, m_field,
+    kodo_rlnc::encoder::factory encoderFactory (m_field,
       m_generationSize, m_packetSize);
-    kodocpp::decoder_factory decoderFactory (m_codeType, m_field,
+    kodo_rlnc::decoder::factory decoderFactory (m_field,
       m_generationSize, m_packetSize);
 
     // Create encoder and disable systematic mode
     m_encoder = encoderFactory.build ();
-    m_encoder.set_systematic_off ();
+    m_encoder->set_systematic_off ();
 
     // Initialize the encoder data buffer
-    m_encoderBuffer.resize (m_encoder.block_size ());
-    m_encoder.set_const_symbols (m_encoderBuffer.data (),
-      m_encoder.block_size ());
-    m_payload.resize (m_encoder.payload_size ());
+    m_encoderBuffer.resize (m_encoder->block_size ());
+    m_encoder->set_const_symbols (storage::storage (m_encoderBuffer));
+    m_payload.resize (m_encoder->payload_size ());
 
     // Create decoders
     m_decoderBuffers.resize (m_users);
     for (uint32_t n = 0; n < m_users; n++)
       {
-        kodocpp::decoder decoder = decoderFactory.build ();
+        auto decoder = decoderFactory.build ();
 
         // Add custom trace callback to each decoder
         auto callback = [](const std::string& zone, const std::string& data)
@@ -75,12 +76,11 @@ public:
                 std::cout << data << std::endl;
               }
           };
-        decoder.set_trace_callback (callback);
+        decoder->set_trace_callback (callback);
 
         // Create data buffer for the decoder
-        m_decoderBuffers[n].resize (decoder.block_size ());
-        decoder.set_mutable_symbols (m_decoderBuffers[n].data (),
-          decoder.block_size ());
+        m_decoderBuffers[n].resize (decoder->block_size ());
+        decoder->set_mutable_symbols (storage::storage (m_decoderBuffers[n]));
 
         m_decoders.emplace_back (decoder);
       }
@@ -95,7 +95,7 @@ public:
 
     for (uint32_t n = 0; n < m_users; n++)
       {
-        allDecoded = allDecoded && m_decoders[n].is_complete ();
+        allDecoded = allDecoded && m_decoders[n]->is_complete ();
       }
 
     if (!allDecoded)
@@ -103,7 +103,7 @@ public:
         std::cout << "+----------------------+" << std::endl;
         std::cout << "|Sending a coded packet|" << std::endl;
         std::cout << "+----------------------+" << std::endl;
-        uint32_t bytesUsed = m_encoder.write_payload (&m_payload[0]);
+        uint32_t bytesUsed = m_encoder->write_payload (&m_payload[0]);
         auto packet = ns3::Create<ns3::Packet> (&m_payload[0], bytesUsed);
         socket->Send (packet);
         m_transmissionCount++;
@@ -127,27 +127,26 @@ public:
 
     std::cout << "Received a packet at Decoder " << n + 1 << std::endl;
 
-    std::vector<uint8_t> payload (m_decoders[n].payload_size ());
+    std::vector<uint8_t> payload (m_decoders[n]->payload_size ());
 
     // Pass the packet payload to the appropriate decoder
     auto packet = socket->Recv ();
-    packet->CopyData (&payload[0], m_decoders[n].payload_size ());
-    m_decoders[n].read_payload (&payload[0]);
+    packet->CopyData (&payload[0], m_decoders[n]->payload_size ());
+    m_decoders[n]->read_payload (&payload[0]);
   }
 
 private:
 
-  const kodocpp::codec m_codeType;
-  const kodocpp::field m_field;
+  const fifi::api::field m_field;
   const uint32_t m_users;
   const uint32_t m_generationSize;
   const uint32_t m_packetSize;
 
   ns3::Ptr<ns3::Socket> m_source;
   std::vector<ns3::Ptr<ns3::Socket>> m_sinks;
-  kodocpp::encoder m_encoder;
+  std::shared_ptr<kodo_rlnc::encoder> m_encoder;
   std::vector<uint8_t> m_encoderBuffer;
-  std::vector<kodocpp::decoder> m_decoders;
+  std::vector<std::shared_ptr<kodo_rlnc::decoder>> m_decoders;
   std::vector<std::vector<uint8_t>> m_decoderBuffers;
 
   std::vector<uint8_t> m_payload;
