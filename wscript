@@ -19,6 +19,14 @@ def options(opt):
 
 def build(bld):
 
+    CXX = bld.env.get_flat("CXX")
+
+    # Matches both g++ and clang++
+    if 'g++' in CXX or 'clang' in CXX:
+        # The -fPIC flag is required for all underlying static libraries that
+        # will be included in a Position Independent Executable (PIE)
+        bld.env.append_value('CXXFLAGS', '-fPIC')
+
     # Define a dummy task to force the compilation of the kodo-rlnc library
     bld(features='cxx',
         use=['kodo_rlnc'])
