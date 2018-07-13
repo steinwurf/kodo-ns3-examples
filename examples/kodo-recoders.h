@@ -44,10 +44,7 @@ public:
       m_recodersSockets (recodersSockets),
       m_transmitProbability (transmitProbability)
   {
-    srand(static_cast<uint32_t>(time(0)));
-
-    // Call factories from basic parameters
-
+    // Create factories using the provided parameters
     kodo_rlnc::encoder::factory encoderFactory (m_field,
       m_generationSize, m_packetSize);
     kodo_rlnc::decoder::factory decoderFactory (m_field,

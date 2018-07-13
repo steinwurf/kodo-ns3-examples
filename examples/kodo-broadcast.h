@@ -42,8 +42,6 @@ public:
       m_source (source),
       m_sinks (sinks)
   {
-    srand(static_cast<uint32_t>(time(0)));
-
     // Create factories using the supplied parameters
     kodo_rlnc::encoder::factory encoderFactory (m_field,
       m_generationSize, m_packetSize);
