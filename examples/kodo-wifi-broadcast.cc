@@ -91,9 +91,12 @@
 //
 // tcpdump -r kodo-wifi-broadcast-0-0.pcap -nn -tt (source node)
 //! [2]
-// General comments: E-macs descriptor, ns-3 license and example description
 
-// ns-3 includes
+#include <iostream>
+#include <vector>
+#include <algorithm>
+#include <string>
+
 #include <ns3/core-module.h>
 #include <ns3/network-module.h>
 #include <ns3/mobility-module.h>
@@ -101,15 +104,7 @@
 #include <ns3/wifi-module.h>
 #include <ns3/internet-module.h>
 
-// Simulation includes
-#include <iostream>
-#include <vector>
-#include <algorithm>
-#include <string>
-#include <ctime>
-
-// Kodo includes
-#include "kodo-broadcast.h" // Contains the broadcast topology class
+#include "kodo-broadcast.h"
 //! [3]
 using namespace ns3;
 
@@ -264,7 +259,7 @@ int main (int argc, char *argv[])
   Ipv4GlobalRoutingHelper::PopulateRoutingTables ();
   //! [13]
   // Pcap tracing
-  wifiPhy.EnablePcap ("kodo-wifi-broadcast", devices);
+  // wifiPhy.EnablePcap ("kodo-wifi-broadcast", devices);
 
   Simulator::ScheduleWithContext (source->GetNode ()->GetId (), Seconds (1.0),
     &Broadcast::SendPacket, &wifiBroadcast, source, interPacketInterval);

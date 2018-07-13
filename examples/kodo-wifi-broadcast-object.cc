@@ -85,15 +85,13 @@
 // not be recovered. Higher rss power values ensure packet reception and
 // decoding
 
-// After running, you will notice N + 1 trace files in your directory, one
-// per device. You can review the files with Wireshark or tcpdump. If you have
-// tcpdump installed, you can try this:
-//
-// tcpdump -r kodo-wifi-broadcast-0-0.pcap -nn -tt (source node)
 //! [2]
-// General comments: E-macs descriptor, ns-3 license and example description
 
-// ns-3 includes
+#include <iostream>
+#include <vector>
+#include <algorithm>
+#include <string>
+
 #include <ns3/core-module.h>
 #include <ns3/network-module.h>
 #include <ns3/mobility-module.h>
@@ -101,15 +99,7 @@
 #include <ns3/wifi-module.h>
 #include <ns3/internet-module.h>
 
-// Simulation includes
-#include <iostream>
-#include <vector>
-#include <algorithm>
-#include <string>
-#include <ctime>
-
-// Kodo includes
-#include "kodo-broadcast-object.h" // Contains the broadcast topology class
+#include "kodo-broadcast-object.h"
 //! [3]
 using namespace ns3;
 
@@ -268,8 +258,6 @@ int main (int argc, char *argv[])
   // Turn on global static routing so we can be routed across the network
   Ipv4GlobalRoutingHelper::PopulateRoutingTables ();
   //! [13]
-  // Pcap tracing
-  wifiPhy.EnablePcap ("kodo-wifi-broadcast-object", devices);
 
   Simulator::ScheduleWithContext (source->GetNode ()->GetId (), Seconds (1.0),
     &BroadcastObject::SendPacket, &wifiBroadcast, source, interPacketInterval);

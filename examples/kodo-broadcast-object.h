@@ -41,7 +41,7 @@ private:
   using storage_decoder = kodo_core::object::storage_decoder<decoder>;
 
   using encoder_stack_ptr = storage_encoder::stack_pointer;
-  using decoder_stack_ptr = storage_encoder::stack_pointer;
+  using decoder_stack_ptr = storage_decoder::stack_pointer;
 
 public:
 
@@ -154,12 +154,11 @@ public:
     auto it = std::find(m_sinks.begin (), m_sinks.end (), socket);
     auto n = std::distance (m_sinks.begin (), it);
 
-    std::cout << "Received a packet at Decoder " << n + 1 << std::endl;
-
     // Pass the packet payload to the appropriate decoder
     auto packet = socket->Recv ();
-    std::vector<uint8_t> payload (packet->GetSize ());
-    packet->CopyData (&payload[0], m_decoders[n]->payload_size ());
+    uint32_t size = packet->GetSize ();
+    std::vector<uint8_t> payload (size);
+    packet->CopyData (&payload[0], size);
 
     // Read block ID from the payload
     uint32_t i = 0;
@@ -170,12 +169,17 @@ public:
       {
         m_decoderStacks[n][i] = m_decoders[n]->build (i);
       }
+
+    // Nothing to do if this block is already completed
+    if (m_decoderStacks[n][i]->is_complete ())
+        return;
+
     // Pass the symbol to the appropriate decoder
     m_decoderStacks[n][i]->read_payload (&payload[4]);
 
     if (m_decoderStacks[n][i]->is_complete ())
       {
-        std::cout << "Block " << i << "completed at Decoder " << n + 1
+        std::cout << "Block " << i << " completed at Decoder " << n + 1
                   << std::endl;
       }
     if (m_decoders[n]->is_complete ())

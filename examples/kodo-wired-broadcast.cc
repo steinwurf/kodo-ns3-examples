@@ -64,16 +64,11 @@
 // python waf --run kodo-wired-broadcast --command-template="%s --errorRate=MY_ERROR_RATE"
 
 // The parameters that can be modified are: generationSize, packetSize, ns-3
-// simulation interval (for controlling event ocurrences), errorRate in the
-// devices and total amount of users. For the field size, refer to the source
-// code in the corresponding part below, modify and rebuild the project to
-// make it effective (this is essential).
+// simulation interval, errorRate in the devices and total number of users.
 
-// When you are done, you will notice several pcap trace files in your
-// directory. You can review the files with Wireshark or tcpdump. If
-// you have tcpdump installed, you can try (for example) this:
-
-// tcpdump -r kodo-wired-broadcast-0-0.pcap -nn -tt
+#include <iostream>
+#include <vector>
+#include <string>
 
 #include <ns3/point-to-point-star.h>
 #include <ns3/internet-module.h>
@@ -81,13 +76,7 @@
 #include <ns3/core-module.h>
 #include <ns3/network-module.h>
 
-#include <iostream>
-#include <fstream>
-#include <vector>
-#include <string>
-#include <ctime>
-
-#include "kodo-broadcast.h" // Contains the broadcast topology class
+#include "kodo-broadcast.h"
 
 using namespace ns3;
 

@@ -88,12 +88,11 @@
 // different number of recoders):
 
 // python waf --run kodo-recoders --command-template="%s --recoders=MY_RECODER_COUNT"
+//! [2]
 
-// When you are done, you will notice many pcap trace files in your directory.
-// You can review the files with Wireshark or tcpdump. If you have tcpdump
-// installed, you can try (for example) this:
-
-// tcpdump -r kodo-recoders-0-0.pcap -nn -tt
+#include <iostream>
+#include <vector>
+#include <string>
 
 #include <ns3/core-module.h>
 #include <ns3/point-to-point-star.h>
@@ -101,12 +100,6 @@
 #include <ns3/config-store-module.h>
 #include <ns3/internet-module.h>
 
-#include <iostream>
-#include <fstream>
-#include <vector>
-#include <string>
-#include <ctime>
-//! [2]
 #include "kodo-recoders.h"
 //! [3]
 using namespace ns3;
