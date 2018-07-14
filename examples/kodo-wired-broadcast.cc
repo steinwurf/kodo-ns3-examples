@@ -19,7 +19,7 @@
 // This example shows how to use the Kodo library in a broadcast rlnc scenario
 // within a ns-3 simulation. The code below is inspired in the
 // kodo-wifi-broadcast example, which can be found in the ns-3-dev repository.
-
+//
 // In this example, the sender transmits encoded packets from a block of
 // data to N receivers with the same packet erasure rate (errorRate).
 // The sender continues until all receivers have decoded all packets. By
@@ -27,7 +27,7 @@
 // generation of 5 packets and 1000 (application) bytes and an erasure rate
 // of 30% (0.3) for all the nodes. Here we have set the number of
 // receivers to 2 by default but it can changed.
-
+//
 // The considered topology is the following:
 //! [0]
 //                  +-----------------------------------------------+
@@ -52,17 +52,17 @@
 //  |    Net Device 1    |     |    Net Device 1    | .. |    Net Device 1    |
 //  |    IP: 10.1.1.2    |     |    IP: 10.1.2.2    | .. |    IP: 10.1.N.N    |
 //  +--------------------+     +--------------------+    +--------------------+
-
+//
 //          N: number of decoders              e: errorRate
 //! [1]
 // By using the previous topology and IP addressing, we ensure that packets
 // are properly broadcasted within the network
-
+//
 // You can modify any default parameter, by running (for example with a
 // different error rate):
-
+//
 // python waf --run kodo-wired-broadcast --command-template="%s --errorRate=MY_ERROR_RATE"
-
+//
 // The parameters that can be modified are: generationSize, packetSize, ns-3
 // simulation interval, errorRate in the devices and total number of users.
 

@@ -22,7 +22,7 @@
 // differentiates from end-to-end codes by allowing any intermediate node
 // to recode a coded packet, even if its data set has not been completely
 // decoded yet.
-
+//
 // In the source code below an encoder transmits coded packets from a block of
 // data to a set of nodes with the same erasure channel
 // (errorRateEncoderRecoders) The recoders which may or may not recode the data
@@ -34,7 +34,7 @@
 // 1000 (application) bytes per packet. Default error rates are 40% (0.4) for
 // the encoder-recoders hop and 20% (0.2) for the recoders-decoder hop. By
 // default, we set the number of recoders to 2.
-
+//
 // In general, topology with IP addresses per net device is as follows:
 //! [0]
 //                +-----------------------------------------------+
@@ -75,7 +75,7 @@
 //               | Net Device 1   Net Device 2  ..  Net Device N |
 //               | IP: 10.2.1.2   IP: 10.2.1.4  ..  IP: 10.2.1.2N|
 //               +-----------------------------------------------+
-
+//
 //                           N: Number of recoders
 //                           eE-R: errorRateEncoderRecoders
 //                           eR-D: errorRateRecodersDecoder
@@ -83,10 +83,10 @@
 // By using the previous topology and IP addressing, we ensure that packets
 // are properly broadcasted to the recoders and each combination is sent from
 // the respective recoder to the decoder.
-
+//
 // You can modify any default parameter, by running (for example with a
 // different number of recoders):
-
+//
 // python waf --run kodo-recoders --command-template="%s --recoders=MY_RECODER_COUNT"
 //! [2]
 

@@ -98,9 +98,10 @@ public:
 
     if (!allDecoded)
       {
-        std::cout << "+----------------------+" << std::endl;
-        std::cout << "|Sending a coded packet|" << std::endl;
-        std::cout << "+----------------------+" << std::endl;
+        std::cout << "------------------------" << std::endl;
+        std::cout << "Sending coded packet: " << m_transmissionCount
+                  << std::endl;
+        std::cout << "------------------------" << std::endl;
         uint32_t bytesUsed = m_encoder->write_payload (&m_payload[0]);
         auto packet = ns3::Create<ns3::Packet> (&m_payload[0], bytesUsed);
         socket->Send (packet);

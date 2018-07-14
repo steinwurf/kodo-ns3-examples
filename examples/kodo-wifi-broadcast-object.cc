@@ -16,75 +16,24 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-// This example shows how to use the Kodo library in a ns-3 simulation.
-// The code below is inspired from the wifi-simple-adhoc example, which can
-// be found here ns-3-dev/examples/wireless/wifi-simple-adhoc.cc in the
-// ns-3 source code.
-
-// In the source code below the sender transmits encoded packets in a
-// non-systematic way from a block of data to N receivers (2 by default).
-// The sender continues until each receiver has all the packets.
-
-// We consider N + 1 nodes on a 802.11b physical layer, with 802.11b net
-// devices in adhoc mode, and by default, sends one generation of
-// 5 packets and 1000 (application) bytes to the other nodes. The physical
-// layer is configured to receive at a fixed rss (receiver signal strength)
-// regardless of the distance and transmit power); therefore, changing position
-// of the nodes has no effect.
+// This example is a variation of the kodo-wifi-broadcast example. You can find
+// the network topology and the common parameters in that example.
+// The main difference is that the sender transmits encoded packets
+// from multiple blocks of data. This input data can be a large buffer and
+// it could even come from a file, but in this simulation we just use an
+// object in memory. The "objectSize" parameter defines the size of this block.
 //
-// The considered topology is the following:
-//! [0]
-//                             +-------------------+
-//                             |  Encoder (Node 0) |
-//                             |                   |
-//                             |    Net Device 1   |
-//                             |    IP: 10.1.1.1   |
-//                             |                   |
-//                             |        +---+      |
-//                             |        |   |      |
-//                             +--------+-+-+------+
-//                                        |
-//                                        |
-//                  +---------------------v--------------------+
-//                  |                                          |
-//                  |  WiFi Standard: 802.11b                  |
-//                  |  Modulation: DSSS 1Mbps at 2.4 GHz       |
-//                  |  WiFi Channel: YansWiFi                  |
-//                  |  Propagation: Fixed propagation loss     |
-//                  |  Delay: Constant                         |
-//                  |  WiFi MAC: Ad-Hoc                        |
-//                  |  RTS / CTS threshold: 2200 bytes         |
-//                  |  Framentation threshold: 2200 bytes      |
-//                  |  Non-unicast data rate: Same as unicast  |
-//                  |                                          |
-//                  +--------+--------------------------+------+
-//                           |                          |
-//                           |  rss                     |  rss
-//                +--------+-v-+-------+     +--------+-v-+---------+
-//                |        |   |       |     |        |   |         |
-//                |        +---+       |  .. |        +---+         |
-//                |                    |  .. |                      |
-//                | Decoder 1 (Node 1) |     | Decoder N (Node N+1) |
-//                |                    |     |                      |
-//                |    Net Device 1    |     |    Net Device 1      |
-//                |    IP: 10.1.1.2    |     |    IP: 10.1.1.N+1    |
-//                +--------------------+     +----------------------+
-
-//                N: number of decoders    rss: Received Signal Strength
-//! [1]
-// For instance, for this configuration, the physical layer will
-// stop of successfully receiving packets when rss (receiver signal strength)
-// drops below -96 dBm. This means that -96 dBm is the threshold.
-
-// To see this effect, try by changing the rss parameter on the simulation
-// by typing:
-
-// python waf --run kodo-wifi-broadcast --command-template="%s --rss=-96"
-
-// With this value (or lower), the erasure rate goes to 1 and the packets can
-// not be recovered. Higher rss power values ensure packet reception and
-// decoding
-
+// The input data is automatically split into multiple blocks
+// and an encoder instance is created for each block. The sender iterates
+// over these blocks in a round-robin fashion and it also sends some recovery
+// packets for each block (this is controlled by the "extraPackets" parameter)
+// to account for some lost packets. The sender continues until all receivers
+// complete all the blocks, so the original object is available on all nodes.
+//
+// To change the number of recovery packets per block, you can set the
+// extraPackets parameter of the simulation:
+//
+// python waf --run kodo-wifi-broadcast-object --command-template="%s --extraPackets=10"
 //! [2]
 
 #include <iostream>
@@ -107,7 +56,11 @@ int main (int argc, char *argv[])
 {
   //! [4]
   std::string phyMode ("DsssRate1Mbps");
-  double rss = -93;  // -dBm
+  // The default loss values yield 50% random packet loss
+  // A different loss rate can be achieved by moving the lower and upper limits
+  // relative to the detection threshold (T=112.0206).
+  double minLoss = 112.0206 - 10.0;  // dBm
+  double maxLoss = 112.0206 + 10.0;  // dBm
   uint32_t packetSize = 1000; // bytes
   double interval = 0.2; // seconds
   uint32_t generationSize = 20;
@@ -125,7 +78,8 @@ int main (int argc, char *argv[])
   CommandLine cmd;
 
   cmd.AddValue ("phyMode", "Wifi Phy mode", phyMode);
-  cmd.AddValue ("rss", "Received signal strength", rss);
+  cmd.AddValue ("minLoss", "Lower bound for receiver random loss", minLoss);
+  cmd.AddValue ("maxLoss", "Higher bound for receiver random loss", maxLoss);
   cmd.AddValue ("packetSize", "Size of UDP packets", packetSize);
   cmd.AddValue ("interval", "Interval (seconds) between packets", interval);
   cmd.AddValue ("generationSize", "The generation size of coded blocks",
@@ -163,17 +117,12 @@ int main (int argc, char *argv[])
   NodeContainer nodes;
   nodes.Create (1 + users); // Sender + receivers
 
-  // The below set of helpers will help us to put together the wifi NICs we
-  // want
+  // The below set of helpers will help us to put together the wifi NICs
   WifiHelper wifi;
   wifi.SetStandard (WIFI_PHY_STANDARD_80211b); // OFDM at 2.4 GHz
 
-  YansWifiPhyHelper wifiPhy =  YansWifiPhyHelper::Default ();
   // The default error rate model is ns3::NistErrorRateModel
-
-  // This is one parameter that matters when using FixedRssLossModel
-  // set it to zero; otherwise, gain will be added
-  wifiPhy.Set ("RxGain", DoubleValue (0));
+  YansWifiPhyHelper wifiPhy =  YansWifiPhyHelper::Default ();
 
   // ns-3 supports RadioTap and Prism tracing extensions for 802.11g
   wifiPhy.SetPcapDataLinkType (YansWifiPhyHelper::DLT_IEEE802_11_RADIO);
@@ -181,10 +130,13 @@ int main (int argc, char *argv[])
   YansWifiChannelHelper wifiChannel;
   wifiChannel.SetPropagationDelay ("ns3::ConstantSpeedPropagationDelayModel");
 
-  // The below FixedRssLossModel will cause the rss to be fixed regardless
-  // of the distance between the two stations, and the transmit power
-  wifiChannel.AddPropagationLoss ("ns3::FixedRssLossModel","Rss",
-    DoubleValue (rss));
+  // When using the RandomPropagationLossModel, the signal strength does not
+  // depend on the distance between the two nodes
+  Ptr<UniformRandomVariable> random = CreateObject<UniformRandomVariable> ();
+  random->SetAttribute ("Min", DoubleValue (minLoss));
+  random->SetAttribute ("Max", DoubleValue (maxLoss));
+  wifiChannel.AddPropagationLoss ("ns3::RandomPropagationLossModel",
+    "Variable",  PointerValue (random));
   wifiPhy.SetChannel (wifiChannel.Create ());
   //! [7]
   // Disable rate control
@@ -198,9 +150,8 @@ int main (int argc, char *argv[])
   // Create the net devices
   NetDeviceContainer devices = wifi.Install (wifiPhy, wifiMac, nodes);
   //! [8]
-  // Note that with FixedRssLossModel, the positions below are not
-  // used for received signal strength. However, they are required for the
-  // YansWiFiChannelHelper
+  // Note that the positions are not relevant for the received signal strength.
+  // However, they are required for the YansWiFiChannelHelper
   MobilityHelper mobility;
   Ptr<ListPositionAllocator> positionAlloc =
     CreateObject<ListPositionAllocator> ();
