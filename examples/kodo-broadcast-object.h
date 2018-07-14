@@ -132,7 +132,7 @@ public:
         endian::big_endian::put<uint32_t>(i, payload.data());
         // Write a symbol to the payload buffer after the block ID
         uint32_t bytesUsed = m_encoderStacks[i]->write_payload (&payload[4]);
-        auto packet = ns3::Create<ns3::Packet> (&payload[0], bytesUsed);
+        auto packet = ns3::Create<ns3::Packet> (&payload[0], 4 + bytesUsed);
         socket->Send (packet);
         m_payloadsForCurrentBlock++;
         m_transmissionCount++;
