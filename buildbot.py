@@ -96,9 +96,11 @@ def run_tests(properties):
 
     # Run each example with the ns-3 waf
     os.chdir(ns3_path)
-    run_command([sys.executable, 'waf', '--run', 'kodo-recoders'])
-    run_command([sys.executable, 'waf', '--run', 'kodo-wifi-broadcast'])
-    run_command([sys.executable, 'waf', '--run', 'kodo-wired-broadcast'])
+    python = sys.executable
+    run_command([python, 'waf', '--run', 'kodo-recoders'])
+    run_command([python, 'waf', '--run', 'kodo-wifi-broadcast'])
+    run_command([python, 'waf', '--run', 'kodo-wired-broadcast'])
+    run_command([python, 'waf', '--run', 'kodo-wifi-broadcast-object'])
 
 
 def install(properties):
