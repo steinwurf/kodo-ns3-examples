@@ -192,7 +192,7 @@ a wrapper for the codecs in the
 ``kodocpp::field::binary`` is the field type in the bindings for the binary
 field implementation (since we are interested in :math:`q = 2`)
 which is defined in the bindings repository. Think of it as a wrapper
-for the fields described in the 
+for the fields described in the
 `Fifi  <https://github.com/steinwurf/fifi>`_ library. However, other
 field types from Fifi might be chosen too from their bindings
 according to your application. Current available field sizes are:
@@ -692,9 +692,7 @@ is: :math:`CP_1 = p_2 + p_3 + p_4 + p_5`.
 .. note:: Normally the encoder (based on the ``kodo_full_vector``),
    would have generated packets in a systematic way,
    but here we set that feature off in the ``Broadcast`` class constructor,
-   through the encoder API ``m_encoder.set_systematic_off()``. Also, normally
-   the encoder starts with the same seed in every run but we have also changed
-   that too in the constructor with ``srand(static_cast<uint32_t>(time(0)))``.
+   through the encoder API ``m_encoder.set_systematic_off()``.
    So, we proceed with this example to explain the simulation, but you will
    obtain another result in your runs. However, the results obtained with
    this example apply in general.

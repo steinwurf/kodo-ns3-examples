@@ -33,14 +33,14 @@ def build(bld):
 
     # Expand and validate the ns3_path option
     if not bld.has_tool_option('ns3_path'):
-        conf.fatal('Please specify a path to ns-3 using the '
+        bld.fatal('Please specify a path to ns-3 using the '
                    '--ns3_path option, for example: --ns3_path="~/ns-3-dev"')
 
     ns3_path = bld.get_tool_option('ns3_path')
     ns3_path = os.path.abspath(os.path.expanduser(ns3_path))
 
     if not os.path.isdir(ns3_path):
-        conf.fatal('The specified ns3_path "{}" is not a valid '
+        bld.fatal('The specified ns3_path "{}" is not a valid '
                    'directory'.format(ns3_path))
 
     # Define the path where the kodo examples will be installed in ns-3
@@ -57,7 +57,7 @@ def build(bld):
     # Add symlinks to all dependency includes under NS3_EXAMPLES_PATH/include
     include_dir = os.path.join(bld.env['NS3_EXAMPLES_PATH'], 'include')
 
-    projects = ['kodo-rlnc', 'kodo-core', 'fifi', 'storage']
+    projects = ['kodo-rlnc', 'kodo-core', 'fifi', 'storage', 'endian']
     for project in projects:
         subfolder = project.replace('-', '_')
         src_dir = os.path.join(

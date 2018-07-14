@@ -16,82 +16,24 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-// This example shows how to use the Kodo library in a ns-3 simulation.
-// The code below is inspired by the wifi-simple-adhoc example
-// (ns-3-dev/examples/wireless/wifi-simple-adhoc.cc).
+// This example is a variation of the kodo-wifi-broadcast example. You can find
+// the network topology and the common parameters in that example.
+// The main difference is that the sender transmits encoded packets
+// from multiple blocks of data. This input data can be a large buffer and
+// it could even come from a file, but in this simulation we just use an
+// object in memory. The "objectSize" parameter defines the size of this block.
 //
-// In this scenario, the sender transmits encoded packets from a single
-// block of data to N receivers (N=2 by default).
-// The sender continues until each receiver has all the packets.
+// The input data is automatically split into multiple blocks
+// and an encoder instance is created for each block. The sender iterates
+// over these blocks in a round-robin fashion and it also sends some recovery
+// packets for each block (this is controlled by the "extraPackets" parameter)
+// to account for some lost packets. The sender continues until all receivers
+// complete all the blocks, so the original object is available on all nodes.
 //
-// We define N + 1 nodes using the 802.11b physical layer in adhoc mode.
-// By default, the sender transmits one generation of 5 packets and 1000
-// (application) bytes to the other nodes.
+// To change the number of recovery packets per block, you can set the
+// extraPackets parameter of the simulation:
 //
-// The considered topology is the following:
-//! [0]
-//                             +-------------------+
-//                             |  Encoder (Node 0) |
-//                             |                   |
-//                             |    Net Device 1   |
-//                             |    IP: 10.1.1.1   |
-//                             |                   |
-//                             |        +---+      |
-//                             |        |   |      |
-//                             +--------+-+-+------+
-//                                        |
-//                                        |
-//                  +---------------------v--------------------+
-//                  |                                          |
-//                  |  WiFi Standard: 802.11b                  |
-//                  |  Modulation: DSSS 1Mbps at 2.4 GHz       |
-//                  |  WiFi Channel: YansWiFi                  |
-//                  |  Propagation: Random loss                |
-//                  |  Delay: Constant                         |
-//                  |  WiFi MAC: Ad-Hoc                        |
-//                  |  RTS / CTS threshold: 2200 bytes         |
-//                  |  Framentation threshold: 2200 bytes      |
-//                  |  Non-unicast data rate: Same as unicast  |
-//                  |                                          |
-//                  +--------+--------------------------+------+
-//                           |                          |
-//                           |  loss                    |  loss
-//                +--------+-v-+-------+     +--------+-v-+---------+
-//                |        |   |       |     |        |   |         |
-//                |        +---+       |  .. |        +---+         |
-//                |                    |  .. |                      |
-//                | Decoder 1 (Node 1) |     | Decoder N (Node N+1) |
-//                |                    |     |                      |
-//                |    Net Device 1    |     |    Net Device 1      |
-//                |    IP: 10.1.1.2    |     |    IP: 10.1.1.N+1    |
-//                +--------------------+     +----------------------+
-//
-//                              N: number of decoders
-//! [1]
-//
-// The wifi channel uses the RandomPropagationLossModel with a
-// UniformRandomVariable that can be configured with the minLoss/maxLoss
-// parameters. Note that changing the position of the nodes has no effect.
-//
-// When setting a loss value, you need to consider the relevant values of the
-// physical layer implementation. These are listed in the "Detailed Description"
-// section here: https://www.nsnam.org/doxygen/classns3_1_1_wifi_phy.html
-//
-// EnergyDetectionThreshold: -96 dBm
-// TxPowerStart/TxPowerEnd: 16.0206 dBm
-//
-// The TxPower starts at 16.0206 dBm and the transmisson can be successfully
-// received if the signal strength stays above the -96 dBm the threshold.
-// If we apply 112.0206 dBm signal loss, then we reach that threshold. If
-// a lower signal loss value is set, then all transmissions will be received.
-// But with a higher value, all packets will be dropped. We use a random
-// variable that covers a range around this threshold to simulate a randomized
-// loss pattern.
-//
-// You can lower the effective packet loss rate by decreasing the minLoss
-// parameter of the simulation:
-//
-// python waf --run kodo-wifi-broadcast --command-template="%s --minLoss=90"
+// python waf --run kodo-wifi-broadcast-object --command-template="%s --extraPackets=10"
 //! [2]
 
 #include <iostream>
@@ -106,7 +48,7 @@
 #include <ns3/wifi-module.h>
 #include <ns3/internet-module.h>
 
-#include "kodo-broadcast.h"
+#include "kodo-broadcast-object.h"
 //! [3]
 using namespace ns3;
 
@@ -120,10 +62,12 @@ int main (int argc, char *argv[])
   double minLoss = 112.0206 - 10.0;  // dBm
   double maxLoss = 112.0206 + 10.0;  // dBm
   uint32_t packetSize = 1000; // bytes
-  double interval = 1.0; // seconds
-  uint32_t generationSize = 5;
+  double interval = 0.2; // seconds
+  uint32_t generationSize = 20;
+  uint32_t extraPackets = 5;
   uint32_t users = 2; // Number of users
-  std::string field = "binary"; // Finite field used
+  uint32_t objectSize = 100000; // bytes
+  std::string field = "binary8"; // Finite field used
 
   // Create a map for the field values
   std::map<std::string, fifi::api::field> fieldMap;
@@ -136,11 +80,14 @@ int main (int argc, char *argv[])
   cmd.AddValue ("phyMode", "Wifi Phy mode", phyMode);
   cmd.AddValue ("minLoss", "Lower bound for receiver random loss", minLoss);
   cmd.AddValue ("maxLoss", "Higher bound for receiver random loss", maxLoss);
-  cmd.AddValue ("packetSize", "size of application packet sent", packetSize);
-  cmd.AddValue ("interval", "interval (seconds) between packets", interval);
-  cmd.AddValue ("generationSize", "Set the generation size to use",
+  cmd.AddValue ("packetSize", "Size of UDP packets", packetSize);
+  cmd.AddValue ("interval", "Interval (seconds) between packets", interval);
+  cmd.AddValue ("generationSize", "The generation size of coded blocks",
                 generationSize);
   cmd.AddValue ("users", "Number of receivers", users);
+  cmd.AddValue ("objectSize", "Size of the object to transmit", objectSize);
+  cmd.AddValue ("extraPackets", "Number of extra coded packets to send "
+                "in each generation", extraPackets);
   cmd.AddValue ("field", "Finite field used", field);
 
   cmd.Parse (argc, argv);
@@ -240,8 +187,8 @@ int main (int argc, char *argv[])
     }
   //! [11]
   // Creates the Broadcast helper for this broadcast topology
-  Broadcast wifiBroadcast (fieldMap[field], users, generationSize, packetSize,
-      source, sinks);
+  BroadcastObject wifiBroadcast (fieldMap[field], users, objectSize,
+      generationSize, packetSize, extraPackets, source, sinks);
   //! [12]
   // Transmitter socket connections. Set transmitter for broadcasting
   uint16_t port = 80;
@@ -255,18 +202,16 @@ int main (int argc, char *argv[])
   for (const auto sink : sinks)
     {
       sink->Bind (local);
-      sink->SetRecvCallback (MakeCallback (&Broadcast::ReceivePacket,
+      sink->SetRecvCallback (MakeCallback (&BroadcastObject::ReceivePacket,
         &wifiBroadcast));
     }
 
   // Turn on global static routing so we can be routed across the network
   Ipv4GlobalRoutingHelper::PopulateRoutingTables ();
   //! [13]
-  // Pcap tracing
-  // wifiPhy.EnablePcap ("kodo-wifi-broadcast", devices);
 
   Simulator::ScheduleWithContext (source->GetNode ()->GetId (), Seconds (1.0),
-    &Broadcast::SendPacket, &wifiBroadcast, source, interPacketInterval);
+    &BroadcastObject::SendPacket, &wifiBroadcast, source, interPacketInterval);
 
   Simulator::Run ();
   Simulator::Destroy ();
