@@ -43,7 +43,7 @@ Please read our general documentation here to get started:
 http://docs.steinwurf.com
 
 The kodo-ns3-examples tutorial is located here:
-http://docs.steinwurf.com/kodo-ns3-examples/master/index.html
+http://docs.steinwurf.com/kodo-ns3-examples/index.html
 
 The tutorial provides a comprehensive description of our examples, and it
 is designed to be a starting point for ns-3 developers that intend to use
