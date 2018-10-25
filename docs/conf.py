@@ -12,7 +12,6 @@ extensions = [
     'sphinx.ext.todo',
     'sphinx.ext.coverage',
     'sphinx.ext.mathjax',
-    'sphinx.ext.pngmath',
     'sphinx.ext.ifconfig',
     'guzzle_sphinx_theme',
 ]
