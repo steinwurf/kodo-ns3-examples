@@ -1,7 +1,29 @@
-Introduction
-------------
-This repository demonstrates how to use the Kodo erasure coding library
-(http://steinwurf.com/kodo/) in various ns-3 examples.
+The kodo-ns3-examples repository demonstrates how to use the Kodo erasure
+coding library (http://steinwurf.com/kodo/) in various ns-3 examples.
+
+ns-3 (http://nsnam.org) is a discrete-event network simulator, targeted
+primarily for research and educational use. ns-3 is licensed under the GNU
+GPLv2 license.
+
+The kodo-ns3-examples repository: https://github.com/steinwurf/kodo-ns3-examples
+
+.. image:: http://buildbot.steinwurf.dk/svgstatus?project=kodo-ns3-examples
+    :target: http://buildbot.steinwurf.dk/stats?projects=kodo-ns3-examples
+    :alt: Buildbot status
+
+If you have any questions or suggestions about this library, please contact
+us at our developer mailing list (hosted at Google Groups):
+
+* http://groups.google.com/group/steinwurf-dev
+
+**Important:** Before asking any questions, please try to precisely follow the
+instructions here and read the **guidelines** of our mailing list!
+
+If you have a technical issue with ns-3 itself, then please ask around on
+the `ns-3 mailing list <https://groups.google.com/d/forum/ns-3-users>`_.
+
+License
+-------
 
 A valid Kodo license is required if you wish to use this project.
 Please request a license by **filling out the license request** form_.
@@ -11,16 +33,22 @@ you can see the details here_.
 
 If you try to configure without a valid license, then you will get an error!
 
-.. _form: http://steinwurf.com/license/
-.. _here: http://steinwurf.com/research-license/
+.. _form: http://steinwurf.com/license.html
+.. _here: http://steinwurf.com/research/evaluation-license.html
 
-ns-3 (http://nsnam.org) is a discrete-event network simulator, targeted
-primarily for research and educational use. ns-3 is licensed under the GNU
-GPLv2 license.
+Documentation
+-------------
 
-.. image:: http://buildbot.steinwurf.dk/svgstatus?project=kodo-ns3-examples
-    :target: http://buildbot.steinwurf.dk/stats?projects=kodo-ns3-examples
-    :alt: Buildbot status
+Please read our general documentation here to get started:
+http://docs.steinwurf.com
+
+The kodo-ns3-examples tutorial is located here:
+http://docs.steinwurf.com/kodo-ns3-examples/master/index.html
+
+The tutorial provides a comprehensive description of our examples, and it
+is designed to be a starting point for ns-3 developers that intend to use
+the Kodo library for a specific application of Random Linear Network Coding
+(RLNC) within the simulator.
 
 Using Kodo in an ns-3 example
 -----------------------------
@@ -184,7 +212,7 @@ Now you can expand your custom simulation as you like. If you use additional
 ns-3 modules, then you need to add them in the wscript (most likely, you will
 get a build error if you are missing a module).
 
-If your simulation has multiple source files (*.cc files), then you can add
+If your simulation has multiple source files (.cc files), then you can add
 these in the wscript like this::
 
   obj.source = ['my-simulation.cc', 'source2.cc', 'source3.cc']
@@ -202,68 +230,3 @@ You can also create a separate folder for your custom simulation to avoid this
 problem. For example, you can create the ``~/ns-3-dev/examples/my-simulation``
 folder and copy the ``include`` and ``lib`` folders from
 ``~/ns-3-dev/examples/kodo``.
-
-Tutorial
---------
-Our `Kodo-ns3 tutorial <http://kodo-ns3-examples.readthedocs.org/en/latest/>`_
-provides a more comprehensive description of these examples.
-For each example, we verify known results to validate our model and provide
-parameters to the user for modifying them.
-
-Comments, Feedback, Bugs & Questions
-------------------------------------
-
-If for some reason your project does not build or you have any other issues or
-questions related to the project **after** precisely following the build
-instructions, please feel free to contact us through our developers mailing
-list hosted at Google Groups:
-
-* http://groups.google.com/group/steinwurf-dev
-
-If you make new examples or use the examples provided here for your
-research, please let us know!
-
-We would be happy to add links to your work or potentially include them
-as new examples!
-
-Please follow **these guidelines for posting on the mailing list** to make
-the workflow efficient and simple:
-
-* Before submitting questions about building the project, please make sure that
-  you have followed the procedure described above
-
-* Before submitting your question, please check the mailing list to see if it
-  has been already answered, most of the basic questions tend to be the same
-
-* Do not reply to previously opened threads if they are not related to your
-  question
-
-* If your question is new, you may open a new mail thread
-
-* When stating your question, be clear about your objectives. For simulations,
-  please tell us what you want to simulate in terms of system model,
-  assumptions, parameters and consider the limitations of ns-3 and/or Kodo. At
-  first, try to provide a concise general description. Later, you can add
-  details if you think that those are relevant to your question.
-
-* If you have followed the previous steps and still want to report an error,
-  please do the following:
-
-  1. In your e-mail, indicate us the failure problem and when does it occur.
-     Indicate the type of problem (e.g. if it is compiler error or a
-     segmentation fault or something else). Also include your OS, compiler
-     waf, python and  ns-3 version.
-  2. Attach a printscreen or a ``.txt`` log file posting the complete
-     output of the command of procedure that gives the error.     .
-  3. If your error is related with a source file, please include it as well
-     in your report.
-
-* **Disclaimer**: We will not correct your source code, but just provide
-  you guidelines to do so :)
-
-Also, feel free to tell us what we should add to improve the examples and the
-tutorial!
-
-Finally, ns-3 users have their
-`mailing list <https://groups.google.com/d/forum/ns-3-users>`_ so you can ask
-questions strictly related to ns-3 there following their mail posting rules.
