@@ -56,6 +56,5 @@ local.properties
 *.sdf
 *.opensdf
 *.log
-*.txt
 *.vcxproj*
 VSProjects

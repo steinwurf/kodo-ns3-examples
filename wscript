@@ -3,6 +3,7 @@
 
 import os
 
+from waflib.Build import BuildContext
 from waflib.TaskGen import feature, after_method, before_method
 
 APPNAME = 'kodo-ns3-examples'
@@ -15,6 +16,10 @@ def options(opt):
     opt.add_option(
         '--ns3_path', default=None, dest='ns3_path',
          help='Path to the cloned ns-3 repository')
+
+    opt.add_option(
+        '--all_docs', default=False, action='store_true',
+        help='Generate all documentation versions using giit.')
 
 
 def build(bld):
@@ -79,3 +84,28 @@ def kodo_ns3_examples_override_stlib_install_path(self):
     Install all static libraries to the NS3_EXAMPLES_PATH/lib folder
     """
     self.install_path = os.path.join(self.bld.env['NS3_EXAMPLES_PATH'], 'lib')
+
+
+class DocsContext(BuildContext):
+    cmd = 'docs'
+    fun = 'docs'
+
+
+def docs(ctx):
+    """ Build the documentation in a virtualenv """
+    with ctx.create_virtualenv(cwd=ctx.bldnode.abspath()) as venv:
+        if not ctx.options.all_docs:
+            venv.run('python -m pip install -r docs/requirements.txt',
+                     cwd=ctx.path.abspath())
+            venv.run('sphinx-build -b html -d build/doctrees docs build/html',
+                     cwd=ctx.path.abspath())
+        else:
+            giit = 'git+https://github.com/steinwurf/giit.git@master'
+            venv.pip_install(packages=[giit])
+            build_path = os.path.join(ctx.path.abspath(), 'build', 'giit')
+            venv.run('giit clean . --build_path {}'.format(build_path),
+                     cwd=ctx.path.abspath())
+            venv.run('giit sphinx . --build_path {}'.format(build_path),
+                     cwd=ctx.path.abspath())
+            venv.run('giit versjon . --build_path {}'.format(build_path),
+                     cwd=ctx.path.abspath())
