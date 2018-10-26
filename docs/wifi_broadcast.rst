@@ -182,7 +182,7 @@ the generation size and the packet size for our coding operations.
 
 The ``kodo_rlnc::encoder`` wrapper class is defined in the
 `kodo-rlnc  <https://github.com/steinwurf/kodo-rlnc>`_ library.
-The available finite fields are described
+The available finite fields are defined in the
 `fifi  <https://github.com/steinwurf/fifi>`_ library.
 Other field types might be chosen to fit the needs of your application.
 The common field sizes are: :math:`q = {2, 2^4, 2^8}`.
@@ -372,7 +372,7 @@ Simulation Calls
    :end-before: //! [12]
    :linenos:
 
-We create the ``Broadcast `` object that contains the encoder and decoder
+We create the ``Broadcast`` object that contains the encoder and decoder
 objects in our network topology.
 This does not run the simulation as we will see, but it creates the
 objects called by ns-3 to perform the tasks of the transmitter and receiver.
