@@ -120,24 +120,26 @@ The ``Broadcast`` class can be roughly defined in the following way:
 
   #pragma once
 
-  #include <kodocpp/kodocpp.hpp>
+  #include <cstdint>
+  #include <memory>
+  #include <vector>
+
+  #include <kodo_rlnc/coders.hpp>
 
   class Broadcast
   {
   public:
 
-    Broadcast (const kodocpp::codec codeType, const kodocpp::field field,
-      const uint32_t users, const uint32_t generationSize,
-      const uint32_t packetSize,
-      const ns3::Ptr<ns3::Socket>& source,
-      const std::vector<ns3::Ptr<ns3::Socket>>& sinks)
-      : m_codeType (codeType),
-        m_field (field),
-        m_users (users),
-        m_generationSize (generationSize),
-        m_packetSize (packetSize),
-        m_source (source),
-        m_sinks (sinks)
+    Broadcast (const fifi::api::field field, const uint32_t users,
+        const uint32_t generationSize, const uint32_t packetSize,
+        const ns3::Ptr<ns3::Socket>& source,
+        const std::vector<ns3::Ptr<ns3::Socket>>& sinks)
+        : m_field (field),
+          m_users (users),
+          m_generationSize (generationSize),
+          m_packetSize (packetSize),
+          m_source (source),
+          m_sinks (sinks)
     {
       // Constructor
     }
@@ -154,17 +156,16 @@ The ``Broadcast`` class can be roughly defined in the following way:
 
   private:
 
-    const kodocpp::codec codeType;
-    const kodocpp::field field
+    const fifi::api::field m_field;
     const uint32_t m_users;
     const uint32_t m_generationSize;
     const uint32_t m_packetSize;
 
     ns3::Ptr<ns3::Socket> m_source;
     std::vector<ns3::Ptr<ns3::Socket>> m_sinks;
-    kodocpp::encoder m_encoder;
+    std::shared_ptr<kodo_rlnc::encoder> m_encoder;
     std::vector<uint8_t> m_encoderBuffer;
-    std::vector<kodocpp::decoder> m_decoders;
+    std::vector<std::shared_ptr<kodo_rlnc::decoder>> m_decoders;
     std::vector<std::vector<uint8_t>> m_decoderBuffers;
 
     std::vector<uint8_t> m_payload;
@@ -173,59 +174,42 @@ The ``Broadcast`` class can be roughly defined in the following way:
 
 The broadcast topology is a simple class. We will describe its parts in detail
 what they model and control from a high level perspective.
-We first need to include main header for the bindings
-``<kodocpp/kodocpp.hpp>`` since they contain all the objects required for
-the C++ bindings to work.
+First, we include ``<kodo_rlnc/coders.hpp>`` from kodo-rlnc which contains
+the encoder and decoder classes that we will use.
 
-First, we need to define our encoder and decoders. For this purpose,
-we have to specify the coding scheme that we are going to employ and
-the field type in which the finite field arithmetics are going to be
-carried. This is done by employing the data types ``kodocpp::codec``
-and ``kodocpp::field`` which are defined in the bindings.
-To avoid using templated classes, we pass the required code type
-and field type as constructor arguments.
+Then we create  our encoder and decoders. We select the finite field type,
+the generation size and the packet size for our coding operations.
 
-Given that we want to perform our basic simulation with RLNC, the
-type in the bindings is ``kodocpp::codec::full_vector``. You can look at it as
-a wrapper for the codecs in the
-`Kodo  <https://github.com/steinwurf/kodo>`_ library. Similarly,
-``kodocpp::field::binary`` is the field type in the bindings for the binary
-field implementation (since we are interested in :math:`q = 2`)
-which is defined in the bindings repository. Think of it as a wrapper
-for the fields described in the
-`Fifi  <https://github.com/steinwurf/fifi>`_ library. However, other
-field types from Fifi might be chosen too from their bindings
-according to your application. Current available field sizes are:
-:math:`q = {2, 2^4, 2^8}`.
+The ``kodo_rlnc::encoder`` wrapper class is defined in the
+`kodo-rlnc  <https://github.com/steinwurf/kodo-rlnc>`_ library.
+The available finite fields are described
+`fifi  <https://github.com/steinwurf/fifi>`_ library.
+Other field types might be chosen to fit the needs of your application.
+The common field sizes are: :math:`q = {2, 2^4, 2^8}`.
 
 For the simulation, ``void SendPacket(ns3::Ptr<ns3::Socket> socket, ns3::Time
 pktInterval)`` generates coded packets from generic data (created in the
 constructor) every ``pktInterval`` units of ``Time`` and sends them to the
 decoders through their socket connections, represented by the
-ns-3 template-based smart pointer object ``ns3::Ptr<ns3::Socket>``. Several
-ns-3 objects are represented in this way. So quite often you will see this
-kind of pointer employed. This ns-3 pointer is intended to make a proper
-memory usage.
+ns-3 smart pointer object ``ns3::Ptr<ns3::Socket>``.
 
 As we will check later, ``void ReceivePacket(ns3::Ptr<ns3::Socket> socket)``
 will be invoked through a callback whenever a packet is received at a
 decoder socket. In this case, the decoder that triggered the
 callback is obtained from looking into a vector container.
 The transmitter creates coded packets from the data and puts them
-in ``m_payload`` to send it over.
-Conversely, a received coded packet is placed in a local ``payload``
-to be read by the inteded decoder and its respective decoding matrix.
+in a payload buffer that is sent over the socket. A received coded packet is
+placed in a temporary payload buffer to be read by the decoder.
 
-You can check the source code to verify that these functionalities are
+You can check the source code to see how these operations are
 performed by the APIs ``m_encoder.write_payload()`` and
-``m_decoders[n].read_payload()``. For
-the encoding case, the amount of bytes required from the buffer to store the
-coded packet and its coefficients is returned. This amount is needed for
-``ns3::Create<ns3::Packet>`` template-based constructor to create the ns-3
-coded packet that is actually sent (and received). Finally,
+``m_decoders[n].read_payload()``. For the encoding case, the amount of bytes
+needed to store the coded payload is returned. This amount is used for the
+``ns3::Create<ns3::Packet>`` constructor to create the ns-3
+packet that is actually sent (and received). Finally,
 ``m_transmission_count`` indicates how many packets were sent by the encoder
-during the whole process. Please make a review to the implementation of
-``SendPacket`` and ``ReceivePacket`` to verify the expected behavior of the
+during the whole process. You can review the implementation of
+``SendPacket`` and ``ReceivePacket`` to see the expected behavior of the
 nodes when packets are sent or received respectively.
 
 Default Parameters and Command-line Parsing
@@ -237,17 +221,13 @@ Default Parameters and Command-line Parsing
    :end-before: //! [5]
    :linenos:
 
-The first part of the ``main`` function introduces us to the basic simulation
-parameters regarding physical layer mode for WiFi (Direct Sequence Spread
-Spectrum of 1 Mbps rate), receiver signal strength of -93 dBm, 1 KB for packet
-size, 1 second interval duration between ns-3 events (we will use it later),
-a generation size of 5 packets, 2 users (receivers) and a string for the
-finite field to be employed. The string name will be searched in a ``std::map``
-container that has the proper ``kodocpp::field`` instance. After that, the
-``CommandLine`` class is ns-3's command line parser used to modify those
-values (if required) with ``AddValue`` and ``Parse``. Then, the interval
-duration is converted to the ns-3 ``Time`` format.
-
+The first part of the ``main`` function defines the default simulation
+parameters including the physical layer mode for WiFi (Direct Sequence Spread
+Spectrum of 1 Mbps rate), the loss rate margins, the packet
+size, the interval between ns-3 events, the generation size, the number of
+users (i.e. receivers) and the finite field. After that, we create an instance
+of the ``CommandLine`` class which is ns-3's command line parser.
+We add the parameters with the ``AddValue`` function.
 
 Configuration defaults
 ^^^^^^^^^^^^^^^^^^^^^^
@@ -258,18 +238,14 @@ Configuration defaults
    :end-before: //! [6]
    :linenos:
 
-Before continuing, you will see many features of ns-3's `WiFi implementation
+Before continuing, you can study the various features of ns-3's `WiFi implementation
 <http://www.nsnam.org/docs/release/3.20/models/singlehtml/index.html#
-document-wifi>`_. Besides the WiFi properties, in the previous link you will
-find a typical workflow about setting and configuring WiFi devices in your
-simulation.
+document-wifi>`_. Besides the WiFi properties, you will see a typical workflow
+for setting and configuring WiFi devices in your simulation.
 
-This part basically sets off some MAC properties that we do not need (at least
-for our purposes), namely frame fragmentation to be applied for frames larger
-than 2200 bytes, disabling the RTS/CTS frame collision protocol for the less
-than 2200 bytes and setting the broadcast data rate to be the same as unicast
-for the given ``phyMode``. However, they need to be included in order to work
-with the WiFi MAC.
+This part basically configures some MAC properties: disable frame fragmentation
+and the RTS/CTS frame collision protocol for frames below 2200 bytes and
+set the broadcast data rate to be the same as unicast for the given ``phyMode``.
 
 WiFi PHY and Channel Helpers for Nodes
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -281,34 +257,29 @@ WiFi PHY and Channel Helpers for Nodes
    :linenos:
 
 In this part we start to build the topology for our simulation following
-a typical ns-3 workflow. By typical we mean that this can be done in different
-ways, but this one you might see regularly within ns-3 simulations. We start by
-creating the nodes that we need with the ``NodeContainer`` class.
-You can create the nodes separately but this way offers the possibility to
-easily assign common properties to the nodes.
+a typical ns-3 workflow. We start by creating the nodes that we need using
+the ``NodeContainer`` class. You can create the nodes separately but this way
+offers the possibility to easily assign common properties to the nodes.
 
-We aid ourselves by using the ``WiFiHelper`` class to set the standard to use.
-Since we are working with DSSS, this means we need to use IEEE 802.11b. For the
-physical layer, we use the ``YansWifiPhyHelper::Default()`` constructor
-and from it, we disable any gains in the receiver and set the pcap
-(packet capture) tracing format at the data link layer.
+We use the ``WiFiHelper`` class to set the Wifi standard.
+Since we are working with DSSS, this means we need to use IEEE 802.11b.
+For the physical layer, we use the ``YansWifiPhyHelper::Default()`` constructor,
+and we set the pcap (packet capture) tracing format at the data link layer.
 ns-3 supports different formats, here we picked the
 `RadioTap <http://www.radiotap.org/>`_ format but you can choose
 other format available in the helper description in its Doxygen documentation.
 In a similar way, we use the ``YansWifiChannelHelper`` to create our WiFi
-channel, where we have set the class property named ``SetPropagationDelay`` to
-``ConstantSpeedPropagationDelayMode``. This means that the delay between the
-transmitter and the receiver signals is set by their distance between them,
-divided by the speed of light. The ``AddPropagationLoss`` defines how do we
-calculate the receiver signal strength (received power) in our model. In this
-case, we have chosen a ``FixedRssLossModel`` which sets the received power to
-a fixed value regardless of the position the nodes have. This fixed value is
-set to -93 dBm, but we can modify it through argument parsing. With these
-settings, we create our WiFi PHY layer channel by doing ``wifiPhy.SetChannel
-(wifiChannel.Create ());``. If you want to read more about how the helpers are
-implemented, you can check the
-`Yans description <http://cutebugs.net/files/wns2-yans.pdf>`_ for further
-details.
+channel, where we set the class property named ``SetPropagationDelay`` to
+``ConstantSpeedPropagationDelayModel``. This means that the delay between the
+transmitter and the receiver is only determined by the distance between them.
+
+The Wifi channel uses the ``RandomPropagationLossModel`` with a
+``UniformRandomVariable`` that can be configured with the minLoss/maxLoss
+parameters. Note that changing the position of the nodes has no effect on
+the received signal strength. By default, 50% of the transmitted packets
+will be dropped at random. You can lower the effective packet loss rate by
+decreasing the minLoss parameter of the simulation.
+
 
 WiFi MAC and Net Device Helpers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -401,14 +372,10 @@ Simulation Calls
    :end-before: //! [12]
    :linenos:
 
-As we mentioned earlier, we use the RLNC codec and binary for our encoder
-and decoders. Then, we call the object that handles
-the topology by doing ``Broadcast wifiBroadcast (kodocpp::codec::full_vector,
-fieldMap[field], users, generationSize, packetSize, sinks);`` to call
-the broadcast class constructor. Notice also that we have separated the
-code type from the topology in case that you want to try another code.
+We create the ``Broadcast `` object that contains the encoder and decoder
+objects in our network topology.
 This does not run the simulation as we will see, but it creates the
-objets called by ns-3 to perform the tasks of the transmitter and receiver.
+objects called by ns-3 to perform the tasks of the transmitter and receiver.
 
 Sockets Connections
 ^^^^^^^^^^^^^^^^^^^
@@ -479,13 +446,7 @@ First type ``cd ~/ns-3-dev`` in your terminal for you to be in the
 path of your ns-3 cloned repository. Also remember that at this point,
 **you need to have configured and built the project with no errors**.
 If you review the constructor of the ``Broadcast`` class, you will
-observe that there is a local callback function made with a
-lambda expression.
-
-.. note:: A lambda expression is basically a pointer to a function and is
-  a feature available since C++11. If you need further information on this
-  topic, please check the C++ tutorial mentioned at the beginning of this
-  guide.
+observe that there is a trace callback function set for the decoders.
 
 The callback is to enable tracing in our examples, e.g. to observe how the
 packets are being processed. The callback uses filters to control the
