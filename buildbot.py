@@ -71,7 +71,7 @@ def configure(properties):
     # See revisions here: https://gitlab.com/nsnam/ns-3-dev/commits/master
     os.chdir(ns3_path)
     run_command(['git', 'pull'])
-    run_command(['git', 'checkout', '7112e718'])
+    run_command(['git', 'reset', '--hard', '7112e718'])
     # Configure ns-3 with the examples enabled
     run_command([sys.executable, 'waf', 'configure', '--enable-examples'])
 
