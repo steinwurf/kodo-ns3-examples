@@ -66,7 +66,7 @@ http://www.nsnam.org/wiki/index.php/Installation
 
 On Ubuntu/Debian, you need to install the following packages::
 
-  sudo apt-get install g++ python mercurial git-core
+  sudo apt-get install g++ python git-core
 
 In the following, we will clone ns-3 to the ``~/ns-3-dev`` folder and we
 will clone the kodo-ns3-examples to the ``~/kodo-ns3-examples`` folder.
@@ -80,7 +80,7 @@ First clone the ns-3 repository (we start from the home folder,
 so it will be cloned to ``~/ns-3-dev``)::
 
   cd ~
-  hg clone http://code.nsnam.org/ns-3-dev/
+  git clone https://gitlab.com/nsnam/ns-3-dev.git
 
 This command will download the ns-3 simulator to your computer into
 the ``ns-3-dev`` folder (this may take a few minutes).
@@ -91,14 +91,14 @@ Go to this freshly cloned folder::
 
 Our aim is to make the examples compatible with the latest ns-3 revision.
 If you experience any issues with the latest revision, then you can switch
-to the latest supported revision (this step is **optional**)::
+to the latest stable release (this step is **optional**)::
 
-  hg checkout 12799
+  git checkout ns-3.29
 
 Our build system automatically tests the examples with the latest supported
 revision of ns-3. This revision is specified in our buildbot.py_ script.
 
-.. _buildbot.py: https://github.com/steinwurf/kodo-ns3-examples/blob/master/buildbot.py#L73
+.. _buildbot.py: https://github.com/steinwurf/kodo-ns3-examples/blob/master/buildbot.py#L74
 
 Configure the ns-3 project (it is important to also enable the examples)::
 

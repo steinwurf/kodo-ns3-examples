@@ -63,14 +63,15 @@ def configure(properties):
 
     # Clone the ns-3 repo if needed
     if not os.path.exists(ns3_path):
-        command = ['hg', 'clone', 'http://code.nsnam.org/ns-3-dev/', ns3_path]
+        command = ['git', 'clone', 'https://gitlab.com/nsnam/ns-3-dev.git']
+        command += [ns3_path]
         run_command(command)
 
     # Update ns-3-dev to the latest supported revision
-    # See revisions here: http://code.nsnam.org/ns-3-dev/log
+    # See revisions here: https://gitlab.com/nsnam/ns-3-dev/commits/master
     os.chdir(ns3_path)
-    run_command(['hg', 'pull'])
-    run_command(['hg', 'checkout', '13824'])
+    run_command(['git', 'pull'])
+    run_command(['git', 'reset', '--hard', '7112e718'])
     # Configure ns-3 with the examples enabled
     run_command([sys.executable, 'waf', 'configure', '--enable-examples'])
 
