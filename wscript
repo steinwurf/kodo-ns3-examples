@@ -95,7 +95,7 @@ def docs(ctx):
     """ Build the documentation in a virtualenv """
     with ctx.create_virtualenv(cwd=ctx.bldnode.abspath()) as venv:
         if not ctx.options.all_docs:
-            venv.run('python -m pip install -r docs/requirements.txt',
+            venv.run('python -m pip install -qq -r docs/requirements.txt',
                      cwd=ctx.path.abspath())
             venv.run('sphinx-build -b html -d build/doctrees docs build/html',
                      cwd=ctx.path.abspath())
