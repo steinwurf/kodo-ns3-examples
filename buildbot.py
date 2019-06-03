@@ -56,10 +56,9 @@ def configure(properties):
     ns3_path = os.path.abspath(os.path.expanduser(ns3_path))
 
     # Make sure that the previously installed examples are deleted
-    if properties.get('build_distclean'):
-        examples_path = os.path.join(ns3_path, 'examples', 'kodo')
-        if os.path.isdir(examples_path):
-            shutil.rmtree(examples_path)
+    examples_path = os.path.join(ns3_path, 'examples', 'kodo')
+    if os.path.isdir(examples_path):
+        shutil.rmtree(examples_path)
 
     # Clone the ns-3 repo if needed
     if not os.path.exists(ns3_path):
