@@ -7,6 +7,9 @@ detailed list of every change, see the Git log.
 Latest
 ------
 * tbd
+
+2.0.0
+-----
 * Minor: Added the kodo-wifi-broadcast-object example that transmits a
   large object in memory which is automatically split into multiple
   blocks/generations.

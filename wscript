@@ -8,7 +8,7 @@ from waflib.Build import BuildContext
 from waflib.TaskGen import feature, after_method, before_method
 
 APPNAME = 'kodo-ns3-examples'
-VERSION = '1.0.0'
+VERSION = '2.0.0'
 
 
 def options(opt):
