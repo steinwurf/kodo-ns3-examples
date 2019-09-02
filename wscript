@@ -3,6 +3,7 @@
 
 import os
 
+from waflib import Options
 from waflib.Build import BuildContext
 from waflib.TaskGen import feature, after_method, before_method
 
@@ -40,6 +41,10 @@ def build(bld):
     if not bld.has_tool_option('ns3_path'):
         bld.fatal('Please specify a path to ns-3 using the '
                    '--ns3_path option, for example: --ns3_path="~/ns-3-dev"')
+
+    # The ns3_path option works correctly when the destdir is empty
+    if Options.options.destdir:
+        Options.options.destdir = ''
 
     ns3_path = bld.get_tool_option('ns3_path')
     ns3_path = os.path.abspath(os.path.expanduser(ns3_path))
