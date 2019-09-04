@@ -58,9 +58,9 @@ int main (int argc, char *argv[])
   std::string phyMode ("DsssRate1Mbps");
   // The default loss values yield 50% random packet loss
   // A different loss rate can be achieved by moving the lower and upper limits
-  // relative to the detection threshold (T=112.0206).
-  double minLoss = 112.0206 - 10.0;  // dBm
-  double maxLoss = 112.0206 + 10.0;  // dBm
+  // relative to the detection threshold (T=117.0206).
+  double minLoss = 117.0206 - 10.0;  // dBm
+  double maxLoss = 117.0206 + 10.0;  // dBm
   uint32_t packetSize = 1000; // bytes
   double interval = 0.2; // seconds
   uint32_t generationSize = 20;

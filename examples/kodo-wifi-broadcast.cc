@@ -77,12 +77,12 @@
 // physical layer implementation. These are listed in the "Detailed Description"
 // section here: https://www.nsnam.org/doxygen/classns3_1_1_wifi_phy.html
 //
-// EnergyDetectionThreshold: -96 dBm
+// EnergyDetectionThreshold: -101 dBm
 // TxPowerStart/TxPowerEnd: 16.0206 dBm
 //
-// The TxPower starts at 16.0206 dBm and the transmisson can be successfully
-// received if the signal strength stays above the -96 dBm the threshold.
-// If we apply 112.0206 dBm signal loss, then we reach that threshold. If
+// The TxPower starts at 16.0206 dBm and the transmission can be successfully
+// received if the signal strength stays above the -101 dBm the threshold.
+// If we apply 117.0206 dBm signal loss, then we reach that threshold. If
 // a lower signal loss value is set, then all transmissions will be received.
 // But with a higher value, all packets will be dropped. We use a random
 // variable that covers a range around this threshold to simulate a randomized
@@ -116,9 +116,9 @@ int main (int argc, char *argv[])
   std::string phyMode ("DsssRate1Mbps");
   // The default loss values yield 50% random packet loss
   // A different loss rate can be achieved by moving the lower and upper limits
-  // relative to the detection threshold (T=112.0206).
-  double minLoss = 112.0206 - 10.0;  // dBm
-  double maxLoss = 112.0206 + 10.0;  // dBm
+  // relative to the detection threshold (T=117.0206).
+  double minLoss = 117.0206 - 10.0;  // dBm
+  double maxLoss = 117.0206 + 10.0;  // dBm
   uint32_t packetSize = 1000; // bytes
   double interval = 1.0; // seconds
   uint32_t generationSize = 5;

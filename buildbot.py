@@ -98,9 +98,9 @@ def run_tests(properties):
     os.chdir(ns3_path)
     python = sys.executable
     run_command([python, 'waf', '--run', 'kodo-recoders'])
-    #run_command([python, 'waf', '--run', 'kodo-wifi-broadcast'])
+    run_command([python, 'waf', '--run', 'kodo-wifi-broadcast'])
     run_command([python, 'waf', '--run', 'kodo-wired-broadcast'])
-    #run_command([python, 'waf', '--run', 'kodo-wifi-broadcast-object'])
+    run_command([python, 'waf', '--run', 'kodo-wifi-broadcast-object'])
 
 
 def install(properties):
