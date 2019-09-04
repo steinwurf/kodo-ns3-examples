@@ -42,43 +42,37 @@ public:
       m_source (source),
       m_sinks (sinks)
   {
-    // Create factories using the supplied parameters
-    kodo_rlnc::encoder::factory encoderFactory (m_field,
-      m_generationSize, m_packetSize);
-    kodo_rlnc::decoder::factory decoderFactory (m_field,
-      m_generationSize, m_packetSize);
-
     // Create encoder and disable systematic mode
-    m_encoder = encoderFactory.build ();
-    m_encoder->set_systematic_off ();
+    m_encoder = kodo_rlnc::encoder (m_field, m_generationSize, m_packetSize);
+    m_encoder.set_systematic_off ();
 
     // Initialize the encoder data buffer
-    m_encoderBuffer.resize (m_encoder->block_size ());
-    m_encoder->set_const_symbols (storage::storage (m_encoderBuffer));
-    m_payload.resize (m_encoder->payload_size ());
+    m_encoderBuffer.resize (m_encoder.block_size ());
+    m_encoder.set_symbols_storage (m_encoderBuffer.data ());
+    m_payload.resize (m_encoder.max_payload_size ());
 
     // Create decoders
     m_decoderBuffers.resize (m_users);
     for (uint32_t n = 0; n < m_users; n++)
       {
-        auto decoder = decoderFactory.build ();
+        kodo_rlnc::decoder decoder (m_field, m_generationSize, m_packetSize);
 
-        // Add custom trace callback to each decoder
+        // Add custom log callback to each decoder
         auto callback = [](const std::string& zone, const std::string& data)
           {
             std::set<std::string> filters =
-              { "decoder_state", "symbol_coefficients_before_read_symbol" };
+              { "decoder_state", "symbol_coefficients_before_consume_symbol" };
             if (filters.count (zone))
               {
                 std::cout << zone << ":" << std::endl;
                 std::cout << data << std::endl;
               }
           };
-        decoder->set_trace_callback (callback);
+        decoder.set_log_callback (callback);
 
         // Create data buffer for the decoder
-        m_decoderBuffers[n].resize (decoder->block_size ());
-        decoder->set_mutable_symbols (storage::storage (m_decoderBuffers[n]));
+        m_decoderBuffers[n].resize (decoder.block_size ());
+        decoder.set_symbols_storage ( m_decoderBuffers[n].data ());
 
         m_decoders.emplace_back (decoder);
       }
@@ -93,7 +87,7 @@ public:
 
     for (uint32_t n = 0; n < m_users; n++)
       {
-        allDecoded = allDecoded && m_decoders[n]->is_complete ();
+        allDecoded = allDecoded && m_decoders[n].is_complete ();
       }
 
     if (!allDecoded)
@@ -102,7 +96,7 @@ public:
         std::cout << "Sending coded packet: " << m_transmissionCount
                   << std::endl;
         std::cout << "------------------------" << std::endl;
-        uint32_t bytesUsed = m_encoder->write_payload (&m_payload[0]);
+        uint32_t bytesUsed = m_encoder.produce_payload (&m_payload[0]);
         auto packet = ns3::Create<ns3::Packet> (&m_payload[0], bytesUsed);
         socket->Send (packet);
         m_transmissionCount++;
@@ -126,12 +120,11 @@ public:
 
     std::cout << "Received a packet at Decoder " << n + 1 << std::endl;
 
-    std::vector<uint8_t> payload (m_decoders[n]->payload_size ());
-
     // Pass the packet payload to the appropriate decoder
     auto packet = socket->Recv ();
-    packet->CopyData (&payload[0], m_decoders[n]->payload_size ());
-    m_decoders[n]->read_payload (&payload[0]);
+    std::vector<uint8_t> payload (packet->GetSize ());
+    packet->CopyData (&payload[0], payload.size ());
+    m_decoders[n].consume_payload (&payload[0]);
   }
 
 private:
@@ -143,9 +136,9 @@ private:
 
   ns3::Ptr<ns3::Socket> m_source;
   std::vector<ns3::Ptr<ns3::Socket>> m_sinks;
-  std::shared_ptr<kodo_rlnc::encoder> m_encoder;
+  kodo_rlnc::encoder m_encoder;
   std::vector<uint8_t> m_encoderBuffer;
-  std::vector<std::shared_ptr<kodo_rlnc::decoder>> m_decoders;
+  std::vector<kodo_rlnc::decoder> m_decoders;
   std::vector<std::vector<uint8_t>> m_decoderBuffers;
 
   std::vector<uint8_t> m_payload;
