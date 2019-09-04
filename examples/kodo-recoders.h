@@ -65,7 +65,7 @@ public:
      }
 
     // Create decoder and its data buffer
-    m_decoder = decoderFactory.build ();
+    m_decoder = kodo_rlnc::decoder (m_field, m_generationSize, m_packetSize);
     m_decoderBuffer.resize (m_decoder.block_size ());
     m_decoder.set_symbols_storage (m_decoderBuffer.data ());
     m_payload.resize (m_decoder.max_payload_size ());

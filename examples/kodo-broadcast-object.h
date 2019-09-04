@@ -63,13 +63,14 @@ public:
     m_payloadsForCurrentBlock = 0;
 
     // Create the storage encoder
-    m_encoder = storage_encoder (m_field, m_generationSize, m_packetSize);
+    m_encoder = std::make_shared<storage_encoder> (m_field,
+      m_generationSize, m_packetSize);
 
     // Initialize the data buffer that might be larger than a single generation
     // In a realistic application, this input buffer can be read from a file
     m_encoderBuffer.resize (m_objectSize);
-    m_encoder.set_const_storage (storage::storage (m_encoderBuffer));
-    m_encoderStacks.resize (m_encoder.blocks ());
+    m_encoder->set_const_storage (storage::storage (m_encoderBuffer));
+    m_encoderStacks.resize (m_encoder->blocks ());
 
     // Create storage decoders for each sink node
     m_decoderBuffers.resize (m_users);
@@ -81,7 +82,7 @@ public:
         // Create data buffer for the decoder
         m_decoderBuffers[n].resize (m_objectSize);
         decoder.set_mutable_storage (storage::storage (m_decoderBuffers[n]));
-        m_decoderStacks[n].resize (decoder->blocks ());
+        m_decoderStacks[n].resize (decoder.blocks ());
 
         m_decoders.emplace_back (decoder);
       }
@@ -107,7 +108,7 @@ public:
         // blocks)
         if (m_payloadsForCurrentBlock >= m_generationSize + m_extraPackets)
           {
-            m_currentBlock = (m_currentBlock + 1) % m_encoder.blocks ();
+            m_currentBlock = (m_currentBlock + 1) % m_encoder->blocks ();
             m_payloadsForCurrentBlock = 0;
           }
 
@@ -116,7 +117,7 @@ public:
         // Create the encoder for this block if necessary
         if (!m_encoderStacks[i])
           {
-            m_encoderStacks[i] = m_encoder.build (i);
+            m_encoderStacks[i] = m_encoder->build (i);
             std::cout << "Encoder created for block: " << i << std::endl;
           }
 
@@ -125,7 +126,7 @@ public:
         // First, the current block ID to the payload
         endian::big_endian::put<uint32_t>(i, payload.data());
         // Write a symbol to the payload buffer after the block ID
-        uint32_t bytesUsed = m_encoderStacks[i]->write_payload (&payload[4]);
+        uint32_t bytesUsed = m_encoderStacks[i]->produce_payload (&payload[4]);
         auto packet = ns3::Create<ns3::Packet> (&payload[0], 4 + bytesUsed);
         socket->Send (packet);
         m_payloadsForCurrentBlock++;
@@ -169,7 +170,7 @@ public:
         return;
 
     // Pass the symbol to the appropriate decoder
-    m_decoderStacks[n][i]->read_payload (&payload[4]);
+    m_decoderStacks[n][i]->consume_payload (&payload[4]);
 
     if (m_decoderStacks[n][i]->is_complete ())
       {
@@ -195,7 +196,7 @@ private:
 
   ns3::Ptr<ns3::Socket> m_source;
   std::vector<ns3::Ptr<ns3::Socket>> m_sinks;
-  storage_encoder m_encoder;
+  std::shared_ptr<storage_encoder> m_encoder;
   std::vector<encoder_stack_ptr> m_encoderStacks;
   std::vector<uint8_t> m_encoderBuffer;
   std::vector<storage_decoder> m_decoders;
