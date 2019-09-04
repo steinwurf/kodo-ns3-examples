@@ -117,10 +117,10 @@ int main (int argc, char *argv[])
   double transmitProbability = 0.5; // Transmit probability for the recoders
 
   // Create a map for the field values
-  std::map<std::string, fifi::api::field> fieldMap;
-  fieldMap["binary"] = fifi::api::field::binary;
-  fieldMap["binary4"] = fifi::api::field::binary4;
-  fieldMap["binary8"] = fifi::api::field::binary8;
+  std::map<std::string, fifi::finite_field> fieldMap;
+  fieldMap["binary"] = fifi::finite_field::binary;
+  fieldMap["binary4"] = fifi::finite_field::binary4;
+  fieldMap["binary8"] = fifi::finite_field::binary8;
 
   Time interPacketInterval = Seconds (interval);
 

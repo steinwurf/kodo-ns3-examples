@@ -56,11 +56,11 @@ int main (int argc, char *argv[])
 {
   //! [4]
   std::string phyMode ("DsssRate1Mbps");
-  // The default loss values yield 50% random packet loss
+  // The default loss values aim for about 50% random packet loss
   // A different loss rate can be achieved by moving the lower and upper limits
-  // relative to the detection threshold (T=112.0206).
-  double minLoss = 112.0206 - 10.0;  // dBm
-  double maxLoss = 112.0206 + 10.0;  // dBm
+  // relative to the detection threshold (T=98).
+  double minLoss = 98.0 - 40.0;  // dBm
+  double maxLoss = 98.0 + 40.0;  // dBm
   uint32_t packetSize = 1000; // bytes
   double interval = 0.2; // seconds
   uint32_t generationSize = 20;
@@ -70,10 +70,10 @@ int main (int argc, char *argv[])
   std::string field = "binary8"; // Finite field used
 
   // Create a map for the field values
-  std::map<std::string, fifi::api::field> fieldMap;
-  fieldMap["binary"] = fifi::api::field::binary;
-  fieldMap["binary4"] = fifi::api::field::binary4;
-  fieldMap["binary8"] = fifi::api::field::binary8;
+  std::map<std::string, fifi::finite_field> fieldMap;
+  fieldMap["binary"] = fifi::finite_field::binary;
+  fieldMap["binary4"] = fifi::finite_field::binary4;
+  fieldMap["binary8"] = fifi::finite_field::binary8;
 
   CommandLine cmd;
 

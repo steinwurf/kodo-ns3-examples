@@ -93,12 +93,12 @@ Our aim is to make the examples compatible with the latest ns-3 revision.
 If you experience any issues with the latest revision, then you can switch
 to the latest stable release (this step is **optional**)::
 
-  git checkout ns-3.29
+  git checkout ns-3.30
 
 Our build system automatically tests the examples with the latest supported
 revision of ns-3. This revision is specified in our buildbot.py_ script.
 
-.. _buildbot.py: https://github.com/steinwurf/kodo-ns3-examples/blob/master/buildbot.py#L74
+.. _buildbot.py: https://github.com/steinwurf/kodo-ns3-examples/blob/master/buildbot.py#L73
 
 Configure the ns-3 project (it is important to also enable the examples)::
 
@@ -128,17 +128,13 @@ The ``waf configure`` command ensures that all dependencies are downloaded
 (by default, waf will create a folder called ``bundle_dependencies`` to
 store these libraries).
 
-You must have **a valid Steinwurf license** to download the ``fifi`` and
-``kodo`` dependencies, otherwise you will get a git error when you execute
-the configure command!
-
 Now we build the kodo-rlnc static library and we install the examples and all
 the required files to the ``~/ns-3-dev/examples/kodo`` folder::
 
-  python waf build install --ns3_path="~/ns-3-dev"
+  python waf build install --destdir="~/ns-3-dev/examples/kodo"
 
-The ``--ns3_path`` option is used to specify your ns-3 folder (you can change
-this if your ns-3 is located elsewhere).
+The ``--destdir`` option is used to specify the target folder (you can change
+the ``kodo`` subfolder name to something else if you like).
 
 Building the Kodo examples in ns-3
 ----------------------------------
@@ -182,19 +178,22 @@ and how many transmissions were required.
 
 Adding your own simulation
 --------------------------
+
 At this point, you might want to add your own simulation that uses kodo.
-It is recommended to create a new program by copying one of the kodo examples.
-The examples are installed in ``~/ns-3-dev/examples/kodo``, so we will go to
-that folder and make a copy ``kodo-wifi-broadcast.cc`` to create a new
-simulation called ``my-simulation.cc`` (you can choose any name here)::
 
-  cd ~/ns-3-dev/examples/kodo
-  cp kodo-wifi-broadcast.cc my-simulation.cc
+It is recommended to create a separate folder (e.g.
+``~/ns-3-dev/examples/my-simulation``) for your custom simulation and copy all
+the necessary files from ``~/ns-3-dev/examples/kodo`` (most importantly the
+``include`` and ``lib`` folders).
 
-To build an executable from the ``my-simulation.cc`` source file, we have to
-define a new program in ``~/ns-3-dev/examples/kodo/wscript``.
-Open this file in your text editor, and add the following lines at the end
-(be careful with the indentation since this is a Python script)::
+If you copy the wscript file, then please delete or comment out the parts where
+we call ``bld.create_ns3_program``. We cannot have multiple programs with
+the same name (e.g. ``kodo-recoders``).
+
+When you create a new program, you can start by copying one of the kodo examples.
+If you have a source file called ``my-simulation.cc``, then you can
+define a new program in ``~/ns-3-dev/examples/my-simulation/wscript``.
+like this::
 
   obj = bld.create_ns3_program('my-simulation',
                                ['core', 'applications', 'point-to-point',
@@ -220,13 +219,10 @@ these in the wscript like this::
 **Warning:** If you install the kodo ns-3 examples again with this command::
 
   cd ~/kodo-ns3-examples
-  python waf build install --ns3_path="~/ns-3-dev"
+  python waf build install --destdir="~/ns-3-dev/examples/kodo"
 
 then the example source files and the wscript will be overwritten in
 the ``~/ns-3-dev/examples/kodo`` folder, so it is recommended to create a
 backup if you modified any of these files.
 
-You can also create a separate folder for your custom simulation to avoid this
-problem. For example, you can create the ``~/ns-3-dev/examples/my-simulation``
-folder and copy the ``include`` and ``lib`` folders from
-``~/ns-3-dev/examples/kodo``.
+

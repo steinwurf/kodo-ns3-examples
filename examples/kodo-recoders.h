@@ -32,7 +32,7 @@ class Recoders
 public:
 
   Recoders (
-    const fifi::api::field field, const uint32_t users,
+    const fifi::finite_field field, const uint32_t users,
     const uint32_t generationSize, const uint32_t packetSize,
     const std::vector<ns3::Ptr<ns3::Socket>>& recodersSockets,
     const bool recodingFlag, const double transmitProbability)
@@ -44,37 +44,31 @@ public:
       m_recodersSockets (recodersSockets),
       m_transmitProbability (transmitProbability)
   {
-    // Create factories using the provided parameters
-    kodo_rlnc::encoder::factory encoderFactory (m_field,
-      m_generationSize, m_packetSize);
-    kodo_rlnc::decoder::factory decoderFactory (m_field,
-      m_generationSize, m_packetSize);
-
     // Create encoder and disable systematic mode
-    m_encoder = encoderFactory.build ();
-    m_encoder->set_systematic_off ();
+    m_encoder = kodo_rlnc::encoder (m_field, m_generationSize, m_packetSize);
+    m_encoder.set_systematic_off ();
 
     // Initialize the encoder data buffer
-    m_encoderBuffer.resize (m_encoder->block_size ());
-    m_encoder->set_const_symbols (storage::storage (m_encoderBuffer));
-    m_payload.resize (m_encoder->payload_size ());
+    m_encoderBuffer.resize (m_encoder.block_size ());
+    m_encoder.set_symbols_storage (m_encoderBuffer.data ());
 
     // Create recoders and place them in a vector
     m_recoderBuffers.resize (m_users);
     for (uint32_t n = 0; n < m_users; n++)
      {
-       auto recoder = decoderFactory.build ();
+        kodo_rlnc::decoder recoder (m_field, m_generationSize, m_packetSize);
 
        // Create data buffer for the decoder
-       m_recoderBuffers[n].resize (recoder->block_size ());
-       recoder->set_mutable_symbols(storage::storage (m_recoderBuffers[n]));
+       m_recoderBuffers[n].resize (recoder.block_size ());
+       recoder.set_symbols_storage ( m_recoderBuffers[n].data ());
        m_recoders.emplace_back (recoder);
      }
 
     // Create decoder and its data buffer
-    m_decoder = decoderFactory.build ();
-    m_decoderBuffers.resize (m_decoder->block_size ());
-    m_decoder->set_mutable_symbols (storage::storage (m_decoderBuffers));
+    m_decoder = kodo_rlnc::decoder (m_field, m_generationSize, m_packetSize);
+    m_decoderBuffer.resize (m_decoder.block_size ());
+    m_decoder.set_symbols_storage (m_decoderBuffer.data ());
+    m_payload.resize (m_decoder.max_payload_size ());
 
     // Initialize transmission counts
     m_encoderTransmissionCount = 0;
@@ -95,7 +89,7 @@ public:
 
     for (auto recoder : m_recoders)
       {
-         allRecodersDecoded &= recoder->is_complete ();
+         allRecodersDecoded &= recoder.is_complete ();
       }
 
     if (!allRecodersDecoded)
@@ -104,7 +98,7 @@ public:
         std::cout << "|Sending a coded packet from ENCODER|" << std::endl;
         std::cout << "+-----------------------------------+" << std::endl;
 
-        uint32_t bytesUsed = m_encoder->write_payload (&m_payload[0]);
+        uint32_t bytesUsed = m_encoder.produce_payload (&m_payload[0]);
         auto packet = ns3::Create<ns3::Packet> (&m_payload[0], bytesUsed);
         socket->Send (packet);
         m_encoderTransmissionCount++;
@@ -131,9 +125,9 @@ public:
     auto& recoder = m_recoders[id];
 
     auto packet = socket->Recv ();
-    packet->CopyData (&m_payload[0], recoder->payload_size ());
+    packet->CopyData (&m_payload[0], packet->GetSize ());
 
-    recoder->read_payload (&m_payload[0]);
+    recoder.consume_payload (&m_payload[0]);
 
     // Keep track of the received packets for each recoder
     // when no recoding is employed to forward one of them
@@ -143,7 +137,7 @@ public:
         m_previousPackets[id].push_back(packet);
       }
 
-    if (recoder->is_complete ())
+    if (recoder.is_complete ())
       {
         std::cout << "RECODER " << id + 1 << " is complete!\n" << std::endl;
       }
@@ -172,7 +166,7 @@ public:
         transmit = true;
       }
 
-    if (!m_decoder->is_complete () && recoder->rank () > 0 && transmit)
+    if (!m_decoder.is_complete () && recoder.rank () > 0 && transmit)
       {
         if (m_recodingFlag)
           {
@@ -182,7 +176,7 @@ public:
             std::cout << "+-------------------------------------+" << std::endl;
 
             // Recode a new packet and send it
-            uint32_t bytesUsed = recoder->write_payload (&m_payload[0]);
+            uint32_t bytesUsed = recoder.produce_payload (&m_payload[0]);
             auto packet = ns3::Create<ns3::Packet> (&m_payload[0], bytesUsed);
             socket->Send (packet);
             m_recodersTransmissionCount++;
@@ -215,7 +209,7 @@ public:
       }
 
     // Schedule the next packet
-    if (!m_decoder->is_complete ())
+    if (!m_decoder.is_complete ())
       {
         ns3::Simulator::Schedule (pktInterval,
           &Recoders::SendPacketRecoder, this,
@@ -226,17 +220,17 @@ public:
   void ReceivePacketDecoder (ns3::Ptr<ns3::Socket> socket)
   {
     auto packet = socket->Recv ();
-    packet->CopyData (&m_payload[0], m_decoder->payload_size ());
-    m_decoder->read_payload (&m_payload[0]);
+    packet->CopyData (&m_payload[0], packet->GetSize ());
+    m_decoder.consume_payload (&m_payload[0]);
 
-    if (m_decoder->rank () > m_decoderRank)
+    if (m_decoder.rank () > m_decoderRank)
       {
         std::cout << "Received an innovative packet at DECODER!" << std::endl;
-        std::cout << "Decoder rank: " << m_decoder->rank () << "\n"
+        std::cout << "Decoder rank: " << m_decoder.rank () << "\n"
           << std::endl;
-        m_decoderRank = m_decoder->rank ();
+        m_decoderRank = m_decoder.rank ();
 
-        if (m_decoder->is_complete ())
+        if (m_decoder.is_complete ())
           {
             socket->Close ();
             std::cout << "*** Decoding completed! ***" << std::endl;
@@ -253,18 +247,18 @@ public:
 
 private:
 
-  const fifi::api::field m_field;
+  const fifi::finite_field m_field;
   const uint32_t m_users;
   const uint32_t m_generationSize;
   const uint32_t m_packetSize;
   const bool m_recodingFlag;
 
-  std::shared_ptr<kodo_rlnc::encoder> m_encoder;
+  kodo_rlnc::encoder m_encoder;
   std::vector<uint8_t> m_encoderBuffer;
-  std::vector<std::shared_ptr<kodo_rlnc::decoder>> m_recoders;
+  std::vector<kodo_rlnc::decoder> m_recoders;
   std::vector<std::vector<uint8_t>> m_recoderBuffers;
-  std::shared_ptr<kodo_rlnc::decoder> m_decoder;
-  std::vector<uint8_t> m_decoderBuffers;
+  kodo_rlnc::decoder m_decoder;
+  std::vector<uint8_t> m_decoderBuffer;
   std::vector<ns3::Ptr<ns3::Socket>> m_recodersSockets;
 
   std::vector<uint8_t> m_payload;

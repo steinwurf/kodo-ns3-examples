@@ -70,7 +70,7 @@ def configure(properties):
     # See revisions here: https://gitlab.com/nsnam/ns-3-dev/commits/master
     os.chdir(ns3_path)
     run_command(['git', 'pull'])
-    run_command(['git', 'reset', '--hard', '7112e718'])
+    run_command(['git', 'reset', '--hard', '5de272fa'])
     # Configure ns-3 with the examples enabled
     run_command([sys.executable, 'waf', 'configure', '--enable-examples'])
 
@@ -80,7 +80,7 @@ def build(properties):
     # Install the examples, the required headers and the compiled static
     # libraries to '{ns3_path}/examples/kodo'
     command = [sys.executable, 'waf', 'build', 'install', '-v']
-    command += ['--ns3_path={}'.format(properties['ns3_path'])]
+    command += ['--destdir={}/examples/kodo'.format(properties['ns3_path'])]
     run_command(command)
 
     ns3_path = properties['ns3_path']

@@ -45,7 +45,7 @@ private:
 
 public:
 
-  BroadcastObject (const fifi::api::field field, const uint32_t users,
+  BroadcastObject (const fifi::finite_field field, const uint32_t users,
     const uint32_t objectSize, const uint32_t generationSize,
     const uint32_t packetSize, const uint32_t extraPackets,
     const ns3::Ptr<ns3::Socket>& source,
@@ -62,14 +62,9 @@ public:
     m_currentBlock = 0;
     m_payloadsForCurrentBlock = 0;
 
-    // Create factories using the supplied parameters
-    storage_encoder::factory encoderFactory (m_field,
-      m_generationSize, m_packetSize);
-    storage_decoder::factory decoderFactory (m_field,
-      m_generationSize, m_packetSize);
-
     // Create the storage encoder
-    m_encoder = encoderFactory.build ();
+    m_encoder = std::make_shared<storage_encoder> (m_field,
+      m_generationSize, m_packetSize);
 
     // Initialize the data buffer that might be larger than a single generation
     // In a realistic application, this input buffer can be read from a file
@@ -82,12 +77,12 @@ public:
     m_decoderStacks.resize (m_users);
     for (uint32_t n = 0; n < m_users; n++)
       {
-        auto decoder = decoderFactory.build ();
+        storage_decoder decoder (m_field, m_generationSize, m_packetSize);
 
         // Create data buffer for the decoder
         m_decoderBuffers[n].resize (m_objectSize);
-        decoder->set_mutable_storage (storage::storage (m_decoderBuffers[n]));
-        m_decoderStacks[n].resize (decoder->blocks ());
+        decoder.set_mutable_storage (storage::storage (m_decoderBuffers[n]));
+        m_decoderStacks[n].resize (decoder.blocks ());
 
         m_decoders.emplace_back (decoder);
       }
@@ -102,7 +97,7 @@ public:
 
     for (uint32_t n = 0; n < m_users; n++)
       {
-        allDecoded = allDecoded && m_decoders[n]->is_complete ();
+        allDecoded = allDecoded && m_decoders[n].is_complete ();
       }
 
     if (!allDecoded)
@@ -127,11 +122,12 @@ public:
           }
 
         // Create a payload that will also contain the block ID
-        std::vector<uint8_t> payload (4 + m_encoderStacks[i]->payload_size ());
+        std::vector<uint8_t> payload (
+          4 + m_encoderStacks[i]->max_payload_size ());
         // First, the current block ID to the payload
         endian::big_endian::put<uint32_t>(i, payload.data());
         // Write a symbol to the payload buffer after the block ID
-        uint32_t bytesUsed = m_encoderStacks[i]->write_payload (&payload[4]);
+        uint32_t bytesUsed = m_encoderStacks[i]->produce_payload (&payload[4]);
         auto packet = ns3::Create<ns3::Packet> (&payload[0], 4 + bytesUsed);
         socket->Send (packet);
         m_payloadsForCurrentBlock++;
@@ -167,7 +163,7 @@ public:
     // Create the decoder for this block if it does not exist
     if (!m_decoderStacks[n][i])
       {
-        m_decoderStacks[n][i] = m_decoders[n]->build (i);
+        m_decoderStacks[n][i] = m_decoders[n].build (i);
       }
 
     // Nothing to do if this block is already completed
@@ -175,14 +171,14 @@ public:
         return;
 
     // Pass the symbol to the appropriate decoder
-    m_decoderStacks[n][i]->read_payload (&payload[4]);
+    m_decoderStacks[n][i]->consume_payload (&payload[4]);
 
     if (m_decoderStacks[n][i]->is_complete ())
       {
         std::cout << "Block " << i << " completed at Decoder " << n + 1
                   << std::endl;
       }
-    if (m_decoders[n]->is_complete ())
+    if (m_decoders[n].is_complete ())
       {
         std::cout << "All blocks completed at Decoder " << n + 1 << std::endl;
       }
@@ -192,7 +188,7 @@ private:
 
   uint32_t m_currentBlock;
   uint32_t m_payloadsForCurrentBlock;
-  const fifi::api::field m_field;
+  const fifi::finite_field m_field;
   const uint32_t m_users;
   const uint32_t m_objectSize;
   const uint32_t m_generationSize;
@@ -204,7 +200,7 @@ private:
   std::shared_ptr<storage_encoder> m_encoder;
   std::vector<encoder_stack_ptr> m_encoderStacks;
   std::vector<uint8_t> m_encoderBuffer;
-  std::vector<std::shared_ptr<storage_decoder>> m_decoders;
+  std::vector<storage_decoder> m_decoders;
   std::vector<std::vector<decoder_stack_ptr>> m_decoderStacks;
   std::vector<std::vector<uint8_t>> m_decoderBuffers;
 

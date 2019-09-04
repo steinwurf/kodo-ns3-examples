@@ -73,25 +73,16 @@
 // UniformRandomVariable that can be configured with the minLoss/maxLoss
 // parameters. Note that changing the position of the nodes has no effect.
 //
-// When setting a loss value, you need to consider the relevant values of the
-// physical layer implementation. These are listed in the "Detailed Description"
-// section here: https://www.nsnam.org/doxygen/classns3_1_1_wifi_phy.html
-//
-// EnergyDetectionThreshold: -96 dBm
-// TxPowerStart/TxPowerEnd: 16.0206 dBm
-//
-// The TxPower starts at 16.0206 dBm and the transmisson can be successfully
-// received if the signal strength stays above the -96 dBm the threshold.
-// If we apply 112.0206 dBm signal loss, then we reach that threshold. If
-// a lower signal loss value is set, then all transmissions will be received.
-// But with a higher value, all packets will be dropped. We use a random
-// variable that covers a range around this threshold to simulate a randomized
-// loss pattern.
+// When setting a loss value, you need to consider the cutoff point is around
+// the 98 dBm. If the loss gets higher than this threshold, then the packet
+// will be dropped. We use a random variable that covers a range around this
+// threshold to simulate a randomized loss pattern. Note that this value
+// can change in future versions of ns-3.
 //
 // You can lower the effective packet loss rate by decreasing the minLoss
 // parameter of the simulation:
 //
-// python waf --run kodo-wifi-broadcast --command-template="%s --minLoss=90"
+// python waf --run kodo-wifi-broadcast --command-template="%s --minLoss=30"
 //! [2]
 
 #include <iostream>
@@ -114,11 +105,11 @@ int main (int argc, char *argv[])
 {
   //! [4]
   std::string phyMode ("DsssRate1Mbps");
-  // The default loss values yield 50% random packet loss
+  // The default loss values aim for about 50% random packet loss
   // A different loss rate can be achieved by moving the lower and upper limits
-  // relative to the detection threshold (T=112.0206).
-  double minLoss = 112.0206 - 10.0;  // dBm
-  double maxLoss = 112.0206 + 10.0;  // dBm
+  // relative to the detection threshold (T=98).
+  double minLoss = 98.0 - 40.0;  // dBm
+  double maxLoss = 98.0 + 40.0;  // dBm
   uint32_t packetSize = 1000; // bytes
   double interval = 1.0; // seconds
   uint32_t generationSize = 5;
@@ -126,10 +117,10 @@ int main (int argc, char *argv[])
   std::string field = "binary"; // Finite field used
 
   // Create a map for the field values
-  std::map<std::string, fifi::api::field> fieldMap;
-  fieldMap["binary"] = fifi::api::field::binary;
-  fieldMap["binary4"] = fifi::api::field::binary4;
-  fieldMap["binary8"] = fifi::api::field::binary8;
+  std::map<std::string, fifi::finite_field> fieldMap;
+  fieldMap["binary"] = fifi::finite_field::binary;
+  fieldMap["binary4"] = fifi::finite_field::binary4;
+  fieldMap["binary8"] = fifi::finite_field::binary8;
 
   CommandLine cmd;
 
