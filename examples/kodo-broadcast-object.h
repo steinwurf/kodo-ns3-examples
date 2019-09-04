@@ -122,7 +122,8 @@ public:
           }
 
         // Create a payload that will also contain the block ID
-        std::vector<uint8_t> payload (4 + m_encoderStacks[i]->payload_size ());
+        std::vector<uint8_t> payload (
+          4 + m_encoderStacks[i]->max_payload_size ());
         // First, the current block ID to the payload
         endian::big_endian::put<uint32_t>(i, payload.data());
         // Write a symbol to the payload buffer after the block ID
