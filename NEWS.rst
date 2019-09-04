@@ -7,6 +7,9 @@ detailed list of every change, see the Git log.
 Latest
 ------
 * tbd
+
+3.0.0
+-----
 * Minor: Upgrade to the ns-3.30 release
 * Major: Use the --destdir option to specify the target installation folder
   for the examples (e.g. ``~/ns-3-dev/examples/kodo``).

@@ -8,7 +8,7 @@ from waflib.Build import BuildContext
 
 
 APPNAME = 'kodo-ns3-examples'
-VERSION = '2.0.0'
+VERSION = '3.0.0'
 
 
 def options(opt):
