@@ -7,6 +7,11 @@ detailed list of every change, see the Git log.
 Latest
 ------
 * tbd
+* Minor: Upgrade to the ns-3.30 release
+* Major: Use the --destdir option to specify the target installation folder
+  for the examples (e.g. ``~/ns-3-dev/examples/kodo``).
+  Consequently, the --ns3_path option was removed.
+* Major: Upgrade to kodo-rlnc 15
 
 2.0.0
 -----
