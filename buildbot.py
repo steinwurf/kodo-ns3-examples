@@ -80,7 +80,7 @@ def build(properties):
     # Install the examples, the required headers and the compiled static
     # libraries to '{ns3_path}/examples/kodo'
     command = [sys.executable, 'waf', 'build', 'install', '-v']
-    command += ['--ns3_path={}'.format(properties['ns3_path'])]
+    command += ['--destdir={}/examples/kodo'.format(properties['ns3_path'])]
     run_command(command)
 
     ns3_path = properties['ns3_path']
