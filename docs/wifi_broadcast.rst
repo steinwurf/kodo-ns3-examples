@@ -130,7 +130,7 @@ The ``Broadcast`` class can be roughly defined in the following way:
   {
   public:
 
-    Broadcast (const fifi::api::field field, const uint32_t users,
+    Broadcast (const fifi::finite_field field, const uint32_t users,
         const uint32_t generationSize, const uint32_t packetSize,
         const ns3::Ptr<ns3::Socket>& source,
         const std::vector<ns3::Ptr<ns3::Socket>>& sinks)
@@ -156,7 +156,7 @@ The ``Broadcast`` class can be roughly defined in the following way:
 
   private:
 
-    const fifi::api::field m_field;
+    const fifi::finite_field m_field;
     const uint32_t m_users;
     const uint32_t m_generationSize;
     const uint32_t m_packetSize;

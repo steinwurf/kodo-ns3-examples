@@ -126,10 +126,10 @@ int main (int argc, char *argv[])
   std::string field = "binary"; // Finite field used
 
   // Create a map for the field values
-  std::map<std::string, fifi::api::field> fieldMap;
-  fieldMap["binary"] = fifi::api::field::binary;
-  fieldMap["binary4"] = fifi::api::field::binary4;
-  fieldMap["binary8"] = fifi::api::field::binary8;
+  std::map<std::string, fifi::finite_field> fieldMap;
+  fieldMap["binary"] = fifi::finite_field::binary;
+  fieldMap["binary4"] = fifi::finite_field::binary4;
+  fieldMap["binary8"] = fifi::finite_field::binary8;
 
   CommandLine cmd;
 

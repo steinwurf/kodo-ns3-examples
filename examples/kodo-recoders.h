@@ -32,7 +32,7 @@ class Recoders
 public:
 
   Recoders (
-    const fifi::api::field field, const uint32_t users,
+    const fifi::finite_field field, const uint32_t users,
     const uint32_t generationSize, const uint32_t packetSize,
     const std::vector<ns3::Ptr<ns3::Socket>>& recodersSockets,
     const bool recodingFlag, const double transmitProbability)
@@ -221,7 +221,7 @@ public:
   {
     auto packet = socket->Recv ();
     packet->CopyData (&m_payload[0], packet->GetSize ());
-    m_decoder.read_payload (&m_payload[0]);
+    m_decoder.consume_payload (&m_payload[0]);
 
     if (m_decoder.rank () > m_decoderRank)
       {
@@ -247,7 +247,7 @@ public:
 
 private:
 
-  const fifi::api::field m_field;
+  const fifi::finite_field m_field;
   const uint32_t m_users;
   const uint32_t m_generationSize;
   const uint32_t m_packetSize;

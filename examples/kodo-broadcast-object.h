@@ -45,7 +45,7 @@ private:
 
 public:
 
-  BroadcastObject (const fifi::api::field field, const uint32_t users,
+  BroadcastObject (const fifi::finite_field field, const uint32_t users,
     const uint32_t objectSize, const uint32_t generationSize,
     const uint32_t packetSize, const uint32_t extraPackets,
     const ns3::Ptr<ns3::Socket>& source,
@@ -186,7 +186,7 @@ private:
 
   uint32_t m_currentBlock;
   uint32_t m_payloadsForCurrentBlock;
-  const fifi::api::field m_field;
+  const fifi::finite_field m_field;
   const uint32_t m_users;
   const uint32_t m_objectSize;
   const uint32_t m_generationSize;

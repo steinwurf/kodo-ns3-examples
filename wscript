@@ -5,18 +5,13 @@ import os
 
 from waflib import Options
 from waflib.Build import BuildContext
-from waflib.TaskGen import feature, after_method, before_method
+
 
 APPNAME = 'kodo-ns3-examples'
 VERSION = '2.0.0'
 
 
 def options(opt):
-
-    # The options needed to find the ns-3 libraries
-    opt.add_option(
-        '--ns3_path', default=None, dest='ns3_path',
-         help='Path to the cloned ns-3 repository')
 
     opt.add_option(
         '--all_docs', default=False, action='store_true',
@@ -33,62 +28,33 @@ def build(bld):
         # will be included in a Position Independent Executable (PIE)
         bld.env.append_value('CXXFLAGS', '-fPIC')
 
-    # Define a dummy task to force the compilation of the kodo-rlnc library
-    bld(features='cxx',
+    # Make sure that kodo-rlnc static library is compiled at the top level
+    bld(features='cxx cxxstlib',
+        name='kodo_rlnc_static',
+        target='kodo_rlnc',
+        install_path='/lib',
         use=['kodo_rlnc'])
 
-    # Expand and validate the ns3_path option
-    if not bld.has_tool_option('ns3_path'):
-        bld.fatal('Please specify a path to ns-3 using the '
-                   '--ns3_path option, for example: --ns3_path="~/ns-3-dev"')
-
-    # The ns3_path option works correctly when the destdir is empty
-    if Options.options.destdir:
-        Options.options.destdir = ''
-
-    ns3_path = bld.get_tool_option('ns3_path')
-    ns3_path = os.path.abspath(os.path.expanduser(ns3_path))
-
-    if not os.path.isdir(ns3_path):
-        bld.fatal('The specified ns3_path "{}" is not a valid '
-                   'directory'.format(ns3_path))
-
-    # Define the path where the kodo examples will be installed in ns-3
-    bld.env['NS3_PATH'] = ns3_path
-    bld.env['NS3_EXAMPLES_PATH'] = os.path.join(
-        bld.env['NS3_PATH'], 'examples', 'kodo')
-
-    # Install all files from the 'examples' folder
+    # Install all examples to the target folder
     start_dir = bld.path.find_dir('examples')
-    bld.install_files('${NS3_EXAMPLES_PATH}',
-                      start_dir.ant_glob('**/*'),
-                      cwd=start_dir, relative_trick=True)
+    bld.install_files(
+        dest = '/',
+        files = start_dir.ant_glob('**/*'),
+        cwd=start_dir,
+        relative_trick=True)
 
-    # Add symlinks to all dependency includes under NS3_EXAMPLES_PATH/include
-    include_dir = os.path.join(bld.env['NS3_EXAMPLES_PATH'], 'include')
-
+    # Add symlinks to all dependency includes in the "include" subfolder
     projects = ['kodo-rlnc', 'kodo-core', 'fifi', 'storage', 'endian']
     for project in projects:
         subfolder = project.replace('-', '_')
         src_dir = os.path.join(
             bld.dependency_path(project), 'src', subfolder)
-        dst_dir = os.path.join(include_dir, subfolder)
+        dst_dir = os.path.join("/include", subfolder)
         bld.symlink_as(dst_dir, src_dir)
 
     # Boost is added separately, since it has a different include path
-    src_dir = os.path.join(
-        bld.dependency_path('boost'), 'boost')
-    dst_dir = os.path.join(include_dir, 'boost')
-    bld.symlink_as(dst_dir, src_dir)
-
-
-@feature('cxxstlib')
-@before_method('apply_link')
-def kodo_ns3_examples_override_stlib_install_path(self):
-    """
-    Install all static libraries to the NS3_EXAMPLES_PATH/lib folder
-    """
-    self.install_path = os.path.join(self.bld.env['NS3_EXAMPLES_PATH'], 'lib')
+    src_dir = os.path.join(bld.dependency_path('boost'), 'boost')
+    bld.symlink_as("/include/boost", src_dir)
 
 
 class DocsContext(BuildContext):
