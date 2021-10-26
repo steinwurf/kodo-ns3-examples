@@ -6,38 +6,38 @@
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
-    'sphinx.ext.autodoc',
-    'sphinx.ext.doctest',
-    'sphinx.ext.intersphinx',
-    'sphinx.ext.todo',
-    'sphinx.ext.coverage',
-    'sphinx.ext.mathjax',
-    'sphinx.ext.ifconfig',
-    'guzzle_sphinx_theme',
+    "sphinx.ext.autodoc",
+    "sphinx.ext.doctest",
+    "sphinx.ext.intersphinx",
+    "sphinx.ext.todo",
+    "sphinx.ext.coverage",
+    "sphinx.ext.mathjax",
+    "sphinx.ext.ifconfig",
+    "guzzle_sphinx_theme",
 ]
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = []
 
 # The suffix(es) of source filenames
-source_suffix = '.rst'
+source_suffix = ".rst"
 
 # The master toctree document.
-master_doc = 'index'
+master_doc = "index"
 
 # General information about the project.
-project = u'Kodo-NS3-Examples'
-copyright = u'2018, Steinwurf'
-author = u'Steinwurf'
+project = u"Kodo-NS3-Examples"
+copyright = u"2021, Steinwurf"
+author = u"Steinwurf"
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
 # built documents.
 #
 # The short X.Y version.
-version = u''
+version = u""
 # The full version, including alpha/beta/rc tags.
-release = u''
+release = u""
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
@@ -45,32 +45,30 @@ release = u''
 exclude_patterns = []
 
 # The name of the Pygments (syntax highlighting) style to use.
-pygments_style = 'sphinx'
+pygments_style = "sphinx"
 
 # -- Options for HTML output ----------------------------------------------
 
 try:
     import guzzle_sphinx_theme
-    html_theme = 'guzzle_sphinx_theme'
+
+    html_theme = "guzzle_sphinx_theme"
     html_theme_path = guzzle_sphinx_theme.html_theme_path()
 except ImportError:
-    print("Unable to import the used theme.\n"
-          "Please install requirements.txt before building")
+    print(
+        "Unable to import the used theme.\n"
+        "Please install requirements.txt before building"
+    )
     pass
 
 html_sidebars = {
-    '**': [
-        'logo-text.html', 'globaltoc.html', 'searchbox.html',
-        'versions.html'
-    ]
+    "**": ["logo-text.html", "globaltoc.html", "searchbox.html", "versions.html"]
 }
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
 # documentation.
-html_theme_options = {
-    "version_json_location": "versjon.json"
-}
+html_theme_options = {"version_json_location": "versjon.json"}
 
 # The name of an image file (relative to this directory) to place at the top
 # of the sidebar.

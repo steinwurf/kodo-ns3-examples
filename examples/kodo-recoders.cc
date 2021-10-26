@@ -87,216 +87,221 @@
 // You can modify any default parameter, by running (for example with a
 // different number of recoders):
 //
-// python waf --run kodo-recoders --command-template="%s --recoders=MY_RECODER_COUNT"
+// python waf --run kodo-recoders --command-template="%s
+// --recoders=MY_RECODER_COUNT"
 //! [2]
 
 #include <iostream>
-#include <vector>
 #include <string>
+#include <vector>
 
-#include <ns3/core-module.h>
-#include <ns3/point-to-point-star.h>
-#include <ns3/network-module.h>
 #include <ns3/config-store-module.h>
+#include <ns3/core-module.h>
 #include <ns3/internet-module.h>
+#include <ns3/network-module.h>
+#include <ns3/point-to-point-star.h>
 
 #include "kodo-recoders.h"
+#include <kodo/finite_field.hpp>
 //! [3]
 using namespace ns3;
 
-int main (int argc, char *argv[])
+int main(int argc, char* argv[])
 {
-  uint32_t packetSize = 1000; // Application bytes per packet
-  double interval = 1.0; // Time between events
-  uint32_t generationSize = 3; // RLNC generation size
-  double errorRateEncoderRecoder = 0.4; // Error rate for encoder-recoder link
-  double errorRateRecoderDecoder = 0.2; // Error rate for recoder-decoder link
-  bool recodingFlag = true; // Flag to control recoding
-  uint32_t recoders = 2; // Number of recoders
-  std::string field = "binary"; // Finite field used
-  double transmitProbability = 0.5; // Transmit probability for the recoders
+    uint32_t packetSize = 1000;           // Application bytes per packet
+    double interval = 1.0;                // Time between events
+    uint32_t generationSize = 3;          // RLNC generation size
+    double errorRateEncoderRecoder = 0.4; // Error rate for encoder-recoder link
+    double errorRateRecoderDecoder = 0.2; // Error rate for recoder-decoder link
+    bool recodingFlag = true;             // Flag to control recoding
+    uint32_t recoders = 2;                // Number of recoders
+    std::string field = "binary";         // Finite field used
+    double transmitProbability = 0.5; // Transmit probability for the recoders
 
-  // Create a map for the field values
-  std::map<std::string, fifi::finite_field> fieldMap;
-  fieldMap["binary"] = fifi::finite_field::binary;
-  fieldMap["binary4"] = fifi::finite_field::binary4;
-  fieldMap["binary8"] = fifi::finite_field::binary8;
+    // Create a map for the field values
+    std::map<std::string, kodo::finite_field> fieldMap;
+    fieldMap["binary"] = kodo::finite_field::binary;
+    fieldMap["binary4"] = kodo::finite_field::binary4;
+    fieldMap["binary8"] = kodo::finite_field::binary8;
+    fieldMap["binary16"] = kodo::finite_field::binary16;
 
-  Time interPacketInterval = Seconds (interval);
+    Time interPacketInterval = Seconds(interval);
 
-  CommandLine cmd;
+    CommandLine cmd;
 
-  cmd.AddValue ("packetSize", "Size of application packet sent", packetSize);
-  cmd.AddValue ("interval", "Interval (seconds) between packets", interval);
-  cmd.AddValue ("generationSize", "Set the generation size to use",
-                generationSize);
-  cmd.AddValue ("errorRateEncoderRecoder",
-                "Packet erasure rate for the encoder-recoder link",
-                errorRateEncoderRecoder);
-  cmd.AddValue ("errorRateRecoderDecoder",
-                "Packet erasure rate for the recoder-decoder link",
-                errorRateRecoderDecoder);
-  cmd.AddValue ("recodingFlag", "Enable packet recoding", recodingFlag);
-  cmd.AddValue ("recoders", "Amount of recoders", recoders);
-  cmd.AddValue ("field", "Finite field used", field);
-  cmd.AddValue ("transmitProbability", "Transmit probability from recoder",
-                transmitProbability);
+    cmd.AddValue("packetSize", "Size of application packet sent", packetSize);
+    cmd.AddValue("interval", "Interval (seconds) between packets", interval);
+    cmd.AddValue("generationSize", "Set the generation size to use",
+                 generationSize);
+    cmd.AddValue("errorRateEncoderRecoder",
+                 "Packet erasure rate for the encoder-recoder link",
+                 errorRateEncoderRecoder);
+    cmd.AddValue("errorRateRecoderDecoder",
+                 "Packet erasure rate for the recoder-decoder link",
+                 errorRateRecoderDecoder);
+    cmd.AddValue("recodingFlag", "Enable packet recoding", recodingFlag);
+    cmd.AddValue("recoders", "Amount of recoders", recoders);
+    cmd.AddValue("field", "Finite field used", field);
+    cmd.AddValue("transmitProbability", "Transmit probability from recoder",
+                 transmitProbability);
 
-  cmd.Parse (argc, argv);
+    cmd.Parse(argc, argv);
 
-  // Use the binary8 field in case of errors
-  if (fieldMap.find (field) == fieldMap.end ())
+    // Use the binary8 field in case of errors
+    if (fieldMap.find(field) == fieldMap.end())
     {
-      field = "binary8";
+        field = "binary8";
     }
 
-  Time::SetResolution (Time::NS);
+    Time::SetResolution(Time::NS);
 
-  //! [4]
-  // We group the nodes in different sets because
-  // we want many net devices per node. For the broadcast
-  // topology we create a subnet and for the recoders to
-  // the decoders, we create a secondary one. This in order to
-  // properly set the net devices and socket connections later
+    //! [4]
+    // We group the nodes in different sets because
+    // we want many net devices per node. For the broadcast
+    // topology we create a subnet and for the recoders to
+    // the decoders, we create a secondary one. This in order to
+    // properly set the net devices and socket connections later
 
+    // First we set the basic helper for a single link.
+    PointToPointHelper ptp;
 
-  // First we set the basic helper for a single link.
-  PointToPointHelper ptp;
+    // Encoder to recoders
+    PointToPointStarHelper toRecoders(recoders, ptp);
+    NodeContainer decoder;
+    decoder.Create(1);
 
-  // Encoder to recoders
-  PointToPointStarHelper toRecoders (recoders, ptp);
-  NodeContainer decoder;
-  decoder.Create (1);
+    // Recoders to decoder
+    NetDeviceContainer recodersDecoderDev;
 
-  // Recoders to decoder
-  NetDeviceContainer recodersDecoderDev;
-
-  for (uint32_t n = 0; n < recoders; n++)
-   {
-      recodersDecoderDev.Add (ptp.Install (
-        NodeContainer (toRecoders.GetSpokeNode (n), decoder.Get (0))) );
-   }
-
-  // Internet stack for the broadcast topology and decoder
-  InternetStackHelper internet;
-  toRecoders.InstallStack (internet);
-  internet.Install (decoder);
-
-  // Here, we first create a total of N net devices in the encoder
-  // (N = recoders amount) and a net device per recoder
-  // Second, we mirror this procedure in the second hop.
-  // Each net device in the recoder is in a different subnet.
-
-  toRecoders.AssignIpv4Addresses (Ipv4AddressHelper ("10.1.1.0",
-    "255.255.255.0"));
-
-  // The IP set of the recoders to the decoder is calculated
-  // in order to not collide with the one from the encoder
-  // to the recoders.
-  Ipv4AddressHelper fromRecoders ("10.2.1.0", "255.255.255.0");
-  fromRecoders.Assign (recodersDecoderDev);
-  //! [5]
-  // Set error model for the net devices
-  Config::SetDefault ("ns3::RateErrorModel::ErrorUnit",
-                      StringValue ("ERROR_UNIT_PACKET"));
-
-  // Create error rate models per branch
-  std::vector<Ptr<RateErrorModel>> errorEncoderRecoders (recoders);
-  std::vector<Ptr<RateErrorModel>> errorRecodersDecoder (recoders);
-
-  for (uint32_t n = 0; n < recoders; n++)
+    for (uint32_t n = 0; n < recoders; n++)
     {
-      // Encoder to recoders branches
-      errorEncoderRecoders[n] = CreateObject<RateErrorModel> ();
-      errorEncoderRecoders[n]->SetAttribute ("ErrorRate", DoubleValue (
-        errorRateEncoderRecoder));
-      toRecoders.GetSpokeNode (n)->GetDevice (0)->SetAttribute (
-        "ReceiveErrorModel", PointerValue (errorEncoderRecoders[n]));
-
-      // Recoders to decoder branches
-      errorRecodersDecoder[n] = CreateObject<RateErrorModel> ();
-      errorRecodersDecoder[n]->SetAttribute ("ErrorRate", DoubleValue (
-        errorRateRecoderDecoder));
-      recodersDecoderDev.Get (2*n + 1)->SetAttribute ("ReceiveErrorModel",
-        PointerValue (errorRecodersDecoder[n]));
-
-      // Activate models
-      errorEncoderRecoders[n]->Enable ();
-      errorRecodersDecoder[n]->Enable ();
+        recodersDecoderDev.Add(ptp.Install(
+            NodeContainer(toRecoders.GetSpokeNode(n), decoder.Get(0))));
     }
 
-  // Setting up application sockets for recoder and decoder
-  uint16_t port = 80;
-  TypeId tid = TypeId::LookupByName ("ns3::UdpSocketFactory");
+    // Internet stack for the broadcast topology and decoder
+    InternetStackHelper internet;
+    toRecoders.InstallStack(internet);
+    internet.Install(decoder);
 
-  Ipv4Address decoderAddress = decoder.Get (0)->GetObject<Ipv4> ()->
-    GetAddress (1, 0).GetLocal ();
+    // Here, we first create a total of N net devices in the encoder
+    // (N = recoders amount) and a net device per recoder
+    // Second, we mirror this procedure in the second hop.
+    // Each net device in the recoder is in a different subnet.
 
-  // Socket connection addresses
-  InetSocketAddress decoderSocketAddress = InetSocketAddress (
-    decoderAddress, port);
+    toRecoders.AssignIpv4Addresses(
+        Ipv4AddressHelper("10.1.1.0", "255.255.255.0"));
 
-  // Socket bind address
-  InetSocketAddress local = InetSocketAddress (Ipv4Address::GetAny (), port);
+    // The IP set of the recoders to the decoder is calculated
+    // in order to not collide with the one from the encoder
+    // to the recoders.
+    Ipv4AddressHelper fromRecoders("10.2.1.0", "255.255.255.0");
+    fromRecoders.Assign(recodersDecoderDev);
+    //! [5]
+    // Set error model for the net devices
+    Config::SetDefault("ns3::RateErrorModel::ErrorUnit",
+                       StringValue("ERROR_UNIT_PACKET"));
 
-  // Encoder connections to recoders
-  Ptr<Socket> encoderSocket = Socket::CreateSocket (toRecoders.GetHub (), tid);
-  encoderSocket->SetAllowBroadcast (true);
-  InetSocketAddress recodersSocketAddress = InetSocketAddress (
-    Ipv4Address ("255.255.255.255"), port);
-  encoderSocket->Connect (recodersSocketAddress);
+    // Create error rate models per branch
+    std::vector<Ptr<RateErrorModel>> errorEncoderRecoders(recoders);
+    std::vector<Ptr<RateErrorModel>> errorRecodersDecoder(recoders);
 
-  // Recoders connections to decoder
-  std::vector<Ptr<Socket>> recodersSockets;
-
-  for (uint32_t n = 0; n < recoders; n++)
+    for (uint32_t n = 0; n < recoders; n++)
     {
-      recodersSockets.push_back (Socket::CreateSocket (
-        toRecoders.GetSpokeNode (n), tid));
-      recodersSockets[n]->Bind (local);
-      recodersSockets[n]->Connect (decoderSocketAddress);
+        // Encoder to recoders branches
+        errorEncoderRecoders[n] = CreateObject<RateErrorModel>();
+        errorEncoderRecoders[n]->SetAttribute(
+            "ErrorRate", DoubleValue(errorRateEncoderRecoder));
+        toRecoders.GetSpokeNode(n)->GetDevice(0)->SetAttribute(
+            "ReceiveErrorModel", PointerValue(errorEncoderRecoders[n]));
+
+        // Recoders to decoder branches
+        errorRecodersDecoder[n] = CreateObject<RateErrorModel>();
+        errorRecodersDecoder[n]->SetAttribute(
+            "ErrorRate", DoubleValue(errorRateRecoderDecoder));
+        recodersDecoderDev.Get(2 * n + 1)->SetAttribute(
+            "ReceiveErrorModel", PointerValue(errorRecodersDecoder[n]));
+
+        // Activate models
+        errorEncoderRecoders[n]->Enable();
+        errorRecodersDecoder[n]->Enable();
     }
 
-  Recoders multihop (fieldMap[field], recoders, generationSize, packetSize,
-      recodersSockets, recodingFlag, transmitProbability);
+    // Setting up application sockets for recoder and decoder
+    uint16_t port = 80;
+    TypeId tid = TypeId::LookupByName("ns3::UdpSocketFactory");
 
-  // Recoders callbacks
-  for (uint32_t n = 0; n < recoders; n++)
+    Ipv4Address decoderAddress =
+        decoder.Get(0)->GetObject<Ipv4>()->GetAddress(1, 0).GetLocal();
+
+    // Socket connection addresses
+    InetSocketAddress decoderSocketAddress =
+        InetSocketAddress(decoderAddress, port);
+
+    // Socket bind address
+    InetSocketAddress local = InetSocketAddress(Ipv4Address::GetAny(), port);
+
+    // Encoder connections to recoders
+    Ptr<Socket> encoderSocket = Socket::CreateSocket(toRecoders.GetHub(), tid);
+    encoderSocket->SetAllowBroadcast(true);
+    InetSocketAddress recodersSocketAddress =
+        InetSocketAddress(Ipv4Address("255.255.255.255"), port);
+    encoderSocket->Connect(recodersSocketAddress);
+
+    // Recoders connections to decoder
+    std::vector<Ptr<Socket>> recodersSockets;
+
+    for (uint32_t n = 0; n < recoders; n++)
     {
-      recodersSockets[n]-> SetRecvCallback (MakeCallback (
-        &Recoders::ReceivePacketRecoder, &multihop));
+        recodersSockets.push_back(
+            Socket::CreateSocket(toRecoders.GetSpokeNode(n), tid));
+        recodersSockets[n]->Bind(local);
+        recodersSockets[n]->Connect(decoderSocketAddress);
     }
 
-  // Decoder
-  Ptr<Socket> decoderSocket = Socket::CreateSocket (decoder.Get (0), tid);
-  decoderSocket->Bind (local);
-  decoderSocket->SetRecvCallback (MakeCallback (
-    &Recoders::ReceivePacketDecoder, &multihop));
+    Recoders multihop(fieldMap[field], recoders, generationSize, packetSize,
+                      recodersSockets, recodingFlag, transmitProbability);
 
-  // Turn on global static routing so we can actually be routed across the hops
-  Ipv4GlobalRoutingHelper::PopulateRoutingTables ();
-
-  // Do pcap tracing on all point-to-point devices on all nodes. File naming
-  // convention is: kodo-recoders-[NODE_NUMBER]-[DEVICE_NUMBER].pcap
-  // ptp.EnablePcapAll ("kodo-recoders");
-
-  // Schedule processes
-  // Encoder
-  Simulator::ScheduleWithContext (encoderSocket->GetNode ()->GetId (),
-    Seconds (1.0), &Recoders::SendPacketEncoder,
-    &multihop, encoderSocket, interPacketInterval);
-
-  //! [6]
-  // Recoders
-  for (auto recoderSocket : recodersSockets)
+    // Recoders callbacks
+    for (uint32_t n = 0; n < recoders; n++)
     {
-      Simulator::ScheduleWithContext (recoderSocket->GetNode ()->GetId (),
-        Seconds (1.5), &Recoders::SendPacketRecoder,
-        &multihop, recoderSocket, interPacketInterval);
+        recodersSockets[n]->SetRecvCallback(
+            MakeCallback(&Recoders::ReceivePacketRecoder, &multihop));
     }
-  //! [7]
-  Simulator::Run ();
-  Simulator::Destroy ();
 
-  return 0;
+    // Decoder
+    Ptr<Socket> decoderSocket = Socket::CreateSocket(decoder.Get(0), tid);
+    decoderSocket->Bind(local);
+    decoderSocket->SetRecvCallback(
+        MakeCallback(&Recoders::ReceivePacketDecoder, &multihop));
+
+    // Turn on global static routing so we can actually be routed across the
+    // hops
+    Ipv4GlobalRoutingHelper::PopulateRoutingTables();
+
+    // Do pcap tracing on all point-to-point devices on all nodes. File naming
+    // convention is: kodo-recoders-[NODE_NUMBER]-[DEVICE_NUMBER].pcap
+    // ptp.EnablePcapAll ("kodo-recoders");
+
+    // Schedule processes
+    // Encoder
+    Simulator::ScheduleWithContext(encoderSocket->GetNode()->GetId(),
+                                   Seconds(1.0), &Recoders::SendPacketEncoder,
+                                   &multihop, encoderSocket,
+                                   interPacketInterval);
+
+    //! [6]
+    // Recoders
+    for (auto recoderSocket : recodersSockets)
+    {
+        Simulator::ScheduleWithContext(recoderSocket->GetNode()->GetId(),
+                                       Seconds(1.5),
+                                       &Recoders::SendPacketRecoder, &multihop,
+                                       recoderSocket, interPacketInterval);
+    }
+    //! [7]
+    Simulator::Run();
+    Simulator::Destroy();
+
+    return 0;
 }

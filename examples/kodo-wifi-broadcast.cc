@@ -85,183 +85,187 @@
 // python waf --run kodo-wifi-broadcast --command-template="%s --minLoss=30"
 //! [2]
 
-#include <iostream>
-#include <vector>
 #include <algorithm>
+#include <iostream>
 #include <string>
+#include <vector>
 
-#include <ns3/core-module.h>
-#include <ns3/network-module.h>
-#include <ns3/mobility-module.h>
 #include <ns3/config-store-module.h>
-#include <ns3/wifi-module.h>
+#include <ns3/core-module.h>
 #include <ns3/internet-module.h>
+#include <ns3/mobility-module.h>
+#include <ns3/network-module.h>
+#include <ns3/wifi-module.h>
 
 #include "kodo-broadcast.h"
+#include <kodo/finite_field.hpp>
 //! [3]
 using namespace ns3;
 
-int main (int argc, char *argv[])
+int main(int argc, char* argv[])
 {
-  //! [4]
-  std::string phyMode ("DsssRate1Mbps");
-  // The default loss values aim for about 50% random packet loss
-  // A different loss rate can be achieved by moving the lower and upper limits
-  // relative to the detection threshold (T=98).
-  double minLoss = 98.0 - 40.0;  // dBm
-  double maxLoss = 98.0 + 40.0;  // dBm
-  uint32_t packetSize = 1000; // bytes
-  double interval = 1.0; // seconds
-  uint32_t generationSize = 5;
-  uint32_t users = 2; // Number of users
-  std::string field = "binary"; // Finite field used
+    //! [4]
+    std::string phyMode("DsssRate1Mbps");
+    // The default loss values aim for about 50% random packet loss
+    // A different loss rate can be achieved by moving the lower and upper
+    // limits relative to the detection threshold (T=98).
+    double minLoss = 98.0 - 40.0; // dBm
+    double maxLoss = 98.0 + 40.0; // dBm
+    uint32_t packetSize = 1000;   // bytes
+    double interval = 1.0;        // seconds
+    uint32_t generationSize = 5;
+    uint32_t users = 2;           // Number of users
+    std::string field = "binary"; // Finite field used
 
-  // Create a map for the field values
-  std::map<std::string, fifi::finite_field> fieldMap;
-  fieldMap["binary"] = fifi::finite_field::binary;
-  fieldMap["binary4"] = fifi::finite_field::binary4;
-  fieldMap["binary8"] = fifi::finite_field::binary8;
+    // Create a map for the field values
+    std::map<std::string, kodo::finite_field> fieldMap;
+    fieldMap["binary"] = kodo::finite_field::binary;
+    fieldMap["binary4"] = kodo::finite_field::binary4;
+    fieldMap["binary8"] = kodo::finite_field::binary8;
+    fieldMap["binary16"] = kodo::finite_field::binary16;
 
-  CommandLine cmd;
+    CommandLine cmd;
 
-  cmd.AddValue ("phyMode", "Wifi Phy mode", phyMode);
-  cmd.AddValue ("minLoss", "Lower bound for receiver random loss", minLoss);
-  cmd.AddValue ("maxLoss", "Higher bound for receiver random loss", maxLoss);
-  cmd.AddValue ("packetSize", "size of application packet sent", packetSize);
-  cmd.AddValue ("interval", "interval (seconds) between packets", interval);
-  cmd.AddValue ("generationSize", "Set the generation size to use",
-                generationSize);
-  cmd.AddValue ("users", "Number of receivers", users);
-  cmd.AddValue ("field", "Finite field used", field);
+    cmd.AddValue("phyMode", "Wifi Phy mode", phyMode);
+    cmd.AddValue("minLoss", "Lower bound for receiver random loss", minLoss);
+    cmd.AddValue("maxLoss", "Higher bound for receiver random loss", maxLoss);
+    cmd.AddValue("packetSize", "size of application packet sent", packetSize);
+    cmd.AddValue("interval", "interval (seconds) between packets", interval);
+    cmd.AddValue("generationSize", "Set the generation size to use",
+                 generationSize);
+    cmd.AddValue("users", "Number of receivers", users);
+    cmd.AddValue("field", "Finite field used", field);
 
-  cmd.Parse (argc, argv);
+    cmd.Parse(argc, argv);
 
-  // Use the binary field in case of errors
-  if (fieldMap.find (field) == fieldMap.end ())
+    // Use the binary field in case of errors
+    if (fieldMap.find(field) == fieldMap.end())
     {
-      field = "binary";
+        field = "binary";
     }
 
-  // Convert to time object
-  Time interPacketInterval = Seconds (interval);
-  //! [5]
-  // disable fragmentation for frames below 2200 bytes
-  Config::SetDefault ("ns3::WifiRemoteStationManager::FragmentationThreshold",
-    StringValue ("2200"));
+    // Convert to time object
+    Time interPacketInterval = Seconds(interval);
+    //! [5]
+    // disable fragmentation for frames below 2200 bytes
+    Config::SetDefault("ns3::WifiRemoteStationManager::FragmentationThreshold",
+                       StringValue("2200"));
 
-  // turn off RTS/CTS for frames below 2200 bytes
-  Config::SetDefault ("ns3::WifiRemoteStationManager::RtsCtsThreshold",
-    StringValue ("2200"));
+    // turn off RTS/CTS for frames below 2200 bytes
+    Config::SetDefault("ns3::WifiRemoteStationManager::RtsCtsThreshold",
+                       StringValue("2200"));
 
-  // Fix non-unicast data rate to be the same as that of unicast
-  Config::SetDefault ("ns3::WifiRemoteStationManager::NonUnicastMode",
-    StringValue (phyMode));
-  //! [6]
-  // Source and destination
-  NodeContainer nodes;
-  nodes.Create (1 + users); // Sender + receivers
+    // Fix non-unicast data rate to be the same as that of unicast
+    Config::SetDefault("ns3::WifiRemoteStationManager::NonUnicastMode",
+                       StringValue(phyMode));
+    //! [6]
+    // Source and destination
+    NodeContainer nodes;
+    nodes.Create(1 + users); // Sender + receivers
 
-  // The below set of helpers will help us to put together the wifi NICs
-  WifiHelper wifi;
-  wifi.SetStandard (WIFI_PHY_STANDARD_80211b); // OFDM at 2.4 GHz
+    // The below set of helpers will help us to put together the wifi NICs
+    WifiHelper wifi;
+    wifi.SetStandard(WIFI_STANDARD_80211b); // OFDM at 2.4 GHz
 
-  // The default error rate model is ns3::NistErrorRateModel
-  YansWifiPhyHelper wifiPhy =  YansWifiPhyHelper::Default ();
+    // The default error rate model is ns3::NistErrorRateModel
+    YansWifiPhyHelper wifiPhy;
 
-  // ns-3 supports RadioTap and Prism tracing extensions for 802.11g
-  wifiPhy.SetPcapDataLinkType (YansWifiPhyHelper::DLT_IEEE802_11_RADIO);
+    // ns-3 supports RadioTap and Prism tracing extensions for 802.11g
+    wifiPhy.SetPcapDataLinkType(YansWifiPhyHelper::DLT_IEEE802_11_RADIO);
 
-  YansWifiChannelHelper wifiChannel;
-  wifiChannel.SetPropagationDelay ("ns3::ConstantSpeedPropagationDelayModel");
+    YansWifiChannelHelper wifiChannel;
+    wifiChannel.SetPropagationDelay("ns3::ConstantSpeedPropagationDelayModel");
 
-  // When using the RandomPropagationLossModel, the signal strength does not
-  // depend on the distance between the two nodes
-  Ptr<UniformRandomVariable> random = CreateObject<UniformRandomVariable> ();
-  random->SetAttribute ("Min", DoubleValue (minLoss));
-  random->SetAttribute ("Max", DoubleValue (maxLoss));
-  wifiChannel.AddPropagationLoss ("ns3::RandomPropagationLossModel",
-    "Variable",  PointerValue (random));
-  wifiPhy.SetChannel (wifiChannel.Create ());
-  //! [7]
-  // Disable rate control
-  wifi.SetRemoteStationManager ("ns3::ConstantRateWifiManager",
-    "DataMode", StringValue (phyMode), "ControlMode", StringValue (phyMode));
+    // When using the RandomPropagationLossModel, the signal strength does not
+    // depend on the distance between the two nodes
+    Ptr<UniformRandomVariable> random = CreateObject<UniformRandomVariable>();
+    random->SetAttribute("Min", DoubleValue(minLoss));
+    random->SetAttribute("Max", DoubleValue(maxLoss));
+    wifiChannel.AddPropagationLoss("ns3::RandomPropagationLossModel",
+                                   "Variable", PointerValue(random));
+    wifiPhy.SetChannel(wifiChannel.Create());
+    //! [7]
+    // Disable rate control
+    wifi.SetRemoteStationManager("ns3::ConstantRateWifiManager", "DataMode",
+                                 StringValue(phyMode), "ControlMode",
+                                 StringValue(phyMode));
 
-  // Set WiFi Mac type to adhoc mode
-  WifiMacHelper wifiMac;
-  wifiMac.SetType ("ns3::AdhocWifiMac");
+    // Set WiFi Mac type to adhoc mode
+    WifiMacHelper wifiMac;
+    wifiMac.SetType("ns3::AdhocWifiMac");
 
-  // Create the net devices
-  NetDeviceContainer devices = wifi.Install (wifiPhy, wifiMac, nodes);
-  //! [8]
-  // Note that the positions are not relevant for the received signal strength.
-  // However, they are required for the YansWiFiChannelHelper
-  MobilityHelper mobility;
-  Ptr<ListPositionAllocator> positionAlloc =
-    CreateObject<ListPositionAllocator> ();
-  positionAlloc->Add (Vector (0.0, 0.0, 0.0));  // Source node
+    // Create the net devices
+    NetDeviceContainer devices = wifi.Install(wifiPhy, wifiMac, nodes);
+    //! [8]
+    // Note that the positions are not relevant for the received signal
+    // strength. However, they are required for the YansWiFiChannelHelper
+    MobilityHelper mobility;
+    Ptr<ListPositionAllocator> positionAlloc =
+        CreateObject<ListPositionAllocator>();
+    positionAlloc->Add(Vector(0.0, 0.0, 0.0)); // Source node
 
-  for (uint32_t n = 1; n <= users; n++)
+    for (uint32_t n = 1; n <= users; n++)
     {
-      positionAlloc->Add (Vector (5.0, 5.0*n, 0.0));
+        positionAlloc->Add(Vector(5.0, 5.0 * n, 0.0));
     }
 
-  mobility.SetPositionAllocator (positionAlloc);
-  mobility.SetMobilityModel ("ns3::ConstantPositionMobilityModel");
-  mobility.Install (nodes);
-  //! [9]
-  InternetStackHelper internet;
-  internet.Install (nodes);
+    mobility.SetPositionAllocator(positionAlloc);
+    mobility.SetMobilityModel("ns3::ConstantPositionMobilityModel");
+    mobility.Install(nodes);
+    //! [9]
+    InternetStackHelper internet;
+    internet.Install(nodes);
 
-  Ipv4AddressHelper ipv4;
-  ipv4.SetBase ("10.1.1.0", "255.255.255.0");
-  ipv4.Assign (devices);
-  //! [10]
-  TypeId tid = TypeId::LookupByName ("ns3::UdpSocketFactory");
+    Ipv4AddressHelper ipv4;
+    ipv4.SetBase("10.1.1.0", "255.255.255.0");
+    ipv4.Assign(devices);
+    //! [10]
+    TypeId tid = TypeId::LookupByName("ns3::UdpSocketFactory");
 
-  // Transmitter socket
-  Ptr<Socket> source = Socket::CreateSocket (nodes.Get (0), tid);
+    // Transmitter socket
+    Ptr<Socket> source = Socket::CreateSocket(nodes.Get(0), tid);
 
-  // Receiver sockets
-  std::vector<Ptr<Socket>> sinks (users);
+    // Receiver sockets
+    std::vector<Ptr<Socket>> sinks(users);
 
-  for (uint32_t n = 0; n < users; n++)
+    for (uint32_t n = 0; n < users; n++)
     {
-      sinks[n] = Socket::CreateSocket (nodes.Get (1 + n), tid);
+        sinks[n] = Socket::CreateSocket(nodes.Get(1 + n), tid);
     }
-  //! [11]
-  // Creates the Broadcast helper for this broadcast topology
-  Broadcast wifiBroadcast (fieldMap[field], users, generationSize, packetSize,
-      source, sinks);
-  //! [12]
-  // Transmitter socket connections. Set transmitter for broadcasting
-  uint16_t port = 80;
-  InetSocketAddress remote = InetSocketAddress (
-    Ipv4Address ("255.255.255.255"), port);
-  source->SetAllowBroadcast (true);
-  source->Connect (remote);
+    //! [11]
+    // Creates the Broadcast helper for this broadcast topology
+    Broadcast wifiBroadcast(fieldMap[field], users, generationSize, packetSize,
+                            source, sinks);
+    //! [12]
+    // Transmitter socket connections. Set transmitter for broadcasting
+    uint16_t port = 80;
+    InetSocketAddress remote =
+        InetSocketAddress(Ipv4Address("255.255.255.255"), port);
+    source->SetAllowBroadcast(true);
+    source->Connect(remote);
 
-  // Receiver socket connections
-  InetSocketAddress local = InetSocketAddress (Ipv4Address::GetAny (), port);
-  for (const auto sink : sinks)
+    // Receiver socket connections
+    InetSocketAddress local = InetSocketAddress(Ipv4Address::GetAny(), port);
+    for (const auto sink : sinks)
     {
-      sink->Bind (local);
-      sink->SetRecvCallback (MakeCallback (&Broadcast::ReceivePacket,
-        &wifiBroadcast));
+        sink->Bind(local);
+        sink->SetRecvCallback(
+            MakeCallback(&Broadcast::ReceivePacket, &wifiBroadcast));
     }
 
-  // Turn on global static routing so we can be routed across the network
-  Ipv4GlobalRoutingHelper::PopulateRoutingTables ();
-  //! [13]
-  // Pcap tracing
-  // wifiPhy.EnablePcap ("kodo-wifi-broadcast", devices);
+    // Turn on global static routing so we can be routed across the network
+    Ipv4GlobalRoutingHelper::PopulateRoutingTables();
+    //! [13]
+    // Pcap tracing
+    // wifiPhy.EnablePcap ("kodo-wifi-broadcast", devices);
 
-  Simulator::ScheduleWithContext (source->GetNode ()->GetId (), Seconds (1.0),
-    &Broadcast::SendPacket, &wifiBroadcast, source, interPacketInterval);
+    Simulator::ScheduleWithContext(source->GetNode()->GetId(), Seconds(1.0),
+                                   &Broadcast::SendPacket, &wifiBroadcast,
+                                   source, interPacketInterval);
 
-  Simulator::Run ();
-  Simulator::Destroy ();
+    Simulator::Run();
+    Simulator::Destroy();
 
-  return 0;
-  //! [14]
+    return 0;
+    //! [14]
 }

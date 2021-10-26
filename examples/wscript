@@ -2,42 +2,47 @@
 
 import os
 
+
 def build(bld):
 
     # Find the required static libraries in the local "lib" folder
-    lib_path = os.path.join(bld.path.abspath(), 'lib')
-    bld.read_stlib('kodo_rlnc', paths=[lib_path])
+    lib_path = os.path.join(bld.path.abspath(), "lib")
+    bld.read_stlib("kodo", paths=[lib_path])
 
     def set_properties(obj):
         # Add the local 'include' folder to the normal ns-3 includes
         # The kodo dependency headers are available in the 'include' folder
-        obj.includes = ['#', 'include']
+        obj.includes = ["#", "include"]
         # Set the required C++ flags
-        obj.cxxflags = ['-std=c++14']
+        obj.cxxflags = ["-std=c++14"]
         # The example uses the specified ns-3 modules and the kodo libraries
-        obj.use = obj.ns3_module_dependencies + ['kodo_rlnc']
+        obj.use = obj.ns3_module_dependencies + ["kodo"]
         obj.install_path = None
 
-    obj = bld.create_ns3_program('kodo-recoders',
-                                 ['core', 'applications', 'point-to-point',
-                                  'point-to-point-layout', 'internet'])
-    obj.source = 'kodo-recoders.cc'
+    obj = bld.create_ns3_program(
+        "kodo-recoders",
+        ["core", "applications", "point-to-point", "point-to-point-layout", "internet"],
+    )
+    obj.source = "kodo-recoders.cc"
     set_properties(obj)
 
-    obj = bld.create_ns3_program('kodo-wifi-broadcast',
-                                 ['core', 'applications', 'point-to-point',
-                                  'point-to-point-layout', 'internet', 'wifi'])
-    obj.source = 'kodo-wifi-broadcast.cc'
+    obj = bld.create_ns3_program(
+        "kodo-wifi-broadcast",
+        [
+            "core",
+            "applications",
+            "point-to-point",
+            "point-to-point-layout",
+            "internet",
+            "wifi",
+        ],
+    )
+    obj.source = "kodo-wifi-broadcast.cc"
     set_properties(obj)
 
-    obj = bld.create_ns3_program('kodo-wired-broadcast',
-                                 ['core', 'applications', 'point-to-point',
-                                  'point-to-point-layout', 'internet'])
-    obj.source = 'kodo-wired-broadcast.cc'
-    set_properties(obj)
-
-    obj = bld.create_ns3_program('kodo-wifi-broadcast-object',
-                                 ['core', 'applications', 'point-to-point',
-                                  'point-to-point-layout', 'internet', 'wifi'])
-    obj.source = 'kodo-wifi-broadcast-object.cc'
+    obj = bld.create_ns3_program(
+        "kodo-wired-broadcast",
+        ["core", "applications", "point-to-point", "point-to-point-layout", "internet"],
+    )
+    obj.source = "kodo-wired-broadcast.cc"
     set_properties(obj)

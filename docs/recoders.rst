@@ -68,86 +68,16 @@ behavior of the nodes in our simulation.
 Simulation Class
 ^^^^^^^^^^^^^^^^
 
-The ``Recoders`` class can be roughly defined in the following way:
-
-.. code-block:: c++
-
-  class Recoders
-  {
-  public:
-
-    Recoders (const kodocpp::codec codeType, const kodocpp::field field,
-      const uint32_t users, const uint32_t generationSize, const uint32_t packetSize,
-      const std::vector<ns3::Ptr<ns3::Socket>>& recodersSockets,
-      const bool recodingFlag)
-      : m_codeType (codeType),
-        m_field (field),
-        m_users (users),
-        m_generationSize (generationSize),
-        m_packetSize (packetSize),
-        m_recodingFlag (recodingFlag),
-        m_recodersSockets (recodersSockets)
-    {
-      // Constructor
-    }
-
-    void SendPacketEncoder (ns3::Ptr<ns3::Socket> socket, ns3::Time pktInterval)
-    {
-      // Encoder logic
-    }
-
-    void ReceivePacketRecoder (ns3::Ptr<ns3::Socket> socket)
-    {
-      // Recoders logic for reception
-    }
-
-    void SendPacketRecoder (ns3::Ptr<ns3::Socket> socket, ns3::Time pktInterval)
-    {
-      // Recoders logic for transmission
-    }
-
-    void ReceivePacketDecoder (ns3::Ptr<ns3::Socket> socket)
-    {
-      // Decoder logic
-    }
-
-  private:
-
-    const kodocpp::codec m_codeType;
-    const kodocpp::field m_field;
-    const uint32_t m_users;
-    const uint32_t m_generationSize;
-    const uint32_t m_packetSize;
-    const bool m_recodingFlag;
-
-    kodocpp::encoder m_encoder;
-    std::vector<uint8_t> m_encoderBuffer;
-    std::vector<kodocpp::decoder> m_recoders;
-    std::vector<std::vector<uint8_t>> m_recoderBuffers;
-    kodocpp::decoder m_decoder;
-    std::vector<uint8_t> m_decoderBuffers;
-    std::vector<ns3::Ptr<ns3::Socket>> m_recodersSockets;
-
-    std::vector<uint8_t> m_payload;
-    uint32_t m_encoderTransmissionCount;
-    uint32_t m_recodersTransmissionCount;
-    uint32_t m_decoderRank;
-    std::map<uint32_t, std::map<uint32_t, ns3::Ptr<ns3::Packet>>> m_previousPackets;
-
-    const double m_transmitProbability;
-    ns3::Ptr<ns3::UniformRandomVariable> m_uniformRandomVariable;
-  };
-
 The ``Recoders`` design is similar as the one for
 ``Broadcast``. Still, some differences exist. For this case
-``kodocpp::decoder`` is the type for the relays since it behaves
+``kodo::block::decoder`` is the type for the relays since it behaves
 in the same way.
 
 Also, now we add different functions for what a relay might
 perform. Hereby, we include ``SendPacketRecoder`` and ``ReceivePacketRecoder``
 to split the functionality of recoding (or forwarding) and receiving with
 decoding. The recoding functionality is performed again with
-``recoder.write_payload ()``.
+``recoder.recode_symbol()``.
 
 For control variables, for the recoding or forwarding behavior, we included a
 boolean as a construction argument. Also we keep track of the decoder rank
@@ -159,7 +89,7 @@ For the medium probability access :math:`p`, we use samples from a
 ``ns3::Ptr<ns3::UniformRandomVariable>`` and convert them to
 samples of a Bernoulli random variable at a given transmission using the
 `Inverse Transmformating Sampling <https://en.wikipedia.org/wiki/Inverse_transform_sampling>`_.
-In this way, we guarantee that a node attemps a medium access with the
+In this way, we guarantee that a node attempts a medium access with the
 desired probability. Finally, we include a counter for the total number of transmissions
 from all the relays for counting total transmissions in general.
 

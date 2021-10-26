@@ -1,15 +1,14 @@
+Kodo NS3 Examples
+=================
+
 The kodo-ns3-examples repository demonstrates how to use the Kodo erasure
-coding library (http://steinwurf.com/kodo/) in various ns-3 examples.
+coding library (http://kodo.steinwurf.com) in various ns-3 examples.
 
 ns-3 (http://nsnam.org) is a discrete-event network simulator, targeted
 primarily for research and educational use. ns-3 is licensed under the GNU
 GPLv2 license.
 
 The kodo-ns3-examples repository: https://github.com/steinwurf/kodo-ns3-examples
-
-.. image:: http://buildbot.steinwurf.dk/svgstatus?project=kodo-ns3-examples
-    :target: http://buildbot.steinwurf.dk/stats?projects=kodo-ns3-examples
-    :alt: Buildbot status
 
 If you have any questions or suggestions about this library, please contact
 us at our developer mailing list (hosted at Google Groups):
@@ -28,27 +27,9 @@ License
 A valid Kodo license is required if you wish to use this project.
 Please request a license by **filling out the license request** form_.
 
-Kodo is available under a research- and education-friendly license,
-you can see the details here_.
-
 If you try to configure without a valid license, then you will get an error!
 
-.. _form: http://steinwurf.com/license.html
-.. _here: http://steinwurf.com/research/evaluation-license.html
-
-Documentation
--------------
-
-Please read our general documentation here to get started:
-http://docs.steinwurf.com
-
-The kodo-ns3-examples tutorial is located here:
-http://docs.steinwurf.com/kodo-ns3-examples/index.html
-
-The tutorial provides a comprehensive description of our examples, and it
-is designed to be a starting point for ns-3 developers that intend to use
-the Kodo library for a specific application of Random Linear Network Coding
-(RLNC) within the simulator.
+.. _form: https://www.steinwurf.com/research-license-request
 
 Using Kodo in an ns-3 example
 -----------------------------
@@ -66,7 +47,7 @@ http://www.nsnam.org/wiki/index.php/Installation
 
 On Ubuntu/Debian, you need to install the following packages::
 
-  sudo apt-get install g++ python git-core
+  sudo apt-get install g++ python3 git
 
 In the following, we will clone ns-3 to the ``~/ns-3-dev`` folder and we
 will clone the kodo-ns3-examples to the ``~/kodo-ns3-examples`` folder.
@@ -93,23 +74,18 @@ Our aim is to make the examples compatible with the latest ns-3 revision.
 If you experience any issues with the latest revision, then you can switch
 to the latest stable release (this step is **optional**)::
 
-  git checkout ns-3.30
-
-Our build system automatically tests the examples with the latest supported
-revision of ns-3. This revision is specified in our buildbot.py_ script.
-
-.. _buildbot.py: https://github.com/steinwurf/kodo-ns3-examples/blob/master/buildbot.py#L73
+  git checkout ns-3.35
 
 Configure the ns-3 project (it is important to also enable the examples)::
 
-  python waf configure --enable-examples
+  python3 waf configure --enable-examples
 
 This will output a whole bunch of information about the enabled modules
 based on the availability of tools and libraries installed on your computer.
 
 Now we build the ns-3 libraries and examples::
 
-  python waf build
+  python3 waf build
 
 Installing the Kodo examples to ns-3
 ------------------------------------
@@ -122,7 +98,7 @@ We will clone this repository to the ``~/kodo-ns3-examples`` folder::
 Configure this project::
 
   cd kodo-ns3-examples
-  python waf configure
+  python3 waf configure
 
 The ``waf configure`` command ensures that all dependencies are downloaded
 (by default, waf will create a folder called ``bundle_dependencies`` to
@@ -131,7 +107,7 @@ store these libraries).
 Now we build the kodo-rlnc static library and we install the examples and all
 the required files to the ``~/ns-3-dev/examples/kodo`` folder::
 
-  python waf build install --destdir="~/ns-3-dev/examples/kodo"
+  python3 waf build install --destdir ~/ns-3-dev/examples/kodo
 
 The ``--destdir`` option is used to specify the target folder (you can change
 the ``kodo`` subfolder name to something else if you like).
@@ -146,7 +122,7 @@ After the install step, you can switch back to your ns-3 folder::
 You can follow the normal ns-3 workflow to build our examples. The ns-3 waf
 will automatically find the new examples in ``~/ns-3-dev/examples/kodo``::
 
-  python waf build
+  python3 waf build
 
 We have the following examples:
 
@@ -167,9 +143,9 @@ the packet-, field- and generation sizes.
 
 You can run the examples with the usual ns-3 run commands::
 
-  python waf --run kodo-wired-broadcast
-  python waf --run kodo-wifi-broadcast
-  python waf --run kodo-recoders
+  python3 waf --run kodo-wired-broadcast
+  python3 waf --run kodo-wifi-broadcast
+  python3 waf --run kodo-recoders
 
 Most of the examples will print out how the decoding matrix changes with
 each combination packet. You will see if a received packet is linearly
@@ -205,7 +181,7 @@ After this change, the ns-3 waf will detect the new example and you will be
 able to run it from the ``~/ns-3-dev`` folder as usual::
 
   cd ~/ns-3-dev
-  python waf --run my-simulation
+  python3 waf --run my-simulation
 
 Now you can expand your custom simulation as you like. If you use additional
 ns-3 modules, then you need to add them in the wscript (most likely, you will
@@ -219,10 +195,8 @@ these in the wscript like this::
 **Warning:** If you install the kodo ns-3 examples again with this command::
 
   cd ~/kodo-ns3-examples
-  python waf build install --destdir="~/ns-3-dev/examples/kodo"
+  python3 waf build install --destdir="~/ns-3-dev/examples/kodo"
 
 then the example source files and the wscript will be overwritten in
 the ``~/ns-3-dev/examples/kodo`` folder, so it is recommended to create a
 backup if you modified any of these files.
-
-

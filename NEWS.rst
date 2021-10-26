@@ -6,7 +6,7 @@ detailed list of every change, see the Git log.
 
 Latest
 ------
-* tbd
+* Major: Use new kodo repository.
 
 3.0.0
 -----

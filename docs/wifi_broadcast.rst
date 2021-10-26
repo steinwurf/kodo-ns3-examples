@@ -114,78 +114,19 @@ us to modularize all the simulation into a single object which is controlled
 by the network through the tasks of the net devices. Also, other ns-3 objects
 can extract information from it in an easy way.
 
-The ``Broadcast`` class can be roughly defined in the following way:
-
-.. code-block:: c++
-
-  #pragma once
-
-  #include <cstdint>
-  #include <memory>
-  #include <vector>
-
-  #include <kodo_rlnc/coders.hpp>
-
-  class Broadcast
-  {
-  public:
-
-    Broadcast (const fifi::finite_field field, const uint32_t users,
-        const uint32_t generationSize, const uint32_t packetSize,
-        const ns3::Ptr<ns3::Socket>& source,
-        const std::vector<ns3::Ptr<ns3::Socket>>& sinks)
-        : m_field (field),
-          m_users (users),
-          m_generationSize (generationSize),
-          m_packetSize (packetSize),
-          m_source (source),
-          m_sinks (sinks)
-    {
-      // Constructor
-    }
-
-    void SendPacket (ns3::Ptr<ns3::Socket> socket, ns3::Time pktInterval)
-    {
-      // Encoder logic
-    }
-
-    void ReceivePacket (ns3::Ptr<ns3::Socket> socket)
-    {
-      // Decoders logic
-    }
-
-  private:
-
-    const fifi::finite_field m_field;
-    const uint32_t m_users;
-    const uint32_t m_generationSize;
-    const uint32_t m_packetSize;
-
-    ns3::Ptr<ns3::Socket> m_source;
-    std::vector<ns3::Ptr<ns3::Socket>> m_sinks;
-    std::shared_ptr<kodo_rlnc::encoder> m_encoder;
-    std::vector<uint8_t> m_encoderBuffer;
-    std::vector<std::shared_ptr<kodo_rlnc::decoder>> m_decoders;
-    std::vector<std::vector<uint8_t>> m_decoderBuffers;
-
-    std::vector<uint8_t> m_payload;
-    uint32_t m_transmissionCount;
-  };
-
 The broadcast topology is a simple class. We will describe its parts in detail
 what they model and control from a high level perspective.
 First, we include ``<kodo_rlnc/coders.hpp>`` from kodo-rlnc which contains
 the encoder and decoder classes that we will use.
 
-Then we create  our encoder and decoders. We select the finite field type,
+Then we create our encoder and decoders. We select the finite field type,
 the generation size and the packet size for our coding operations.
 
-The ``kodo_rlnc::encoder`` wrapper class is defined in the
-`kodo-rlnc  <https://github.com/steinwurf/kodo-rlnc>`_ library.
-The available finite fields are defined in the
-`fifi  <https://github.com/steinwurf/fifi>`_ library.
+The ``kodo::block::encoder`` class is defined in the
+`kodo  <https://github.com/steinwurf/kodo>`_ library.
+
 Other field types might be chosen to fit the needs of your application.
-The common field sizes are: :math:`q = {2, 2^4, 2^8}`.
+The common field sizes are: :math:`q = {2, 2^4, 2^8, 2^16}`.
 
 For the simulation, ``void SendPacket(ns3::Ptr<ns3::Socket> socket, ns3::Time
 pktInterval)`` generates coded packets from generic data (created in the
@@ -202,15 +143,12 @@ in a payload buffer that is sent over the socket. A received coded packet is
 placed in a temporary payload buffer to be read by the decoder.
 
 You can check the source code to see how these operations are
-performed by the APIs ``m_encoder.write_payload()`` and
-``m_decoders[n].read_payload()``. For the encoding case, the amount of bytes
-needed to store the coded payload is returned. This amount is used for the
-``ns3::Create<ns3::Packet>`` constructor to create the ns-3
-packet that is actually sent (and received). Finally,
-``m_transmission_count`` indicates how many packets were sent by the encoder
-during the whole process. You can review the implementation of
-``SendPacket`` and ``ReceivePacket`` to see the expected behavior of the
-nodes when packets are sent or received respectively.
+performed by the APIs ``m_encoder.encode_symbol()`` and
+``m_decoders[n].decode_symbol()``. 
+Finally, ``m_transmission_count`` indicates how many packets were sent by the
+encoder during the whole process. You can review the implementation of 
+``SendPacket`` and ``ReceivePacket`` to see the expected behavior of the nodes
+when packets are sent or received respectively.
 
 Default Parameters and Command-line Parsing
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -263,12 +201,12 @@ offers the possibility to easily assign common properties to the nodes.
 
 We use the ``WiFiHelper`` class to set the Wifi standard.
 Since we are working with DSSS, this means we need to use IEEE 802.11b.
-For the physical layer, we use the ``YansWifiPhyHelper::Default()`` constructor,
+For the physical layer, to do so we use the default constructor,
 and we set the pcap (packet capture) tracing format at the data link layer.
 ns-3 supports different formats, here we picked the
 `RadioTap <http://www.radiotap.org/>`_ format but you can choose
 other format available in the helper description in its Doxygen documentation.
-In a similar way, we use the ``YansWifiChannelHelper`` to create our WiFi
+In a similar way, we use the default constructor create our WiFi
 channel, where we set the class property named ``SetPropagationDelay`` to
 ``ConstantSpeedPropagationDelayModel``. This means that the delay between the
 transmitter and the receiver is only determined by the distance between them.
@@ -316,11 +254,10 @@ Mobility Model and Helper
    :linenos:
 
 The ns-3 ``MobilityHelper`` class assigns a model for the velocities of
-the receivers within ns-3. Even though we had fixed the received power of the
-decoder, it is a necessary component for the ``YansWiFiChannelHelper``. We
-create a ``Vector`` describing the initial (and remaining) coordinates for both
-transmitter and receiver in a 3D grid. Then, we put them in the helper with a
-``ConstantPositionMobilityModel`` for the nodes.
+the receivers within ns-3.
+We create a ``Vector`` describing the initial (and remaining) coordinates for 
+both transmitter and receiver in a 3D grid. Then, we put them in the helper with
+a ``ConstantPositionMobilityModel`` for the nodes.
 
 Internet and Application Protocol Helpers
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -336,10 +273,10 @@ the network and application layer protocols. The ``InternetStackHelper``
 provides functionalities for IPv4, ARP, UDP, TCP, IPv6, Neighbor Discovery, and
 other related protocols. You can find more about the implementation of the
 helper in this
-`link <http://www.nsnam.org/docs/release/3.20/models/singlehtml/index.html#docu
-ment-internet-models>`_. A similar process is made for the IPv4 address
-assignment. We use the address range ``10.1.1.0`` with the subnet mask
-``255.255.255.0``, assign it to the ``devices``.
+`link <http://www.nsnam.org/docs/release/3.20/models/singlehtml/index.html#document-internet-models>`_.
+A similar process is made for the IPv4 address assignment. We use the address
+range ``10.1.1.0`` with the subnet mask ``255.255.255.0``, assign it to the
+``devices``.
 
 Sockets Construction
 ^^^^^^^^^^^^^^^^^^^^
@@ -456,8 +393,8 @@ tells how are the coding coefficients of the received packet before
 inserting it in the coding matrix and (ii) ``decoder_state`` which tells
 how is the state of the coding coefficients matrix at the decoder after
 performing Gaussian elimination.
-Laer, the default run goes with 5 packets in the binary field with 2 users
-and the previosuly tracing options defined.
+Later, the default run goes with 5 packets in the binary field with 2 users
+and the previously tracing options defined.
 
 As a starter (once located in the path described earlier), type: ::
 
@@ -465,183 +402,71 @@ As a starter (once located in the path described earlier), type: ::
 
 You should see an output similar to this: ::
 
-  +----------------------+
-  |Sending a coded packet|
-  +----------------------+
+  ------------------------
+  Sending coded packet: 0
+  ------------------------
+  ------------------------
+  Sending coded packet: 1
+  ------------------------
   Received a packet at Decoder 1
-  symbol_coefficients_before_read_symbol:
-  C: 0 1 1 1 1
-
-  decoder_state:
-  000 ?:  0 0 0 0 0
-  001 S:  0 1 1 1 1
-  002 ?:  0 0 0 0 0
-  003 ?:  0 0 0 0 0
-  004 ?:  0 0 0 0 0
-
   Received a packet at Decoder 2
-  symbol_coefficients_before_read_symbol:
-  C: 0 1 1 1 1
-
-  decoder_state:
-  000 ?:  0 0 0 0 0
-  001 S:  0 1 1 1 1
-  002 ?:  0 0 0 0 0
-  003 ?:  0 0 0 0 0
-  004 ?:  0 0 0 0 0
-
-  +----------------------+
-  |Sending a coded packet|
-  +----------------------+
+  ------------------------
+  Sending coded packet: 2
+  ------------------------
   Received a packet at Decoder 1
-  symbol_coefficients_before_read_symbol:
-  C: 0 1 1 0 0
-
-  decoder_state:
-  000 ?:  0 0 0 0 0
-  001 S:  0 1 1 0 0
-  002 ?:  0 0 0 0 0
-  003 S:  0 0 0 1 1
-  004 ?:  0 0 0 0 0
-
-  Received a packet at Decoder 2
-  symbol_coefficients_before_read_symbol:
-  C: 0 1 1 0 0
-
-  decoder_state:
-  000 ?:  0 0 0 0 0
-  001 S:  0 1 1 0 0
-  002 ?:  0 0 0 0 0
-  003 S:  0 0 0 1 1
-  004 ?:  0 0 0 0 0
-
-  +----------------------+
-  |Sending a coded packet|
-  +----------------------+
+  ------------------------
+  Sending coded packet: 3
+  ------------------------
   Received a packet at Decoder 1
-  symbol_coefficients_before_read_symbol:
-  C: 0 0 1 0 1
-
-  decoder_state:
-  000 ?:  0 0 0 0 0
-  001 S:  0 1 0 0 1
-  002 S:  0 0 1 0 1
-  003 S:  0 0 0 1 1
-  004 ?:  0 0 0 0 0
-
-  Received a packet at Decoder 2
-  symbol_coefficients_before_read_symbol:
-  C: 0 0 1 0 1
-
-  decoder_state:
-  000 ?:  0 0 0 0 0
-  001 S:  0 1 0 0 1
-  002 S:  0 0 1 0 1
-  003 S:  0 0 0 1 1
-  004 ?:  0 0 0 0 0
-
-  +----------------------+
-  |Sending a coded packet|
-  +----------------------+
+  ------------------------
+  Sending coded packet: 4
+  ------------------------
+  ------------------------
+  Sending coded packet: 5
+  ------------------------
+  ------------------------
+  Sending coded packet: 6
+  ------------------------
   Received a packet at Decoder 1
-  symbol_coefficients_before_read_symbol:
-  C: 1 0 1 1 0
-
-  decoder_state:
-  000 S:  1 0 0 0 0
-  001 S:  0 1 0 0 1
-  002 S:  0 0 1 0 1
-  003 S:  0 0 0 1 1
-  004 ?:  0 0 0 0 0
-
-  Received a packet at Decoder 2
-  symbol_coefficients_before_read_symbol:
-  C: 1 0 1 1 0
-
-  decoder_state:
-  000 S:  1 0 0 0 0
-  001 S:  0 1 0 0 1
-  002 S:  0 0 1 0 1
-  003 S:  0 0 0 1 1
-  004 ?:  0 0 0 0 0
-
-  +----------------------+
-  |Sending a coded packet|
-  +----------------------+
+  ------------------------
+  Sending coded packet: 7
+  ------------------------
   Received a packet at Decoder 1
-  symbol_coefficients_before_read_symbol:
-  C: 0 1 0 0 1
-
-  decoder_state:
-  000 S:  1 0 0 0 0
-  001 S:  0 1 0 0 1
-  002 S:  0 0 1 0 1
-  003 S:  0 0 0 1 1
-  004 ?:  0 0 0 0 0
-
-  Received a packet at Decoder 2
-  symbol_coefficients_before_read_symbol:
-  C: 0 1 0 0 1
-
-  decoder_state:
-  000 S:  1 0 0 0 0
-  001 S:  0 1 0 0 1
-  002 S:  0 0 1 0 1
-  003 S:  0 0 0 1 1
-  004 ?:  0 0 0 0 0
-
-  +----------------------+
-  |Sending a coded packet|
-  +----------------------+
+  ------------------------
+  Sending coded packet: 8
+  ------------------------
+  ------------------------
+  Sending coded packet: 9
+  ------------------------
   Received a packet at Decoder 1
-  symbol_coefficients_before_read_symbol:
-  C: 0 1 1 1 1
-
-  decoder_state:
-  000 S:  1 0 0 0 0
-  001 S:  0 1 0 0 1
-  002 S:  0 0 1 0 1
-  003 S:  0 0 0 1 1
-  004 ?:  0 0 0 0 0
-
-  Received a packet at Decoder 2
-  symbol_coefficients_before_read_symbol:
-  C: 0 1 1 1 1
-
-  decoder_state:
-  000 S:  1 0 0 0 0
-  001 S:  0 1 0 0 1
-  002 S:  0 0 1 0 1
-  003 S:  0 0 0 1 1
-  004 ?:  0 0 0 0 0
-
-  +----------------------+
-  |Sending a coded packet|
-  +----------------------+
+  ------------------------
+  Sending coded packet: 10
+  ------------------------
   Received a packet at Decoder 1
-  symbol_coefficients_before_read_symbol:
-  C: 0 1 1 1 0
-
-  decoder_state:
-  000 U:  1 0 0 0 0
-  001 U:  0 1 0 0 0
-  002 U:  0 0 1 0 0
-  003 U:  0 0 0 1 0
-  004 U:  0 0 0 0 1
-
   Received a packet at Decoder 2
-  symbol_coefficients_before_read_symbol:
-  C: 0 1 1 1 0
-
-  decoder_state:
-  000 U:  1 0 0 0 0
-  001 U:  0 1 0 0 0
-  002 U:  0 0 1 0 0
-  003 U:  0 0 0 1 0
-  004 U:  0 0 0 0 1
-
-  Decoding completed! Total transmissions: 7
-
+  ------------------------
+  Sending coded packet: 11
+  ------------------------
+  Received a packet at Decoder 1
+  Received a packet at Decoder 2
+  ------------------------
+  Sending coded packet: 12
+  ------------------------
+  Received a packet at Decoder 2
+  ------------------------
+  Sending coded packet: 13
+  ------------------------
+  Received a packet at Decoder 1
+  Received a packet at Decoder 2
+  ------------------------
+  Sending coded packet: 14
+  ------------------------
+  ------------------------
+  Sending coded packet: 15
+  ------------------------
+  Received a packet at Decoder 1
+  Received a packet at Decoder 2
+  Decoding completed! Total transmissions: 16
 
 Here we observe that every time a packet is received, the previously
 mentioned information is printed for each receiver. For the
@@ -649,14 +474,6 @@ mentioned information is printed for each receiver. For the
 that we have a received a *coded* packet with the given coding vector.
 In this output, the first given coded packet (CP)
 is: :math:`CP_1 = p_2 + p_3 + p_4 + p_5`.
-
-.. note:: Normally the encoder (based on the ``kodo_full_vector``),
-   would have generated packets in a systematic way,
-   but here we set that feature off in the ``Broadcast`` class constructor,
-   through the encoder API ``m_encoder.set_systematic_off()``.
-   So, we proceed with this example to explain the simulation, but you will
-   obtain another result in your runs. However, the results obtained with
-   this example apply in general.
 
 After the input symbols have been checked, the decoder trace shows the
 ``decoder_state``. This is the current decoding matrix in an equivalent row
@@ -790,64 +607,19 @@ You should see something similar to: ::
   |Sending a coded packet|
   +----------------------+
   Received a packet at Decoder 1
-  symbol_coefficients_before_read_symbol:
-  C: 134 44 251
-
-  decoder_state:
-  000 S:  1 21 169
-  001 ?:  0 0 0
-  002 ?:  0 0 0
-
   Received a packet at Decoder 2
-  symbol_coefficients_before_read_symbol:
-  C: 134 44 251
-
-  decoder_state:
-  000 S:  1 21 169
-  001 ?:  0 0 0
-  002 ?:  0 0 0
 
   +----------------------+
   |Sending a coded packet|
   +----------------------+
   Received a packet at Decoder 1
-  symbol_coefficients_before_read_symbol:
-  C: 9 166 29
-
-  decoder_state:
-  000 S:  1 0 149
-  001 S:  0 1 65
-  002 ?:  0 0 0
-
   Received a packet at Decoder 2
-  symbol_coefficients_before_read_symbol:
-  C: 9 166 29
-
-  decoder_state:
-  000 S:  1 0 149
-  001 S:  0 1 65
-  002 ?:  0 0 0
 
   +----------------------+
   |Sending a coded packet|
   +----------------------+
   Received a packet at Decoder 1
-  symbol_coefficients_before_read_symbol:
-  C: 144 87 3
-
-  decoder_state:
-  000 U:  1 0 0
-  001 U:  0 1 0
-  002 U:  0 0 1
-
   Received a packet at Decoder 2
-  symbol_coefficients_before_read_symbol:
-  C: 144 87 3
-
-  decoder_state:
-  000 U:  1 0 0
-  001 U:  0 1 0
-  002 U:  0 0 1
 
   Decoding completed! Total transmissions: 3
 

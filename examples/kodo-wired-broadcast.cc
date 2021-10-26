@@ -61,140 +61,144 @@
 // You can modify any default parameter, by running (for example with a
 // different error rate):
 //
-// python waf --run kodo-wired-broadcast --command-template="%s --errorRate=MY_ERROR_RATE"
+// python waf --run kodo-wired-broadcast --command-template="%s
+// --errorRate=MY_ERROR_RATE"
 //
 // The parameters that can be modified are: generationSize, packetSize, ns-3
 // simulation interval, errorRate in the devices and total number of users.
 
 #include <iostream>
-#include <vector>
 #include <string>
+#include <vector>
 
-#include <ns3/point-to-point-star.h>
-#include <ns3/internet-module.h>
 #include <ns3/config-store-module.h>
 #include <ns3/core-module.h>
+#include <ns3/internet-module.h>
 #include <ns3/network-module.h>
+#include <ns3/point-to-point-star.h>
 
 #include "kodo-broadcast.h"
+#include <kodo/finite_field.hpp>
 
 using namespace ns3;
 
-int main (int argc, char *argv[])
+int main(int argc, char* argv[])
 {
-  // Default values
-  uint32_t packetSize = 1000; // Application bytes per packet
-  double interval = 1.0; // Time between events
-  uint32_t generationSize = 5; // RLNC generation size
-  double errorRate = 0.3; // Error rate for all the links
-  uint32_t users = 2; // Number of users
-  std::string field = "binary"; // Finite field used
+    // Default values
+    uint32_t packetSize = 1000;   // Application bytes per packet
+    double interval = 1.0;        // Time between events
+    uint32_t generationSize = 5;  // RLNC generation size
+    double errorRate = 0.3;       // Error rate for all the links
+    uint32_t users = 2;           // Number of users
+    std::string field = "binary"; // Finite field used
 
-  // Create a map for the field values
-  std::map<std::string, fifi::finite_field> fieldMap;
-  fieldMap["binary"] = fifi::finite_field::binary;
-  fieldMap["binary4"] = fifi::finite_field::binary4;
-  fieldMap["binary8"] = fifi::finite_field::binary8;
+    // Create a map for the field values
+    std::map<std::string, kodo::finite_field> fieldMap;
+    fieldMap["binary"] = kodo::finite_field::binary;
+    fieldMap["binary4"] = kodo::finite_field::binary4;
+    fieldMap["binary8"] = kodo::finite_field::binary8;
+    fieldMap["binary16"] = kodo::finite_field::binary16;
 
-  Time interPacketInterval = Seconds (interval);
+    Time interPacketInterval = Seconds(interval);
 
-  CommandLine cmd;
+    CommandLine cmd;
 
-  cmd.AddValue ("packetSize", "Size of application packet sent", packetSize);
-  cmd.AddValue ("interval", "Interval (seconds) between packets", interval);
-  cmd.AddValue ("generationSize", "Set the generation size to use",
-    generationSize);
-  cmd.AddValue ("errorRate", "Packet erasure rate for the links", errorRate);
-  cmd.AddValue ("users", "Number of receivers", users);
-  cmd.AddValue ("field", "Finite field used", field);
+    cmd.AddValue("packetSize", "Size of application packet sent", packetSize);
+    cmd.AddValue("interval", "Interval (seconds) between packets", interval);
+    cmd.AddValue("generationSize", "Set the generation size to use",
+                 generationSize);
+    cmd.AddValue("errorRate", "Packet erasure rate for the links", errorRate);
+    cmd.AddValue("users", "Number of receivers", users);
+    cmd.AddValue("field", "Finite field used", field);
 
-  cmd.Parse (argc, argv);
+    cmd.Parse(argc, argv);
 
-  // Use the binary field in case of errors
-  if (fieldMap.find (field) == fieldMap.end ())
+    // Use the binary field in case of errors
+    if (fieldMap.find(field) == fieldMap.end())
     {
-      field = "binary";
+        field = "binary";
     }
 
-  Time::SetResolution (Time::NS);
-  //! [2]
-  // Set the basic helper for a single link
-  PointToPointHelper pointToPoint;
+    Time::SetResolution(Time::NS);
+    //! [2]
+    // Set the basic helper for a single link
+    PointToPointHelper pointToPoint;
 
-  // N receivers against a centralized hub.
-  PointToPointStarHelper star (users, pointToPoint);
+    // N receivers against a centralized hub.
+    PointToPointStarHelper star(users, pointToPoint);
 
-  // Set error model for the net devices
-  Config::SetDefault ("ns3::RateErrorModel::ErrorUnit",
-    StringValue ("ERROR_UNIT_PACKET"));
+    // Set error model for the net devices
+    Config::SetDefault("ns3::RateErrorModel::ErrorUnit",
+                       StringValue("ERROR_UNIT_PACKET"));
 
-  std::vector<Ptr<RateErrorModel>> errorModel (users,
-    CreateObject<RateErrorModel> ());
+    std::vector<Ptr<RateErrorModel>> errorModel(users,
+                                                CreateObject<RateErrorModel>());
 
-  for (uint32_t n = 0; n < users; n++)
-  {
-    errorModel[n]->SetAttribute ("ErrorRate", DoubleValue (errorRate));
-    star.GetSpokeNode (n)->GetDevice (0)->SetAttribute ("ReceiveErrorModel",
-      PointerValue (errorModel[n]));
-    errorModel[n]->Enable ();
-  }
-
-  // Setting IP protocol stack
-  InternetStackHelper internet;
-  star.InstallStack (internet);
-
-  // Set IP addresses
-  star.AssignIpv4Addresses (Ipv4AddressHelper ("10.1.1.0", "255.255.255.0"));
-  //! [3]
-  // Setting up application socket parameters for transmitter and
-  // receiver sockets
-  TypeId tid = TypeId::LookupByName ("ns3::UdpSocketFactory");
-
-  // Transmitter socket
-  Ptr<Socket> source = Socket::CreateSocket (star.GetHub (), tid);
-
-  // Transmitter socket connections. Set transmitter for broadcasting
-  uint16_t port = 80;
-  InetSocketAddress remote = InetSocketAddress (
-    Ipv4Address ("255.255.255.255"), port);
-  source->SetAllowBroadcast (true);
-  source->Connect (remote);
-
-  // Receiver sockets
-  std::vector<Ptr<Socket>> sinks (users);
-
-  for (uint32_t n = 0; n < users; n++)
+    for (uint32_t n = 0; n < users; n++)
     {
-      sinks[n] = Socket::CreateSocket (star.GetSpokeNode (n), tid);
+        errorModel[n]->SetAttribute("ErrorRate", DoubleValue(errorRate));
+        star.GetSpokeNode(n)->GetDevice(0)->SetAttribute(
+            "ReceiveErrorModel", PointerValue(errorModel[n]));
+        errorModel[n]->Enable();
     }
 
-  // Check for finite field employed and
-  // Creates the Broadcast helper for this broadcast topology
+    // Setting IP protocol stack
+    InternetStackHelper internet;
+    star.InstallStack(internet);
 
-  Broadcast wiredBroadcast (fieldMap[field], users, generationSize, packetSize,
-      source, sinks);
+    // Set IP addresses
+    star.AssignIpv4Addresses(Ipv4AddressHelper("10.1.1.0", "255.255.255.0"));
+    //! [3]
+    // Setting up application socket parameters for transmitter and
+    // receiver sockets
+    TypeId tid = TypeId::LookupByName("ns3::UdpSocketFactory");
 
-  // Receiver socket connections
-  InetSocketAddress local = InetSocketAddress (Ipv4Address::GetAny (), port);
+    // Transmitter socket
+    Ptr<Socket> source = Socket::CreateSocket(star.GetHub(), tid);
 
-  for (const auto sink : sinks)
+    // Transmitter socket connections. Set transmitter for broadcasting
+    uint16_t port = 80;
+    InetSocketAddress remote =
+        InetSocketAddress(Ipv4Address("255.255.255.255"), port);
+    source->SetAllowBroadcast(true);
+    source->Connect(remote);
+
+    // Receiver sockets
+    std::vector<Ptr<Socket>> sinks(users);
+
+    for (uint32_t n = 0; n < users; n++)
     {
-      sink->Bind (local);
-      sink->SetRecvCallback (MakeCallback (
-        &Broadcast::ReceivePacket, &wiredBroadcast));
+        sinks[n] = Socket::CreateSocket(star.GetSpokeNode(n), tid);
     }
 
-  // Turn on global static routing so we can be routed across the network
-  Ipv4GlobalRoutingHelper::PopulateRoutingTables ();
+    // Check for finite field employed and
+    // Creates the Broadcast helper for this broadcast topology
 
-  // Do pcap tracing on all point-to-point devices on all nodes
-  // pointToPoint.EnablePcapAll ("kodo-wired-broadcast");
+    Broadcast wiredBroadcast(fieldMap[field], users, generationSize, packetSize,
+                             source, sinks);
 
-  Simulator::ScheduleWithContext (source->GetNode ()->GetId (), Seconds (1.0),
-    &Broadcast::SendPacket, &wiredBroadcast, source, interPacketInterval);
+    // Receiver socket connections
+    InetSocketAddress local = InetSocketAddress(Ipv4Address::GetAny(), port);
 
-  Simulator::Run ();
-  Simulator::Destroy ();
+    for (const auto sink : sinks)
+    {
+        sink->Bind(local);
+        sink->SetRecvCallback(
+            MakeCallback(&Broadcast::ReceivePacket, &wiredBroadcast));
+    }
 
-  return 0;
+    // Turn on global static routing so we can be routed across the network
+    Ipv4GlobalRoutingHelper::PopulateRoutingTables();
+
+    // Do pcap tracing on all point-to-point devices on all nodes
+    // pointToPoint.EnablePcapAll ("kodo-wired-broadcast");
+
+    Simulator::ScheduleWithContext(source->GetNode()->GetId(), Seconds(1.0),
+                                   &Broadcast::SendPacket, &wiredBroadcast,
+                                   source, interPacketInterval);
+
+    Simulator::Run();
+    Simulator::Destroy();
+
+    return 0;
 }
